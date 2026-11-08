@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EngineerPrep India — API Documentation</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
+  <style>
+    body { margin: 0; padding: 0; }
+    .swagger-ui .topbar { background-color: #0f172a; }
+    .swagger-ui .topbar .download-url-wrapper input[type=text] { border: 2px solid #FF5A00; }
+    #swagger-logo { color: white; font-size: 1.1rem; font-weight: 700; padding: 8px 16px; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({
+      url: "/swagger.json",
+      dom_id: "#swagger-ui",
+      presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+      layout: "BaseLayout",
+      deepLinking: true,
+      displayRequestDuration: true,
+      filter: true,
+      persistAuthorization: true,
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* EngineerPrep India design tokens                                   */
+/* ------------------------------------------------------------------ */
+@theme {
+  --color-brand-50: #fff4ed;
+  --color-brand-100: #ffe6d5;
+  --color-brand-200: #ffc9aa;
+  --color-brand-300: #ffa374;
+  --color-brand-400: #ff7a1a;
+  --color-brand-500: #ff5a00;
+  --color-brand-600: #e64f00;
+  --color-brand-700: #b83e00;
+
+  --color-navy-700: #1d2a36;
+  --color-navy-800: #17212b;
+  --color-navy-900: #111b24;
+
+  --color-ink-500: #697586;
+  --color-ink-700: #3d4a5a;
+  --color-ink-900: #17212b;
+
+  --color-surface: #f7f8fa;
+  --color-line: #e8e9ed;
+
+  --color-success-500: #22a06b;
+  --color-warning-500: #f5a623;
+  --color-error-500: #e5484d;
+
+  --font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --radius-card: 0.875rem;
+
+  --shadow-soft: 0 1px 2px rgba(23, 33, 43, 0.04),
+    0 8px 24px rgba(23, 33, 43, 0.06);
+  --shadow-lift: 0 2px 4px rgba(23, 33, 43, 0.05),
+    0 16px 40px rgba(23, 33, 43, 0.12);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                               */
+/* ------------------------------------------------------------------ */
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink-900);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-brand-500);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  /* Scrollbars */
+  .scroll-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: #cfd4dc;
+    border-radius: 999px;
+  }
+  .scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Component utilities                                                */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .epi-card {
+    background: #fff;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .epi-card-hover {
+    transition:
+      box-shadow 0.18s ease,
+      transform 0.18s ease,
+      border-color 0.18s ease;
+  }
+  .epi-card-hover:hover {
+    box-shadow: var(--shadow-lift);
+    border-color: var(--color-brand-200);
+    transform: translateY(-2px);
+  }
+
+  .epi-input {
+    width: 100%;
+    border: 1px solid var(--color-line);
+    background: #fff;
+    border-radius: 0.625rem;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-ink-900);
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  .epi-input::placeholder {
+    color: #9aa4b2;
+  }
+  .epi-input:focus {
+    outline: none;
+    border-color: var(--color-brand-400);
+    box-shadow: 0 0 0 3px rgba(255, 122, 26, 0.16);
+  }
+
+  .epi-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-ink-700);
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.01em;
+  }
+
+  .epi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 999px;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .epi-scroll-x {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+}
+
+/* Syntax-highlight-ish code blocks */
+.code-block {
+  background: #111b24;
+  color: #e6edf3;
+  border-radius: 0.75rem;
+  padding: 1rem 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+.code-block .tok-key {
+  color: #ff7a1a;
+}
+.code-block .tok-str {
+  color: #7ee2b8;
+}
+.code-block .tok-com {
+  color: #7d8590;
+  font-style: italic;
+}
+.code-block .tok-num {
+  color: #f5a623;
+}
+
+@keyframes epi-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-fade-up {
+  animation: epi-fade-up 0.28s ease both;
+}
+
+@keyframes epi-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 90, 0, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 90, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 90, 0, 0);
+  }
+}
+.animate-pulse-ring {
+  animation: epi-pulse-ring 1.8s infinite;
+}

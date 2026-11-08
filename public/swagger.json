@@ -1,0 +1,1040 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "EngineerPrep India API",
+    "version": "1.0.0",
+    "description": "REST API for the EngineerPrep India engineering student learning and placement platform.\n\nAll endpoints are prefixed with `/api/v1`. Authentication uses JWT access tokens with HTTP-only cookie refresh tokens.",
+    "contact": {
+      "name": "EngineerPrep India",
+      "url": "https://engineerprep.in"
+    },
+    "license": {
+      "name": "Private"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Development"
+    },
+    {
+      "url": "https://engineerprep.in/api/v1",
+      "description": "Production"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT access token obtained from /auth/login or /auth/register"
+      }
+    },
+    "schemas": {
+      "ApiSuccess": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": { "type": "object" }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": { "type": "string" }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "fullName": { "type": "string" },
+          "role": { "type": "string", "enum": ["STUDENT", "ADMIN"] },
+          "isActive": { "type": "boolean" },
+          "emailVerified": { "type": "boolean" },
+          "collegeName": { "type": "string", "nullable": true },
+          "graduationYear": { "type": "integer", "nullable": true },
+          "profileImageUrl": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Resource": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "resourceType": {
+            "type": "string",
+            "enum": ["NOTES", "QUESTION_PAPER", "SYLLABUS", "LAB_MANUAL", "ASSIGNMENT", "OTHER"]
+          },
+          "moduleNumber": { "type": "integer", "nullable": true },
+          "fileName": { "type": "string" },
+          "fileUrl": { "type": "string" },
+          "fileSize": { "type": "string", "nullable": true },
+          "downloadCount": { "type": "integer" },
+          "subjectName": { "type": "string", "nullable": true },
+          "subjectCode": { "type": "string", "nullable": true },
+          "semesterNumber": { "type": "integer", "nullable": true },
+          "branchName": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "DsaProblem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" },
+          "statement": { "type": "string", "nullable": true },
+          "practiceUrl": { "type": "string", "nullable": true },
+          "difficulty": {
+            "type": "string",
+            "enum": ["EASY", "MEDIUM", "HARD", "BEGINNER", "INTERMEDIATE", "ADVANCED"]
+          },
+          "orderIndex": { "type": "integer" },
+          "sheetId": { "type": "string", "format": "uuid", "nullable": true },
+          "patternId": { "type": "string", "format": "uuid", "nullable": true }
+        }
+      },
+      "Opportunity": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "opportunityType": {
+            "type": "string",
+            "enum": ["JOB", "INTERNSHIP", "OFF_CAMPUS"]
+          },
+          "companyName": { "type": "string", "nullable": true },
+          "location": { "type": "string" },
+          "workMode": { "type": "string", "enum": ["ONSITE", "REMOTE", "HYBRID"] },
+          "salaryMin": { "type": "integer", "nullable": true },
+          "salaryMax": { "type": "integer", "nullable": true },
+          "applicationDeadline": { "type": "string", "format": "date-time", "nullable": true },
+          "status": { "type": "string" },
+          "postedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": { "type": "string" },
+          "title": { "type": "string" },
+          "body": { "type": "string", "nullable": true },
+          "linkUrl": { "type": "string", "nullable": true },
+          "isRead": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Authentication required",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Insufficient permissions",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Validation error",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ApiError" }
+          }
+        }
+      }
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new student account",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "fullName"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 8 },
+                  "fullName": { "type": "string", "minLength": 2 },
+                  "collegeName": { "type": "string" },
+                  "graduationYear": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registration successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/ApiSuccess" },
+                    {
+                      "properties": {
+                        "data": {
+                          "properties": {
+                            "accessToken": { "type": "string" },
+                            "user": { "$ref": "#/components/schemas/User" }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "409": { "description": "Email already registered" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login with email and password",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/ApiSuccess" },
+                    {
+                      "properties": {
+                        "data": {
+                          "properties": {
+                            "accessToken": { "type": "string" },
+                            "user": { "$ref": "#/components/schemas/User" }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid credentials" },
+          "429": { "description": "Too many login attempts" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Logout and revoke refresh token",
+        "responses": {
+          "200": { "description": "Logged out successfully" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Refresh access token using refresh token cookie",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "New access token issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "accessToken": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Refresh token invalid or expired" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Get current authenticated user",
+        "responses": {
+          "200": {
+            "description": "Current user data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Request password reset email",
+        "security": [],
+        "description": "Always returns 200 to prevent account enumeration.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": { "email": { "type": "string", "format": "email" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "If the email exists, a reset link has been sent" },
+          "429": { "description": "Too many requests" }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Reset password with token from email",
+        "security": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token", "password"],
+                "properties": {
+                  "token": { "type": "string" },
+                  "password": { "type": "string", "minLength": 8 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password reset successful" },
+          "400": { "description": "Token invalid or expired" }
+        }
+      }
+    },
+    "/vtu/branches": {
+      "get": {
+        "tags": ["VTU Resources"],
+        "summary": "List all branches",
+        "security": [],
+        "responses": {
+          "200": { "description": "List of branches" }
+        }
+      }
+    },
+    "/vtu/semesters": {
+      "get": {
+        "tags": ["VTU Resources"],
+        "summary": "List all semesters",
+        "security": [],
+        "responses": { "200": { "description": "List of semesters" } }
+      }
+    },
+    "/vtu/schemes": {
+      "get": {
+        "tags": ["VTU Resources"],
+        "summary": "List all VTU schemes",
+        "security": [],
+        "responses": { "200": { "description": "List of schemes" } }
+      }
+    },
+    "/vtu/subjects": {
+      "get": {
+        "tags": ["VTU Resources"],
+        "summary": "List subjects with optional filtering",
+        "security": [],
+        "parameters": [
+          { "name": "branchId", "in": "query", "schema": { "type": "string" } },
+          { "name": "semesterId", "in": "query", "schema": { "type": "string" } },
+          { "name": "schemeId", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "List of subjects" } }
+      }
+    },
+    "/vtu/resources": {
+      "get": {
+        "tags": ["VTU Resources"],
+        "summary": "List published resources with filtering",
+        "parameters": [
+          { "name": "q", "in": "query", "description": "Full-text search", "schema": { "type": "string" } },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["NOTES", "QUESTION_PAPER", "SYLLABUS", "LAB_MANUAL", "ASSIGNMENT", "OTHER"] } },
+          { "name": "subjectId", "in": "query", "schema": { "type": "string" } },
+          { "name": "branchId", "in": "query", "schema": { "type": "string" } },
+          { "name": "semesterId", "in": "query", "schema": { "type": "string" } },
+          { "name": "module", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of resources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Resource" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dsa/sheets": {
+      "get": {
+        "tags": ["DSA"],
+        "summary": "List all DSA sheets",
+        "responses": { "200": { "description": "List of DSA sheets" } }
+      }
+    },
+    "/dsa/sheets/{slug}": {
+      "get": {
+        "tags": ["DSA"],
+        "summary": "Get DSA sheet by slug",
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "DSA sheet details with problems" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/dsa/problems": {
+      "get": {
+        "tags": ["DSA"],
+        "summary": "List DSA problems with filtering",
+        "parameters": [
+          { "name": "sheetId", "in": "query", "schema": { "type": "string" } },
+          { "name": "patternId", "in": "query", "schema": { "type": "string" } },
+          { "name": "difficulty", "in": "query", "schema": { "type": "string" } },
+          { "name": "q", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of problems",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/DsaProblem" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dsa/progress": {
+      "get": {
+        "tags": ["DSA"],
+        "summary": "Get authenticated student's DSA progress",
+        "responses": { "200": { "description": "Progress records for current user only" } }
+      },
+      "post": {
+        "tags": ["DSA"],
+        "summary": "Mark a problem complete/incomplete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["problemId", "completed"],
+                "properties": {
+                  "problemId": { "type": "string", "format": "uuid" },
+                  "completed": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Progress updated" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/roadmaps": {
+      "get": {
+        "tags": ["Roadmaps"],
+        "summary": "List all roadmaps",
+        "parameters": [
+          { "name": "category", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "List of roadmaps" } }
+      }
+    },
+    "/roadmaps/{slug}": {
+      "get": {
+        "tags": ["Roadmaps"],
+        "summary": "Get roadmap with stages and topics",
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Full roadmap with stages and topics" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/roadmaps/progress": {
+      "get": {
+        "tags": ["Roadmaps"],
+        "summary": "Get current student's roadmap progress",
+        "responses": { "200": { "description": "Topic completion records" } }
+      },
+      "post": {
+        "tags": ["Roadmaps"],
+        "summary": "Mark a topic complete or incomplete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["topicId", "completed"],
+                "properties": {
+                  "topicId": { "type": "string", "format": "uuid" },
+                  "completed": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Progress updated" } }
+      }
+    },
+    "/mock-tests": {
+      "get": {
+        "tags": ["Mock Tests"],
+        "summary": "List all published mock tests",
+        "responses": { "200": { "description": "List of mock tests" } }
+      }
+    },
+    "/mock-tests/{id}": {
+      "get": {
+        "tags": ["Mock Tests"],
+        "summary": "Get mock test with questions",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Mock test with all questions and options" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/mock-tests/{id}/attempt": {
+      "post": {
+        "tags": ["Mock Tests"],
+        "summary": "Start a new test attempt",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": { "201": { "description": "Attempt created with attempt ID" } }
+      }
+    },
+    "/mock-tests/attempts/{attemptId}/submit": {
+      "post": {
+        "tags": ["Mock Tests"],
+        "summary": "Submit test attempt with responses",
+        "parameters": [
+          { "name": "attemptId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "responses": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "questionId": { "type": "string", "format": "uuid" },
+                        "selectedOptionId": { "type": "string", "format": "uuid" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Score and result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "score": { "type": "integer" },
+                        "total": { "type": "integer" },
+                        "percentage": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "List opportunities with filters",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["JOB", "INTERNSHIP", "OFF_CAMPUS"] } },
+          { "name": "workMode", "in": "query", "schema": { "type": "string", "enum": ["ONSITE", "REMOTE", "HYBRID"] } },
+          { "name": "location", "in": "query", "schema": { "type": "string" } },
+          { "name": "batch", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of opportunities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Opportunity" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/apply": {
+      "post": {
+        "tags": ["Jobs"],
+        "summary": "Apply to an opportunity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["opportunityId"],
+                "properties": {
+                  "opportunityId": { "type": "string", "format": "uuid" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Application submitted" },
+          "409": { "description": "Already applied" }
+        }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get student dashboard summary",
+        "responses": {
+          "200": { "description": "Dashboard stats including DSA progress, streak, recent activity" }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Get all notifications for current user",
+        "responses": {
+          "200": {
+            "description": "List of notifications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Notification" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "put": {
+        "tags": ["Notifications"],
+        "summary": "Mark a notification as read",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": { "200": { "description": "Notification marked as read" } }
+      }
+    },
+    "/admin/stats": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get platform statistics (admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Platform stats" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/admin/students": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "List all students (admin only)",
+        "responses": { "200": { "description": "List of all student accounts" } }
+      }
+    },
+    "/admin/resources": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create a VTU resource (admin only)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "resourceType", "fileName", "fileUrl"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "resourceType": { "type": "string", "enum": ["NOTES", "QUESTION_PAPER", "SYLLABUS", "LAB_MANUAL", "ASSIGNMENT", "OTHER"] },
+                  "subjectId": { "type": "string", "format": "uuid" },
+                  "fileName": { "type": "string" },
+                  "fileUrl": { "type": "string", "format": "uri" },
+                  "status": { "type": "string", "enum": ["DRAFT", "PUBLISHED", "ARCHIVED"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Resource created" } }
+      }
+    },
+    "/admin/dsa-problems": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create a DSA problem (admin only)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "difficulty": { "type": "string", "enum": ["EASY", "MEDIUM", "HARD"] },
+                  "practiceUrl": { "type": "string", "format": "uri" },
+                  "sheetId": { "type": "string", "format": "uuid" },
+                  "patternId": { "type": "string", "format": "uuid" },
+                  "orderIndex": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "DSA problem created" } }
+      }
+    },
+    "/admin/roadmaps": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Create a roadmap (admin only)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "category"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "category": { "type": "string" },
+                  "description": { "type": "string" },
+                  "difficulty": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Roadmap created" } }
+      }
+    },
+    "/admin/questions": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Add a question with options to a mock test (admin only)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["testId", "text", "options"],
+                "properties": {
+                  "testId": { "type": "string", "format": "uuid" },
+                  "topic": { "type": "string" },
+                  "text": { "type": "string" },
+                  "explanation": { "type": "string" },
+                  "marks": { "type": "integer" },
+                  "options": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": { "type": "string" },
+                        "text": { "type": "string" },
+                        "isCorrect": { "type": "boolean" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Question created with options" } }
+      }
+    },
+    "/admin/export": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Export data as CSV (admin only)",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["resources", "opportunities", "students", "dsa-problems"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV file download",
+            "content": { "text/csv": {} }
+          }
+        }
+      }
+    },
+    "/admin/bulk-import": {
+      "post": {
+        "tags": ["Bulk Import"],
+        "summary": "Upload CSV/JSON file for bulk import (admin only)",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "kind"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" },
+                  "kind": {
+                    "type": "string",
+                    "enum": ["dsa-problems", "jobs", "roadmaps", "vtu-updates", "mock-test-questions"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File validated, preview returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "jobId": { "type": "string", "format": "uuid" },
+                        "preview": { "type": "array", "items": {} },
+                        "totalRows": { "type": "integer" },
+                        "validRows": { "type": "integer" },
+                        "errors": { "type": "array", "items": {} }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/bulk-import/confirm": {
+      "post": {
+        "tags": ["Bulk Import"],
+        "summary": "Confirm and execute bulk import (admin only)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["jobId"],
+                "properties": {
+                  "jobId": { "type": "string", "format": "uuid" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Import completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "inserted": { "type": "integer" },
+                        "skipped": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/uploads": {
+      "post": {
+        "tags": ["File Upload"],
+        "summary": "Upload a file (authenticated users)",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" },
+                  "category": { "type": "string", "default": "misc" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "File uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "originalName": { "type": "string" },
+                        "publicUrl": { "type": "string" },
+                        "size": { "type": "integer" },
+                        "mimeType": { "type": "string" },
+                        "storage": { "type": "string", "enum": ["local", "s3"] }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": { "description": "File exceeds 50MB limit" },
+          "415": { "description": "Unsupported file type" }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "Authentication", "description": "Login, register, tokens, password management" },
+    { "name": "VTU Resources", "description": "Notes, question papers, syllabus, lab manuals" },
+    { "name": "DSA", "description": "DSA sheets, patterns, problems, progress tracking" },
+    { "name": "Roadmaps", "description": "Learning roadmaps with stages and topics" },
+    { "name": "Mock Tests", "description": "Practice tests with scoring" },
+    { "name": "Jobs", "description": "Job and internship opportunities" },
+    { "name": "Dashboard", "description": "Student dashboard and activity" },
+    { "name": "Notifications", "description": "In-app notifications" },
+    { "name": "Admin", "description": "Admin-only endpoints (requires ADMIN role)" },
+    { "name": "Bulk Import", "description": "CSV/JSON bulk import for admin" },
+    { "name": "File Upload", "description": "File upload and storage" }
+  ]
+}
+
