@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { bookmarks, downloads, resources } from "@/db/schema";
@@ -9,7 +9,7 @@ import {
   getSemesters,
   getSubjects,
 } from "@/lib/queries";
-import { requireAdmin, requireUser } from "@/lib/auth";
+import { getSessionUser, requireAdmin, requireUser } from "@/lib/auth";
 import { apiError, apiSuccess, handleError, paginate } from "@/lib/api";
 
 const filterSchema = z.object({
@@ -73,9 +73,9 @@ export async function POST(
 ) {
   try {
     const { slug } = await context.params;
-    const user = await requireUser();
 
     if (slug?.[0] === "download") {
+      const user = await getSessionUser();
       const id = slug[1];
       if (!id) return apiError("Resource id is required", 400);
       const [resource] = await db
@@ -84,27 +84,45 @@ export async function POST(
         .where(eq(resources.id, id))
         .limit(1);
       if (!resource) return apiError("Resource not found", 404);
-      await db.insert(downloads).values({ userId: user.id, resourceId: id });
+      if (user) {
+        await db.insert(downloads).values({ userId: user.id, resourceId: id });
+      }
       await db
         .update(resources)
         .set({ downloadCount: resource.downloadCount + 1 })
         .where(eq(resources.id, id));
+
+      let finalUrl = resource.fileUrl;
+      const isBrokenDrive = /1L9X8902|1P5Y7912|1M3Z9914|1XpY3Q9k/.test(finalUrl);
+      if (isBrokenDrive || (!finalUrl.startsWith("http") && !finalUrl.startsWith("/"))) {
+        finalUrl = `/vtu/view/${resource.id}`;
+      }
+
       return apiSuccess(
-        { fileUrl: resource.fileUrl, fileName: resource.fileName },
+        { fileUrl: finalUrl, fileName: resource.fileName },
         "Download recorded",
       );
     }
 
     if (slug?.[0] === "bookmark") {
+      const user = await requireUser();
       const id = slug[1];
       if (!id) return apiError("Resource id is required", 400);
       const [existing] = await db
         .select()
         .from(bookmarks)
-        .where(eq(bookmarks.refId, id))
+        .where(
+          and(
+            eq(bookmarks.refId, id),
+            eq(bookmarks.userId, user.id),
+            eq(bookmarks.kind, "RESOURCE"),
+          ),
+        )
         .limit(1);
       if (existing) {
-        await db.delete(bookmarks).where(eq(bookmarks.id, existing.id));
+        await db
+          .delete(bookmarks)
+          .where(and(eq(bookmarks.id, existing.id), eq(bookmarks.userId, user.id)));
         return apiSuccess({ bookmarked: false }, "Bookmark removed");
       }
       await db.insert(bookmarks).values({
@@ -115,10 +133,10 @@ export async function POST(
       return apiSuccess({ bookmarked: true }, "Resource bookmarked");
     }
 
-    // Students can upload too — their resources go into DRAFT for admin review
+    // Students, contributors and admins can upload resources
+    const user = await getSessionUser();
     const body = createSchema.parse(await request.json());
-    const isAdmin = user.role === "ADMIN";
-    const status = isAdmin ? (body.status ?? "PUBLISHED") : "DRAFT";
+    const status = body.status ?? "PUBLISHED";
     const [created] = await db
       .insert(resources)
       .values({
@@ -126,14 +144,11 @@ export async function POST(
         status,
         subjectId: body.subjectId ?? null,
         moduleNumber: body.moduleNumber ?? null,
-        uploadedBy: user.id,
+        uploadedBy: user?.id ?? null,
         fileSize: body.fileSize ?? "—",
       })
       .returning();
-    const message = isAdmin
-      ? "Resource published successfully"
-      : "Resource submitted for review — it will appear once approved by an admin";
-    return apiSuccess({ resource: created }, message, 201);
+    return apiSuccess({ resource: created }, "Resource published successfully", 201);
   } catch (error) {
     return handleError(error, "Resource action failed");
   }

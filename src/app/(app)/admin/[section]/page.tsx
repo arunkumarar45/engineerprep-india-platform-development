@@ -8,6 +8,7 @@ import {
   SimpleSection,
   Students,
 } from "@/components/admin/sections";
+import { VtuCollectorConsole } from "@/components/admin/VtuCollectorConsole";
 import { getSessionUser } from "@/lib/auth";
 import {
   getAllUsers,
@@ -91,8 +92,21 @@ export default async function AdminSectionPage({
     );
   }
 
+  if (section === "vtu-collector" || section === "resources") {
+    return (
+      <>
+        <PageHeader
+          breadcrumb={[{ label: "Admin Console", href: "/admin" }, { label: "VTU Resource Collector" }]}
+          title="VTU Academic Resource Collection & Verification System"
+          subtitle="Discover, validate magic bytes, categorize and upload authentic VTU academic documents with zero interference with existing Notes."
+        />
+        <VtuCollectorConsole />
+      </>
+    );
+  }
+
   if (
-    ["dsa", "roadmaps", "playlists", "patterns", "mock-tests", "jobs", "updates", "resources"].includes(
+    ["dsa", "roadmaps", "playlists", "patterns", "mock-tests", "jobs", "updates"].includes(
       section,
     )
   ) {

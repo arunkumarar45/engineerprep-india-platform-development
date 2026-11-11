@@ -151,18 +151,22 @@ export function VtuOverviewClient({
         </div>
       )}
 
-      {/* Student upload banner */}
-      {!isAdmin && isLoggedIn && (
-        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-          <div className="flex-1">
-            <p className="text-xs font-bold text-blue-700">Contribute to the community</p>
-            <p className="text-xs text-blue-600">
-              Have notes or question papers? Upload them — they'll be reviewed and published for everyone.
+      {/* Student upload banner — visible to all students & visitors */}
+      {!isAdmin && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-200 bg-brand-50/40 p-4">
+          <div>
+            <p className="text-sm font-bold text-ink-900">Have notes, question papers or lab manuals?</p>
+            <p className="text-xs text-ink-500">
+              Share your study resources with fellow engineering students across Karnataka. Instant PDF publishing.
             </p>
           </div>
-          <Button size="sm" onClick={() => setShowUpload(true)}>
-            <Upload className="size-3.5" /> Share a Resource
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/vtu/upload">
+              <Button size="sm">
+                <Upload className="size-3.5" /> Upload Resource
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
 

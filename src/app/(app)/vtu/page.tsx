@@ -1,5 +1,8 @@
 import { PageHeader } from "@/components/layout";
 import { VtuOverviewClient } from "@/components/vtu/VtuOverviewClient";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { getSessionUser } from "@/lib/auth";
 import {
   getBranches,

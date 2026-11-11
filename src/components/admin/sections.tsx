@@ -8,8 +8,11 @@ import {
   CheckCircle2,
   Database,
   Download,
+  ExternalLink,
+  Eye,
   FileSpreadsheet,
   FileText,
+  Image as ImageIcon,
   Layers,
   ListChecks,
   Play,
@@ -21,6 +24,7 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
+import playlistsData from "@/data/playlists.json";
 import {
   Badge,
   Button,
@@ -955,6 +959,65 @@ export function Students({
 
 /* --------------------------- simple sections ------------------------ */
 
+const DSA_SHEET_ADMIN_LIST = [
+  {
+    title: "Striver's A2Z DSA Sheet",
+    instructor: "Raj Vikramaditya (Striver)",
+    slug: "striver-a2z-dsa-sheet",
+    thumbnailUrl: "/thumbnails/dsa-sheets/striver-a2z-dsa-sheet.jpg",
+    source: "YouTube / takeUforward",
+    problems: 455,
+  },
+  {
+    title: "Love Babbar DSA Sheet",
+    instructor: "Love Babbar",
+    slug: "love-babbar-dsa-sheet",
+    thumbnailUrl: "/thumbnails/dsa-sheets/love-babbar-dsa-sheet.jpg",
+    source: "YouTube / CodeHelp by Babbar",
+    problems: 430,
+  },
+  {
+    title: "Shraddha Khapra Sheet",
+    instructor: "Shradha Khapra (Apna College)",
+    slug: "shraddha-khapra-dsa-sheet",
+    thumbnailUrl: "/thumbnails/dsa-sheets/shraddha-khapra-dsa-sheet.jpg",
+    source: "YouTube / Apna College",
+    problems: 403,
+  },
+  {
+    title: "Rohit Negi (Coder Army) Sheet",
+    instructor: "Rohit Negi",
+    slug: "rohit-negi-dsa-sheet",
+    thumbnailUrl: "/thumbnails/dsa-sheets/rohit-negi-dsa-sheet.jpg",
+    source: "YouTube / Coder Army",
+    problems: 726,
+  },
+  {
+    title: "Arsh Goyal DSA Sheet",
+    instructor: "Arsh Goyal",
+    slug: "arsh-goyal-dsa-sheet",
+    thumbnailUrl: "/thumbnails/dsa-sheets/arsh-goyal-dsa-sheet.jpg",
+    source: "YouTube / Arsh Goyal",
+    problems: 287,
+  },
+  {
+    title: "NeetCode DSA Sheet",
+    instructor: "NeetCode (Navdeep Singh)",
+    slug: "neetcode-dsa-sheet",
+    thumbnailUrl: "/thumbnails/dsa-sheets/neetcode-dsa-sheet.jpg",
+    source: "YouTube / NeetCode",
+    problems: 150,
+  },
+  {
+    title: "20 Essential DSA Patterns",
+    instructor: "MAANG Engineers",
+    slug: "20-essential-dsa-patterns",
+    thumbnailUrl: "/thumbnails/dsa-sheets/20-essential-dsa-patterns.jpg",
+    source: "MAANG Algorithmic Patterns",
+    problems: 180,
+  },
+];
+
 export function SimpleSection({
   kind,
 }: {
@@ -964,16 +1027,17 @@ export function SimpleSection({
   const { push } = useToast();
   const config = {
     dsa: {
-      title: "DSA Sheets",
-      description: "Manage curated problem sheets and their problem lists.",
+      title: "DSA Sheets & Thumbnails",
+      description: "Manage curated problem sheets, problem counts and authentic thumbnail bindings.",
       icon: Layers,
       items: [
         "Striver's A2Z DSA Sheet — 455 problems",
-        "Love Babbar DSA Sheet — 450 problems",
-        "Shraddha Khapra Sheet — 375 problems",
-        "Rohit Negi DSA Sheet — 300 problems",
+        "Love Babbar DSA Sheet — 430 problems",
+        "Shraddha Khapra Sheet — 403 problems",
+        "Rohit Negi DSA Sheet — 726 problems",
         "Arsh Goyal DSA Sheet — 287 problems",
-        "NeetCode DSA Sheet — 450 problems",
+        "NeetCode DSA Sheet — 150 problems",
+        "20 Essential DSA Patterns — 180 problems",
       ],
       href: "/placements/dsa-sheets",
     },
@@ -991,13 +1055,13 @@ export function SimpleSection({
       href: "/placements/roadmaps",
     },
     playlists: {
-      title: "DSA Playlists",
-      description: "Curate video playlists from educators.",
+      title: "DSA & System Design Playlists",
+      description: "Curated 20 verified course playlists with individual high-definition thumbnails.",
       icon: ListChecks,
       items: [
-        "Striver A2Z Playlist — 290 problems",
-        "Love Babbar Playlist — 450 problems",
-        "NeetCode Roadmap — 250 problems",
+        "Striver A2Z Playlist — 290 videos",
+        "Love Babbar Playlist — 141 videos",
+        "NeetCode Roadmap — 250 videos",
       ],
       href: "/placements/dsa-playlists",
     },
@@ -1065,6 +1129,137 @@ export function SimpleSection({
   }[kind];
 
   const Icon = config.icon;
+
+  if (kind === "dsa") {
+    return (
+      <div>
+        <SectionHeader
+          title={config.title}
+          description={config.description}
+          action={
+            <div className="flex gap-2">
+              <Link
+                href={config.href}
+                className="inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-bold text-ink-900 hover:border-brand-300 hover:text-brand-600"
+              >
+                <Eye className="size-3.5 mr-1" /> View public page
+              </Link>
+            </div>
+          }
+        />
+        <Card className="p-0 overflow-hidden">
+          <div className="p-4 bg-surface-elevated border-b border-line flex items-center justify-between">
+            <span className="text-xs font-bold text-ink-900">
+              Curated Sheets ({DSA_SHEET_ADMIN_LIST.length})
+            </span>
+            <span className="text-[0.7rem] text-ink-500">
+              All thumbnails verified & stored locally
+            </span>
+          </div>
+          <div className="divide-y divide-line">
+            {DSA_SHEET_ADMIN_LIST.map((sheet) => (
+              <div key={sheet.slug} className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-4">
+                <div className="relative aspect-[16/9] w-28 shrink-0 overflow-hidden rounded-lg bg-ink-950 border border-line">
+                  <img
+                    src={sheet.thumbnailUrl}
+                    alt={sheet.title}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-ink-900 truncate">{sheet.title}</h3>
+                    <Badge tone="success" className="text-[0.65rem]">ACTIVE</Badge>
+                  </div>
+                  <p className="text-xs text-ink-500 mt-0.5">
+                    Curated by <span className="font-semibold text-ink-700">{sheet.instructor}</span> · {sheet.problems} problems
+                  </p>
+                  <p className="text-[0.7rem] text-ink-400 mt-1 truncate">
+                    Asset: <code className="text-brand-600">{sheet.thumbnailUrl}</code> ({sheet.source})
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link
+                    href={`/placements/dsa-sheets/${sheet.slug}`}
+                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-line bg-surface px-2.5 text-xs font-semibold text-ink-700 hover:border-brand-400 hover:text-brand-600"
+                  >
+                    <Eye className="size-3.5" /> View
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (kind === "playlists") {
+    return (
+      <div>
+        <SectionHeader
+          title={config.title}
+          description={config.description}
+          action={
+            <div className="flex gap-2">
+              <Link
+                href={config.href}
+                className="inline-flex h-8 items-center rounded-lg border border-line px-3 text-xs font-bold text-ink-900 hover:border-brand-300 hover:text-brand-600"
+              >
+                <Eye className="size-3.5 mr-1" /> View public page
+              </Link>
+            </div>
+          }
+        />
+        <Card className="p-0 overflow-hidden">
+          <div className="p-4 bg-surface-elevated border-b border-line flex items-center justify-between">
+            <span className="text-xs font-bold text-ink-900">
+              Curated Video Playlists ({playlistsData.length})
+            </span>
+            <span className="text-[0.7rem] text-ink-500">
+              Individual 16:9 authentic thumbnails bound to each course
+            </span>
+          </div>
+          <div className="divide-y divide-line max-h-[700px] overflow-y-auto">
+            {playlistsData.map((playlist: any) => (
+              <div key={playlist.slug} className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-3.5">
+                <div className="relative aspect-[16/9] w-28 shrink-0 overflow-hidden rounded-lg bg-ink-950 border border-line">
+                  <img
+                    src={playlist.thumbnailUrl || `/thumbnails/dsa-playlists/${playlist.slug}.jpg`}
+                    alt={playlist.title}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-ink-900 truncate">{playlist.title}</h3>
+                    <Badge tone="brand" className="uppercase text-[0.6rem]">{playlist.category}</Badge>
+                    <Badge tone="success" className="text-[0.65rem]">ACTIVE</Badge>
+                  </div>
+                  <p className="text-xs text-ink-500 mt-0.5">
+                    by <span className="font-semibold text-ink-700">{playlist.instructor || playlist.channel}</span> · {playlist.totalVideos} videos · {playlist.totalDuration}
+                  </p>
+                  <p className="text-[0.7rem] text-ink-400 mt-1 truncate">
+                    Asset: <code className="text-brand-600">/thumbnails/dsa-playlists/{playlist.slug}.jpg</code>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href={playlist.playlistUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-8 items-center gap-1 rounded-lg bg-red-600 px-2.5 text-xs font-bold text-white hover:bg-red-700"
+                  >
+                    <ExternalLink className="size-3.5" /> YouTube
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div>

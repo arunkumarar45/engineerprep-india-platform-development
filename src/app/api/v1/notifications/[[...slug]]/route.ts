@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { notificationPreferences, notifications } from "@/db/schema";
@@ -92,10 +92,14 @@ export async function POST(
     }
 
     if (body.id) {
-      await db
+      const [updated] = await db
         .update(notifications)
         .set({ isRead: true })
-        .where(eq(notifications.id, body.id));
+        .where(and(eq(notifications.id, body.id), eq(notifications.userId, user.id)))
+        .returning();
+      if (!updated) {
+        return apiError("Notification not found or access denied", 404);
+      }
       return apiSuccess({ id: body.id }, "Notification marked as read");
     }
 

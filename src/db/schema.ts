@@ -293,6 +293,26 @@ export const resources = pgTable(
     }),
     status: resourceStatus("status").notNull().default("PUBLISHED"),
     downloadCount: integer("download_count").notNull().default(0),
+    branchId: uuid("branch_id").references(() => branches.id, {
+      onDelete: "set null",
+    }),
+    schemeId: uuid("scheme_id").references(() => schemes.id, {
+      onDelete: "set null",
+    }),
+    semesterId: uuid("semester_id").references(() => semesters.id, {
+      onDelete: "set null",
+    }),
+    subjectCode: varchar("subject_code", { length: 40 }),
+    examYear: integer("exam_year"),
+    examMonth: varchar("exam_month", { length: 30 }),
+    examType: varchar("exam_type", { length: 40 }),
+    sourceWebsite: varchar("source_website", { length: 120 }),
+    sourcePageUrl: text("source_page_url"),
+    originalFileUrl: text("original_file_url"),
+    fileHash: varchar("file_hash", { length: 64 }),
+    mimeType: varchar("mime_type", { length: 80 }).default("application/pdf"),
+    downloadStatus: varchar("download_status", { length: 40 }).default("COMPLETED"),
+    verificationStatus: varchar("verification_status", { length: 40 }).default("VERIFIED"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -304,6 +324,10 @@ export const resources = pgTable(
     typeIdx: index("resources_type_idx").on(t.resourceType),
     subjectIdx: index("resources_subject_idx").on(t.subjectId),
     statusIdx: index("resources_status_idx").on(t.status),
+    branchIdx: index("resources_branch_idx").on(t.branchId),
+    schemeIdx: index("resources_scheme_idx").on(t.schemeId),
+    semesterIdx: index("resources_semester_idx").on(t.semesterId),
+    hashIdx: index("resources_file_hash_idx").on(t.fileHash),
   }),
 );
 
@@ -325,6 +349,107 @@ export const vtuUpdates = pgTable(
   },
   (t) => ({
     publishedIdx: index("vtu_updates_published_idx").on(t.publishedAt),
+  }),
+);
+
+export const vtuDiscoveredResources = pgTable(
+  "vtu_discovered_resources",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    category: resourceType("category").notNull().default("QUESTION_PAPER"),
+    title: varchar("title", { length: 300 }).notNull(),
+    subjectCode: varchar("subject_code", { length: 40 }),
+    subjectName: varchar("subject_name", { length: 260 }),
+    branchCode: varchar("branch_code", { length: 40 }),
+    branchId: uuid("branch_id").references(() => branches.id, {
+      onDelete: "set null",
+    }),
+    schemeName: varchar("scheme_name", { length: 60 }),
+    schemeId: uuid("scheme_id").references(() => schemes.id, {
+      onDelete: "set null",
+    }),
+    semesterNumber: integer("semester_number"),
+    semesterId: uuid("semester_id").references(() => semesters.id, {
+      onDelete: "set null",
+    }),
+    examYear: integer("exam_year"),
+    examMonth: varchar("exam_month", { length: 30 }),
+    examType: varchar("exam_type", { length: 40 }),
+    moduleNumber: integer("module_number"),
+    sourceWebsite: varchar("source_website", { length: 120 }).notNull(),
+    sourcePageUrl: text("source_page_url"),
+    originalFileUrl: text("original_file_url").notNull(),
+    storedFilePath: text("stored_file_path"),
+    fileSize: varchar("file_size", { length: 40 }).default("—"),
+    fileHash: varchar("file_hash", { length: 64 }),
+    mimeType: varchar("mime_type", { length: 80 }).default("application/pdf"),
+    downloadStatus: varchar("download_status", { length: 40 })
+      .notNull()
+      .default("DISCOVERED"), // DISCOVERED, DOWNLOADING, DOWNLOADED, FAILED
+    validationStatus: varchar("validation_status", { length: 40 })
+      .notNull()
+      .default("PENDING"), // PENDING, VALID, INVALID, FLAGGED
+    validationNotes: text("validation_notes"),
+    approvalStatus: varchar("approval_status", { length: 40 })
+      .notNull()
+      .default("PENDING_REVIEW"), // PENDING_REVIEW, APPROVED, REJECTED
+    isUploaded: boolean("is_uploaded").notNull().default(false),
+    uploadedResourceId: uuid("uploaded_resource_id").references(
+      () => resources.id,
+      { onDelete: "set null" },
+    ),
+    errorLog: text("error_log"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    categoryIdx: index("vtu_discovered_category_idx").on(t.category),
+    sourceWebsiteIdx: index("vtu_discovered_source_idx").on(t.sourceWebsite),
+    approvalIdx: index("vtu_discovered_approval_idx").on(t.approvalStatus),
+    downloadStatusIdx: index("vtu_discovered_download_status_idx").on(
+      t.downloadStatus,
+    ),
+    validationStatusIdx: index("vtu_discovered_validation_status_idx").on(
+      t.validationStatus,
+    ),
+    hashIdx: index("vtu_discovered_hash_idx").on(t.fileHash),
+    origUrlIdx: index("vtu_discovered_orig_url_idx").on(t.originalFileUrl),
+  }),
+);
+
+export const vtuCollectionJobs = pgTable(
+  "vtu_collection_jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    jobType: varchar("job_type", { length: 40 }).notNull(), // DISCOVERY, DOWNLOAD, VALIDATION, UPLOAD
+    category: resourceType("category"),
+    sourceWebsite: varchar("source_website", { length: 120 }),
+    status: varchar("status", { length: 40 }).notNull().default("QUEUED"), // QUEUED, RUNNING, COMPLETED, FAILED, CANCELLED
+    progress: integer("progress").notNull().default(0),
+    totalItems: integer("total_items").notNull().default(0),
+    processedItems: integer("processed_items").notNull().default(0),
+    successCount: integer("success_count").notNull().default(0),
+    failedCount: integer("failed_count").notNull().default(0),
+    filters: jsonb("filters").default(sql`'{}'::jsonb`),
+    result: jsonb("result").default(sql`'{}'::jsonb`),
+    errorMessage: text("error_message"),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    statusIdx: index("vtu_jobs_status_idx").on(t.status),
+    typeIdx: index("vtu_jobs_type_idx").on(t.jobType),
+    createdAtIdx: index("vtu_jobs_created_idx").on(t.createdAt),
   }),
 );
 
@@ -356,11 +481,47 @@ export const dsaSheets = pgTable("dsa_sheets", {
   author: varchar("author", { length: 160 }),
   description: text("description"),
   coverImageUrl: text("cover_image_url"),
+  thumbnailUrl: text("thumbnail_url"),
+  thumbnailSource: varchar("thumbnail_source", { length: 120 }),
+  thumbnailSourceUrl: text("thumbnail_source_url"),
+  thumbnailAlt: varchar("thumbnail_alt", { length: 240 }),
+  thumbnailStatus: varchar("thumbnail_status", { length: 40 }).default("ACTIVE"),
   coverTint: varchar("cover_tint", { length: 40 }).default("#FF5A00"),
   difficulty: difficulty("difficulty").notNull().default("BEGINNER"),
   totalProblems: integer("total_problems").notNull().default(0),
   slug: varchar("slug", { length: 120 }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
+
+export const playlists = pgTable(
+  "playlists",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: varchar("slug", { length: 120 }).notNull().unique(),
+    title: varchar("title", { length: 240 }).notNull(),
+    category: varchar("category", { length: 60 }).notNull().default("dsa"),
+    instructor: varchar("instructor", { length: 160 }),
+    channel: varchar("channel", { length: 160 }),
+    totalVideos: integer("total_videos").notNull().default(0),
+    totalDuration: varchar("total_duration", { length: 60 }),
+    rating: numeric("rating", { precision: 3, scale: 1 }).default("4.8"),
+    badge: varchar("badge", { length: 120 }),
+    description: text("description"),
+    playlistUrl: text("playlist_url").notNull(),
+    thumbnailUrl: text("thumbnail_url").notNull(),
+    thumbnailSource: varchar("thumbnail_source", { length: 120 }),
+    thumbnailSourceUrl: text("thumbnail_source_url"),
+    thumbnailAlt: varchar("thumbnail_alt", { length: 240 }),
+    thumbnailStatus: varchar("thumbnail_status", { length: 40 }).notNull().default("ACTIVE"),
+    orderIndex: integer("order_index").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    slugIdx: uniqueIndex("playlists_slug_idx").on(t.slug),
+    categoryIdx: index("playlists_category_idx").on(t.category),
+  }),
+);
 
 export const dsaPatterns = pgTable("dsa_patterns", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -386,6 +547,10 @@ export const dsaProblems = pgTable(
     hints: jsonb("hints").default(sql`'[]'::jsonb`),
     editorial: text("editorial"),
     practiceUrl: text("practice_url"),
+    topic: varchar("topic", { length: 160 }),
+    subtopic: varchar("subtopic", { length: 160 }),
+    platform: varchar("platform", { length: 60 }),
+    videoUrl: text("video_url"),
     difficulty: difficulty("difficulty").notNull().default("EASY"),
     orderIndex: integer("order_index").notNull().default(0),
     sheetId: uuid("sheet_id").references(() => dsaSheets.id, {
@@ -1096,6 +1261,7 @@ export const schema = {
   vtuUpdates,
   downloads,
   dsaSheets,
+  playlists,
   dsaPatterns,
   dsaProblems,
   dsaSolutions,

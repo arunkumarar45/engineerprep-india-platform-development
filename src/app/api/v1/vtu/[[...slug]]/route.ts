@@ -54,39 +54,104 @@ export async function POST(
     if (slug?.[0] === "sync") {
       const admin = await requireAdmin();
 
-      let fetched: { title: string; category: string; summary: string; fileUrl?: string }[] = [];
+      let fetched: {
+        title: string;
+        category: string;
+        summary: string;
+        fileUrl?: string;
+        fileSize?: string;
+        publishedAt: Date;
+      }[] = [];
 
       try {
-        // Fetch VTU announcements from official portal
-        const res = await fetch(
-          "https://www.vtu.ac.in/en/announcements/",
-          {
+        // Method 1: Official VTU WordPress REST API (fastest, structured, accurate)
+        const wpRes = await fetch("https://vtu.ac.in/wp-json/wp/v2/posts?per_page=20", {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            Accept: "application/json",
+          },
+          signal: AbortSignal.timeout(15000),
+        });
+
+        if (wpRes.ok) {
+          const posts = await wpRes.json();
+          if (Array.isArray(posts) && posts.length > 0) {
+            fetched = posts.map((p) => {
+              const rawTitle = (p.title?.rendered ?? "")
+                .replace(/&#8211;/g, "–")
+                .replace(/&#8212;/g, "—")
+                .replace(/&#8220;/g, '“')
+                .replace(/&#8221;/g, '”')
+                .replace(/&#038;/g, "&")
+                .replace(/&amp;/g, "&")
+                .replace(/<[^>]+>/g, "")
+                .trim();
+
+              const contentHtml = p.content?.rendered ?? "";
+              const pdfMatch = contentHtml.match(/href="([^"]*\.pdf)"/i) || contentHtml.match(/(https?:\/\/[^\s"']+\.pdf)/i);
+              const fileUrl = pdfMatch ? pdfMatch[1].replace(/\\\//g, "/") : undefined;
+
+              const sizeMatch = contentHtml.match(/Size:\s*([^<]+)/i);
+              const fileSize = sizeMatch ? sizeMatch[1].trim() : fileUrl ? "PDF" : undefined;
+
+              const lower = rawTitle.toLowerCase();
+              let category = "General";
+              if (lower.includes("exam") || lower.includes("result") || lower.includes("timetable") || lower.includes("revaluation") || lower.includes("marks")) {
+                category = "Examinations";
+              } else if (lower.includes("circular") || lower.includes("order")) {
+                category = "Circular";
+              } else if (lower.includes("notification") || lower.includes("fee") || lower.includes("registration")) {
+                category = "Notification";
+              } else if (lower.includes("academic") || lower.includes("calendar")) {
+                category = "Academic";
+              }
+
+              return {
+                title: rawTitle,
+                category,
+                summary: rawTitle,
+                fileUrl,
+                fileSize,
+                publishedAt: new Date(p.date ?? Date.now()),
+              };
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("VTU REST API sync failed, trying HTML fallback:", err);
+      }
+
+      if (fetched.length === 0) {
+        try {
+          const res = await fetch("https://vtu.ac.in/", {
             headers: {
               "User-Agent":
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
               Accept: "text/html",
             },
             signal: AbortSignal.timeout(15000),
-          },
-        );
+          });
 
-        if (res.ok) {
-          const html = await res.text();
-          fetched = parseVtuAnnouncements(html);
+          if (res.ok) {
+            const html = await res.text();
+            fetched = parseVtuAnnouncements(html).map((item) => ({
+              ...item,
+              publishedAt: new Date(),
+            }));
+          }
+        } catch {
+          return apiSuccess(
+            { synced: 0, skipped: 0 },
+            "VTU portal unreachable. Try again later or add updates manually.",
+          );
         }
-      } catch {
-        // If fetch fails, return informative message — don't crash
-        return apiSuccess(
-          { synced: 0, skipped: 0 },
-          "VTU portal unreachable. Try again later or add updates manually.",
-        );
       }
 
       let synced = 0;
       let skipped = 0;
 
       for (const item of fetched) {
-        // Check if already exists (by title similarity)
         const existing = await db
           .select({ id: vtuUpdates.id })
           .from(vtuUpdates)
@@ -105,26 +170,11 @@ export async function POST(
             category: item.category,
             summary: item.summary,
             fileUrl: item.fileUrl ?? null,
+            fileSize: item.fileSize ?? null,
+            publishedAt: item.publishedAt,
             createdBy: admin.id,
           })
           .returning();
-
-        // Notify all students
-        const students = await db
-          .select({ id: users.id })
-          .from(users)
-          .where(eq(users.role, "STUDENT"));
-
-        for (const student of students) {
-          await queueNotification({
-            userId: student.id,
-            type: "VTU_UPDATE",
-            title: created.title,
-            body: created.summary ?? "A new VTU update has been published.",
-            linkUrl: "/vtu/updates",
-            idempotencyKey: `vtu-update-${created.id}-${student.id}`,
-          });
-        }
 
         synced++;
       }
@@ -132,10 +182,10 @@ export async function POST(
       return apiSuccess(
         { synced, skipped, total: fetched.length },
         synced > 0
-          ? `Synced ${synced} new updates from VTU portal`
+          ? `Synced ${synced} real updates from official VTU portal`
           : fetched.length === 0
-            ? "No announcements found on VTU portal. It may be temporarily unavailable."
-            : `All ${skipped} updates already in the system`,
+            ? "No announcements found on VTU portal."
+            : `All ${skipped} updates already up to date`,
       );
     }
 

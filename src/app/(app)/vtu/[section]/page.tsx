@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
 import { CalendarClock, Database, Upload } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import { PageHeader } from "@/components/layout";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import { UpdateCard } from "@/components/cards";
@@ -56,17 +59,17 @@ const SECTIONS: Record<
   },
   "lab-manuals": {
     title: "Lab Manuals",
-    subtitle: "Complete lab manuals with programs, outputs and viva questions.",
+    subtitle: "Complete official VTU lab manuals with verified programs, outputs and viva questions.",
     type: "LAB_MANUAL",
     emptyTitle: "No lab manuals available",
-    emptyMessage: "Lab manuals are available for fifth semester and above.",
+    emptyMessage: "Try a different branch or semester filter.",
   },
   assignments: {
-    title: "Assignments",
-    subtitle: "Internal assessment assignment questions with solutions.",
+    title: "Important Questions & Passing Packages",
+    subtitle: "Module-wise high-yield exam questions, passing packages and official question banks.",
     type: "ASSIGNMENT",
-    emptyTitle: "No assignments available",
-    emptyMessage: "Assignments are published for fourth semester and above.",
+    emptyTitle: "No important questions available",
+    emptyMessage: "Try a different branch or semester filter.",
   },
   resources: {
     title: "All Resources",
@@ -187,16 +190,9 @@ export default async function VtuSectionPage({
         title={config.title}
         subtitle={config.subtitle}
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge tone="brand">
-              <Database className="size-3" /> {resources.length} available
-            </Badge>
-            {user?.role === "ADMIN" && (
-              <Button>
-                <Upload className="size-4" /> Upload Resource
-              </Button>
-            )}
-          </div>
+          <Badge tone="brand">
+            <Database className="size-3" /> {resources.length} available
+          </Badge>
         }
       />
 
@@ -211,7 +207,7 @@ export default async function VtuSectionPage({
             { label: "Question Papers", href: "/vtu/question-papers" },
             { label: "Syllabus", href: "/vtu/syllabus" },
             { label: "Lab Manuals", href: "/vtu/lab-manuals" },
-            { label: "Assignments", href: "/vtu/assignments" },
+            { label: "Important Questions", href: "/vtu/assignments" },
           ].map((item) => (
             <a
               key={item.href}
@@ -226,7 +222,7 @@ export default async function VtuSectionPage({
           Library totals — Notes {stats.NOTES.toLocaleString()} · Question
           papers {stats.QUESTION_PAPER.toLocaleString()} · Syllabus{" "}
           {stats.SYLLABUS.toLocaleString()} · Lab manuals{" "}
-          {stats.LAB_MANUAL.toLocaleString()} · Assignments{" "}
+          {stats.LAB_MANUAL.toLocaleString()} · Important questions{" "}
           {stats.ASSIGNMENT.toLocaleString()}
         </p>
       </Card>

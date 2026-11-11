@@ -13,6 +13,8 @@ test-results
 
 # production
 /build
+/dist
+*.zip
 
 # misc
 .DS_Store
@@ -37,3 +39,4 @@ next-env.d.ts
 
 # uploads
 uploads/
+

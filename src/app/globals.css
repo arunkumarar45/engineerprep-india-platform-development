@@ -209,3 +209,48 @@
 .animate-pulse-ring {
   animation: epi-pulse-ring 1.8s infinite;
 }
+
+/* ------------------------------------------------------------------ */
+/* Print Styling for VTU Question Papers & Lab Manuals                */
+/* ------------------------------------------------------------------ */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .no-print,
+  nav,
+  aside,
+  header,
+  footer,
+  button,
+  .toast,
+  .fixed {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .vtu-print-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .page-break-inside-avoid {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+

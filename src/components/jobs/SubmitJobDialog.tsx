@@ -35,11 +35,6 @@ export function SubmitJobDialog({ onClose, isLoggedIn }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!isLoggedIn) {
-      push({ title: "Please log in to submit a job tip", tone: "error" });
-      return;
-    }
-
     if (!company.trim() || !title.trim() || !location.trim() || !jobLink.trim()) {
       push({ title: "Company, title, location and job link are required", tone: "error" });
       return;
@@ -49,7 +44,7 @@ export function SubmitJobDialog({ onClose, isLoggedIn }: Props) {
     try {
       new URL(jobLink);
     } catch {
-      push({ title: "Please enter a valid job link URL", tone: "error" });
+      push({ title: "Please enter a valid job link URL (e.g. https://...)", tone: "error" });
       return;
     }
 
@@ -76,6 +71,11 @@ export function SubmitJobDialog({ onClose, isLoggedIn }: Props) {
       if (!res.ok) throw new Error(json.message ?? "Submission failed");
 
       setDone(true);
+      push({
+        title: "Job posted live!",
+        description: "Your opportunity is now visible on the jobs board.",
+        tone: "success",
+      });
     } catch (err) {
       push({
         title: "Submission failed",
@@ -93,15 +93,19 @@ export function SubmitJobDialog({ onClose, isLoggedIn }: Props) {
         <Card className="flex flex-col items-center gap-4 p-8 text-center max-w-sm w-full">
           <CheckCircle2 className="size-12 text-success-500" />
           <div>
-            <p className="font-bold text-ink-900">Job tip submitted!</p>
+            <p className="font-bold text-ink-900">Job vacancy published live!</p>
             <p className="mt-1 text-sm text-ink-500">
-              Thank you! Our team will review and publish it shortly so other
-              students can benefit.
+              Thank you! The job opportunity is now live on the board for all students.
             </p>
           </div>
-          <Badge tone="brand">Under Review</Badge>
-          <Button variant="outline" onClick={onClose}>
-            Close
+          <Badge tone="success">Live on Board</Badge>
+          <Button
+            onClick={() => {
+              onClose();
+              window.location.href = "/jobs";
+            }}
+          >
+            View on Jobs Board
           </Button>
         </Card>
       </div>

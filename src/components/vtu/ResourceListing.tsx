@@ -12,6 +12,7 @@ import {
   RotateCcw,
   ScrollText,
   Search,
+  Upload,
 } from "lucide-react";
 import {
   Badge,
@@ -24,6 +25,7 @@ import {
   useToast,
 } from "@/components/ui";
 import { ResourceCard } from "@/components/cards";
+import { ResourceUploadDialog } from "./ResourceUploadDialog";
 import { cn } from "@/lib/utils";
 
 export type ResourceRow = {
@@ -39,6 +41,8 @@ export type ResourceRow = {
   semesterNumber?: number | null;
   branchCode?: string | null;
   fileUrl?: string;
+  schemeName?: string | null;
+  schemeId?: string | null;
 };
 
 export type FilterMeta = {
@@ -51,6 +55,7 @@ export type FilterMeta = {
     code: string;
     branchId: string | null;
     semesterId: string | null;
+    schemeId?: string | null;
   }>;
 };
 
@@ -80,6 +85,7 @@ export function ResourceListing({
   const [page, setPage] = useState(1);
   const [bookmarks, setBookmarks] = useState<string[]>(bookmarkedIds);
   const [busy, setBusy] = useState<string | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
 
   const pageSize = 9;
 
@@ -87,8 +93,11 @@ export function ResourceListing({
     let list = meta.subjects;
     if (branchId) list = list.filter((s) => s.branchId === branchId);
     if (semesterId) list = list.filter((s) => s.semesterId === semesterId);
+    if (schemeId) {
+      list = list.filter((s) => !s.schemeId || s.schemeId === schemeId);
+    }
     return list.map((s) => ({ id: s.id, label: `${s.code} — ${s.name}` }));
-  }, [meta.subjects, branchId, semesterId]);
+  }, [meta.subjects, branchId, semesterId, schemeId]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -98,23 +107,44 @@ export function ResourceListing({
         if (!hay.includes(needle)) return false;
       }
       if (subjectId) {
-        // subjectId filter is applied by matching code prefix
+        // subjectId filter is applied by matching code or id
         const subject = meta.subjects.find((s) => s.id === subjectId);
         if (subject && resource.subjectCode !== subject.code) return false;
       }
       if (branchId) {
         const branch = meta.branches.find((b) => b.id === branchId);
-        if (branch && resource.branchCode && resource.branchCode !== branch.code)
-          return false;
+        if (branch) {
+          if (resource.resourceType === "SYLLABUS") {
+            // Strict branch enforcement: never substitute or leak other branch syllabi
+            if (resource.branchCode && resource.branchCode !== branch.code) return false;
+            if (!resource.branchCode && resource.subjectCode) {
+              const subj = meta.subjects.find((s) => s.code === resource.subjectCode);
+              if (subj && subj.branchId && subj.branchId !== branchId) return false;
+            }
+          } else {
+            if (resource.branchCode && resource.branchCode !== branch.code) return false;
+          }
+        }
       }
       if (semesterId) {
         const sem = meta.semesters.find((s) => s.id === semesterId);
-        if (sem && resource.semesterNumber && resource.semesterNumber !== sem.number)
-          return false;
+        if (sem) {
+          if (resource.semesterNumber && resource.semesterNumber !== sem.number)
+            return false;
+        }
       }
       if (schemeId) {
-        // scheme is not stored per resource; keep the row visible (demo data is 2022 scheme)
-        void schemeId;
+        const selectedScheme = meta.schemes.find((s) => s.id === schemeId);
+        if (selectedScheme) {
+          const schemeKey = selectedScheme.name.trim().toLowerCase().replace(" scheme", "");
+          if (resource.schemeId && resource.schemeId !== schemeId) {
+            if (!resource.schemeName?.toLowerCase().includes(schemeKey)) {
+              return false;
+            }
+          } else if (resource.schemeName && !resource.schemeName.toLowerCase().includes(schemeKey)) {
+            return false;
+          }
+        }
       }
       if (module && String(resource.moduleNumber ?? "") !== module) return false;
       return true;
@@ -193,6 +223,13 @@ export function ResourceListing({
 
   return (
     <div>
+      {showUpload && (
+        <ResourceUploadDialog
+          meta={meta}
+          onClose={() => setShowUpload(false)}
+        />
+      )}
+
       {/* Filters */}
       <Card className="mb-5 p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
@@ -306,11 +343,9 @@ export function ResourceListing({
             </Button>
             <Button
               size="sm"
-              onClick={() => setPage(1)}
-              className="invisible"
-              aria-hidden
+              onClick={() => setShowUpload(true)}
             >
-              <Search className="size-3.5" /> Search
+              <Upload className="size-3.5" /> Upload Resource
             </Button>
           </div>
         </div>
@@ -319,12 +354,27 @@ export function ResourceListing({
       {visible.length === 0 ? (
         <EmptyState
           icon={<Inbox className="size-6" />}
-          title={emptyTitle}
-          message={emptyMessage}
+          title={
+            (branchId || semesterId || schemeId || subjectId)
+              ? "Syllabus not available for this selection"
+              : emptyTitle
+          }
+          message={
+            (branchId || semesterId || schemeId || subjectId)
+              ? "No official VTU curriculum document has been verified for this specific branch, scheme and semester yet. Unrelated syllabi are never substituted."
+              : emptyMessage
+          }
           action={
-            <Button variant="outline" onClick={reset}>
-              Reset Filters
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={reset}>
+                Reset Filters
+              </Button>
+              <Button
+                onClick={() => setShowUpload(true)}
+              >
+                <Upload className="size-3.5" /> Upload a Resource
+              </Button>
+            </div>
           }
         />
       ) : (

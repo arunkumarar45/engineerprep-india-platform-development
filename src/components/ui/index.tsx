@@ -69,6 +69,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
+      suppressHydrationWarning
       className={cn(
         "inline-flex items-center justify-center border font-semibold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-55",
         buttonVariants[variant],
@@ -699,10 +700,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const fallbackToast = {
+  toasts: [],
+  push: () => {},
+  dismiss: () => {},
+};
+
 export function useToast() {
   const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error("useToast must be used inside ToastProvider");
-  return ctx;
+  return ctx || fallbackToast;
 }
 
 const toastTones: Record<Toast["tone"], string> = {

@@ -92,7 +92,7 @@ export function JobBoard({
       if (batch && String(job.graduationBatch ?? "") !== batch) return false;
       if (
         location &&
-        !job.location.toLowerCase().includes(location.toLowerCase())
+        !(job.location ?? "").toLowerCase().includes(location.toLowerCase())
       )
         return false;
       if (branch) {
@@ -101,7 +101,7 @@ export function JobBoard({
           : [];
         if (
           list.length &&
-          !list.some((b) => b.toLowerCase().includes(branch.toLowerCase()))
+          !list.some((b) => (b ?? "").toLowerCase().includes(branch.toLowerCase()))
         )
           return false;
       }
@@ -109,7 +109,7 @@ export function JobBoard({
         const skills = Array.isArray(job.requiredSkills)
           ? (job.requiredSkills as string[]).join(" ")
           : "";
-        const hay = `${job.title} ${job.companyName ?? ""} ${skills} ${job.location}`.toLowerCase();
+        const hay = `${job.title ?? ""} ${job.companyName ?? ""} ${skills} ${job.location ?? ""}`.toLowerCase();
         if (!hay.includes(needle)) return false;
       }
       return true;
@@ -306,6 +306,9 @@ export function JobBoard({
             <Button variant="outline" size="sm" onClick={reset}>
               Reset Filters
             </Button>
+            <Button size="sm" onClick={() => setShowSubmitJob(true)}>
+              <Upload className="size-3.5" /> Post Job Opening
+            </Button>
           </div>
         </div>
       </Card>
@@ -367,18 +370,11 @@ export function JobBoard({
               </Button>
             )}
             <Button
-              variant={isLoggedIn ? "primary" : "outline"}
               size="sm"
-              onClick={() => {
-                if (!isLoggedIn) {
-                  router.push("/login?next=/jobs");
-                  return;
-                }
-                setShowSubmitJob(true);
-              }}
+              onClick={() => setShowSubmitJob(true)}
             >
               <Upload className="size-4" />
-              {isLoggedIn ? "Share a Job / Drive" : "Login to Share"}
+              Share a Job / Drive
             </Button>
           </div>
         </div>

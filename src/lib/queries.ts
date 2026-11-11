@@ -85,10 +85,62 @@ export type ResourceFilters = {
 
 export async function getResources(filters: ResourceFilters = {}) {
   const conds = [eq(resources.status, "PUBLISHED")];
+  const isSyllabus = filters.type === "SYLLABUS";
+
   if (filters.type) conds.push(eq(resources.resourceType, filters.type as never));
   if (filters.subjectId) conds.push(eq(resources.subjectId, filters.subjectId));
   if (filters.module)
     conds.push(eq(resources.moduleNumber, Number(filters.module)));
+
+  if (filters.semesterId) {
+    conds.push(
+      or(
+        eq(subjects.semesterId, filters.semesterId),
+        eq(resources.semesterId, filters.semesterId),
+      )!,
+    );
+  }
+
+  if (filters.branchId) {
+    if (isSyllabus) {
+      // Strict matching for syllabus: never substitute another branch or accept NULL branch
+      conds.push(
+        or(
+          eq(subjects.branchId, filters.branchId),
+          eq(resources.branchId, filters.branchId),
+        )!,
+      );
+    } else {
+      conds.push(
+        or(
+          eq(subjects.branchId, filters.branchId),
+          eq(resources.branchId, filters.branchId),
+          sql`${subjects.branchId} IS NULL`,
+        )!,
+      );
+    }
+  }
+
+  if (filters.schemeId) {
+    if (isSyllabus) {
+      // Strict matching for syllabus: never substitute another scheme or accept NULL scheme
+      conds.push(
+        or(
+          eq(subjects.schemeId, filters.schemeId),
+          eq(resources.schemeId, filters.schemeId),
+        )!,
+      );
+    } else {
+      conds.push(
+        or(
+          eq(subjects.schemeId, filters.schemeId),
+          eq(resources.schemeId, filters.schemeId),
+          sql`${subjects.schemeId} IS NULL`,
+        )!,
+      );
+    }
+  }
+
   if (filters.q)
     conds.push(
       or(
@@ -98,7 +150,7 @@ export async function getResources(filters: ResourceFilters = {}) {
       )!,
     );
 
-  const baseQuery = db
+  return db
     .select({
       id: resources.id,
       title: resources.title,
@@ -117,48 +169,50 @@ export async function getResources(filters: ResourceFilters = {}) {
       branchCode: branches.code,
       branchName: branches.name,
       schemeName: schemes.name,
+      schemeId: schemes.id,
     })
     .from(resources)
     .leftJoin(subjects, eq(resources.subjectId, subjects.id))
     .leftJoin(semesters, eq(subjects.semesterId, semesters.id))
     .leftJoin(branches, eq(subjects.branchId, branches.id))
-    .leftJoin(schemes, eq(subjects.schemeId, schemes.id));
-
-  let rows = await baseQuery
+    .leftJoin(schemes, eq(subjects.schemeId, schemes.id))
     .where(and(...conds))
     .orderBy(desc(resources.createdAt));
+}
 
-  if (filters.semesterId) {
-    const [sem] = await db
-      .select()
-      .from(semesters)
-      .where(eq(semesters.id, filters.semesterId))
-      .limit(1);
-    if (sem) rows = rows.filter((r) => r.semesterNumber === sem.number);
-  }
+export async function getResourceById(id: string) {
+  const [row] = await db
+    .select({
+      id: resources.id,
+      title: resources.title,
+      description: resources.description,
+      resourceType: resources.resourceType,
+      moduleNumber: resources.moduleNumber,
+      fileName: resources.fileName,
+      fileUrl: resources.fileUrl,
+      fileSize: resources.fileSize,
+      downloadCount: resources.downloadCount,
+      createdAt: resources.createdAt,
+      subjectId: subjects.id,
+      subjectName: subjects.name,
+      subjectCode: subjects.code,
+      credits: subjects.credits,
+      semesterNumber: semesters.number,
+      semesterLabel: semesters.label,
+      branchCode: branches.code,
+      branchName: branches.name,
+      schemeName: schemes.name,
+      schemeId: schemes.id,
+    })
+    .from(resources)
+    .leftJoin(subjects, eq(resources.subjectId, subjects.id))
+    .leftJoin(semesters, eq(subjects.semesterId, semesters.id))
+    .leftJoin(branches, eq(subjects.branchId, branches.id))
+    .leftJoin(schemes, eq(subjects.schemeId, schemes.id))
+    .where(eq(resources.id, id))
+    .limit(1);
 
-  if (filters.branchId) {
-    const [branch] = await db
-      .select()
-      .from(branches)
-      .where(eq(branches.id, filters.branchId))
-      .limit(1);
-    if (branch)
-      rows = rows.filter(
-        (r) => !r.branchCode || r.branchCode === branch.code,
-      );
-  }
-
-  if (filters.schemeId) {
-    const [scheme] = await db
-      .select()
-      .from(schemes)
-      .where(eq(schemes.id, filters.schemeId))
-      .limit(1);
-    if (scheme) rows = rows.filter((r) => !r.schemeName || r.schemeName === scheme.name);
-  }
-
-  return rows;
+  return row ?? null;
 }
 
 export async function getResourceStats() {
@@ -272,6 +326,12 @@ export async function getDsaProblems(filters: {
       patternName: dsaPatterns.name,
       sheetId: dsaProblems.sheetId,
       sheetTitle: dsaSheets.title,
+      practiceUrl: dsaProblems.practiceUrl,
+      topic: dsaProblems.topic,
+      subtopic: dsaProblems.subtopic,
+      platform: dsaProblems.platform,
+      videoUrl: dsaProblems.videoUrl,
+      statement: dsaProblems.statement,
     })
     .from(dsaProblems)
     .leftJoin(dsaPatterns, eq(dsaProblems.patternId, dsaPatterns.id))
@@ -332,7 +392,7 @@ export async function getRoadmaps(category?: string) {
   const rows = await db.select().from(roadmaps).orderBy(roadmaps.title);
   if (!category || category === "All") return rows;
   return rows.filter(
-    (r) => r.category.toLowerCase() === category.toLowerCase(),
+    (r) => (r.category ?? "").toLowerCase() === category.toLowerCase(),
   );
 }
 
@@ -449,7 +509,45 @@ export type OpportunityFilters = {
 };
 
 export async function getOpportunities(filters: OpportunityFilters = {}) {
-  const rows = await db
+  const conds = [];
+
+  // Only show OPEN jobs publicly; PENDING goes to admin review only
+  if (!filters.includeAll) {
+    conds.push(eq(opportunities.status, "OPEN"));
+  }
+
+  if (filters.type && filters.type !== "ALL") {
+    conds.push(eq(opportunities.opportunityType, filters.type as any));
+  }
+
+  if (filters.batch) {
+    const batchInt = parseInt(filters.batch, 10);
+    if (!isNaN(batchInt)) {
+      conds.push(eq(opportunities.graduationBatch, batchInt));
+    }
+  }
+
+  if (filters.mode && filters.mode !== "ALL") {
+    conds.push(eq(opportunities.workMode, filters.mode as any));
+  }
+
+  if (filters.location) {
+    conds.push(ilike(opportunities.location, `%${filters.location}%`));
+  }
+
+  if (filters.q) {
+    const qWild = `%${filters.q}%`;
+    conds.push(
+      or(
+        ilike(opportunities.title, qWild),
+        ilike(companies.name, qWild),
+        ilike(opportunities.location, qWild),
+        sql`EXISTS (SELECT 1 FROM jsonb_array_elements_text(COALESCE(${opportunities.requiredSkills}, '[]'::jsonb)) AS elem WHERE elem ILIKE ${qWild})`
+      )
+    );
+  }
+
+  let query = db
     .select({
       id: opportunities.id,
       title: opportunities.title,
@@ -474,43 +572,35 @@ export async function getOpportunities(filters: OpportunityFilters = {}) {
       companyLogoColor: companies.logoColor,
     })
     .from(opportunities)
-    .leftJoin(companies, eq(opportunities.companyId, companies.id))
-    .orderBy(desc(opportunities.postedAt));
+    .leftJoin(companies, eq(opportunities.companyId, companies.id));
 
-  return rows.filter((row) => {
-    // Only show OPEN jobs publicly; PENDING goes to admin review only
-    if (!filters.includeAll && row.status !== "OPEN") return false;
-    if (filters.type && filters.type !== "ALL" && row.opportunityType !== filters.type)
-      return false;
-    if (filters.branch) {
+  if (conds.length > 0) {
+    query = query.where(and(...conds)) as any;
+  }
+
+  const rows = await query.orderBy(desc(opportunities.postedAt));
+
+  if (filters.branch) {
+    return rows.filter((row) => {
       const list = Array.isArray(row.branchEligibility)
         ? (row.branchEligibility as string[])
         : [];
-      if (list.length && !list.some((b) => b.toLowerCase().includes(filters.branch!.toLowerCase())))
-        return false;
-    }
-    if (filters.batch && String(row.graduationBatch ?? "") !== filters.batch)
-      return false;
-    if (
-      filters.location &&
-      !(row.location ?? "").toLowerCase().includes(filters.location.toLowerCase())
-    )
-      return false;
-    if (filters.mode && filters.mode !== "ALL" && row.workMode !== filters.mode)
-      return false;
-    if (filters.q) {
-      const needle = filters.q.toLowerCase();
-      const skills = Array.isArray(row.requiredSkills)
-        ? (row.requiredSkills as string[]).join(" ")
-        : "";
-      const hay = `${row.title} ${row.companyName ?? ""} ${skills} ${row.location ?? ""}`.toLowerCase();
-      if (!hay.includes(needle)) return false;
-    }
-    return true;
-  });
+      return (
+        !list.length ||
+        list.some((b) => (b ?? "").toLowerCase().includes(filters.branch!.toLowerCase()))
+      );
+    });
+  }
+
+  return rows;
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function getOpportunity(id: string) {
+  if (!id || !UUID_REGEX.test(id)) {
+    return null;
+  }
   const [row] = await db
     .select({
       id: opportunities.id,

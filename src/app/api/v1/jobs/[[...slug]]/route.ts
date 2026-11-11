@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { companies, jobApplications, opportunities, savedOpportunities } from "@/db/schema";
 import { getOpportunities } from "@/lib/queries";
-import { requireAdmin, requireUser } from "@/lib/auth";
+import { getSessionUser, requireAdmin, requireUser } from "@/lib/auth";
 import { queueNotification } from "@/lib/automation";
 import { apiError, apiSuccess, handleError, paginate } from "@/lib/api";
 
@@ -70,9 +70,15 @@ const submitJobSchema = z.object({
   opportunityType: z.enum(["JOB", "INTERNSHIP", "OFF_CAMPUS"]).default("JOB"),
   workMode: z.enum(["ONSITE", "REMOTE", "HYBRID"]).default("ONSITE"),
   applicationUrl: z.string().url("Must be a valid URL"),
-  whatsappChannelUrl: z.string().url().optional(),
+  whatsappChannelUrl: z.string().url().optional().or(z.literal("")),
   source: z.string().default("Community"),
-  description: z.string().max(1000).optional(),
+  description: z.string().max(2000).optional(),
+  salaryMin: z.coerce.number().optional(),
+  salaryMax: z.coerce.number().optional(),
+  stipend: z.coerce.number().optional(),
+  graduationBatch: z.coerce.number().optional(),
+  branchEligibility: z.array(z.string()).optional(),
+  requiredSkills: z.array(z.string()).optional(),
 });
 
 export async function POST(
@@ -81,11 +87,10 @@ export async function POST(
 ) {
   try {
     const { slug } = await context.params;
-    const user = await requireUser();
-    const id = slug?.[1];
 
-    // ── Community job submission (any logged-in user) ──────────────────
+    // ── Community job submission (any user or guest can share vacancies) ─
     if (slug?.[0] === "submit") {
+      const user = await getSessionUser();
       const body = submitJobSchema.parse(await request.json());
 
       // Auto-create or find company record
@@ -123,7 +128,7 @@ export async function POST(
       if (body.whatsappChannelUrl) {
         descParts.push(`WhatsApp Channel: ${body.whatsappChannelUrl}`);
       }
-      descParts.push(`Submitted by community member. Under review.`);
+      descParts.push(`Posted via Community Job Upload.`);
 
       const [created] = await db
         .insert(opportunities)
@@ -135,27 +140,38 @@ export async function POST(
           location: body.location,
           workMode: body.workMode,
           applicationUrl: body.applicationUrl,
-          status: "PENDING", // goes into review queue
+          graduationBatch: body.graduationBatch ?? 2025,
+          branchEligibility: body.branchEligibility ?? ["All Branches"],
+          requiredSkills: body.requiredSkills ?? [],
+          salaryMin: body.salaryMin,
+          salaryMax: body.salaryMax,
+          stipend: body.stipend,
+          status: "OPEN", // Immediately visible on the live job board!
           postedAt: new Date(),
         })
         .returning();
 
-      // Notify admins to review
-      await queueNotification({
-        userId: user.id,
-        type: "SYSTEM",
-        title: "Job tip submitted for review",
-        body: `Your job tip for "${body.title}" at ${body.companyName} is under review and will be published shortly.`,
-        linkUrl: "/jobs",
-        idempotencyKey: `job-submit-${created.id}-${user.id}`,
-      });
+      // If logged in, queue a notification for the submitter
+      if (user) {
+        await queueNotification({
+          userId: user.id,
+          type: "SYSTEM",
+          title: "Opportunity posted live!",
+          body: `Your job posting for "${body.title}" at ${body.companyName} is now live on the board.`,
+          linkUrl: `/jobs/${created.id}`,
+          idempotencyKey: `job-submit-${created.id}-${user.id}`,
+        });
+      }
 
       return apiSuccess(
-        { opportunityId: created.id, status: "PENDING" },
-        "Job tip submitted successfully! It will be reviewed and published shortly.",
+        { opportunityId: created.id, status: "OPEN" },
+        "Job opportunity published successfully! It is now live on the job board.",
         201,
       );
     }
+
+    const user = await requireUser();
+    const id = slug?.[1];
 
     if (slug?.[0] === "save" && id) {
       const [existing] = await db
@@ -171,7 +187,12 @@ export async function POST(
       if (existing) {
         await db
           .delete(savedOpportunities)
-          .where(eq(savedOpportunities.id, existing.id));
+          .where(
+            and(
+              eq(savedOpportunities.id, existing.id),
+              eq(savedOpportunities.userId, user.id),
+            ),
+          );
         return apiSuccess({ saved: false }, "Removed from saved jobs");
       }
       await db
@@ -188,6 +209,13 @@ export async function POST(
         .where(eq(opportunities.id, id))
         .limit(1);
       if (!opp) return apiError("Opportunity not found", 404);
+
+      if (opp.status !== "OPEN") {
+        return apiError("This opportunity is no longer accepting applications", 400);
+      }
+      if (opp.applicationDeadline && new Date(opp.applicationDeadline).getTime() < Date.now()) {
+        return apiError("The application deadline for this opportunity has passed", 400);
+      }
 
       const [existing] = await db
         .select()

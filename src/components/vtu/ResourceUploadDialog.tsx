@@ -96,7 +96,7 @@ export function ResourceUploadDialog({
       // Step 1 — upload the file
       const form = new FormData();
       form.append("file", file);
-      form.append("category", resourceType.toLowerCase().replace("_", "-"));
+      form.append("category", (resourceType || "notes").toLowerCase().replace("_", "-"));
 
       const uploadRes = await fetch("/api/v1/uploads", {
         method: "POST",
@@ -107,7 +107,7 @@ export function ResourceUploadDialog({
         throw new Error(uploadJson.message ?? "Upload failed");
       }
 
-      const { publicUrl, size } = uploadJson.data;
+      const { publicUrl } = uploadJson.data;
       const fileSizeStr =
         file.size > 1024 * 1024
           ? `${(file.size / 1024 / 1024).toFixed(1)} MB`
@@ -126,8 +126,7 @@ export function ResourceUploadDialog({
           fileName: file.name,
           fileUrl: publicUrl,
           fileSize: fileSizeStr,
-          // Admin publishes immediately; students go to DRAFT for review
-          status: isAdmin ? "PUBLISHED" : "DRAFT",
+          status: "PUBLISHED",
           // extra metadata stored in description if year provided
           ...(year ? { description: `${description.trim()} | Year: ${year}`.trim().replace(/^\|/, "") } : {}),
         }),
@@ -138,7 +137,7 @@ export function ResourceUploadDialog({
       }
 
       setDone(true);
-      push({ title: isAdmin ? "Resource published!" : "Resource submitted for review!", tone: "success" });
+      push({ title: "Resource published!", description: "Your PDF is now live in the library.", tone: "success" });
       setTimeout(() => {
         router.refresh();
         onClose();
@@ -159,11 +158,9 @@ export function ResourceUploadDialog({
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
         <Card className="flex flex-col items-center gap-3 p-8 text-center">
           <CheckCircle2 className="size-12 text-success-500" />
-          <p className="font-bold text-ink-900">{isAdmin ? "Resource published!" : "Submitted for review!"}</p>
+          <p className="font-bold text-ink-900">Resource published!</p>
           <p className="text-sm text-ink-500">
-            {isAdmin
-              ? "The PDF is now live in the resource library."
-              : "An admin will review and publish your resource shortly. Thank you for contributing!"}
+            The PDF is now live in the resource library for all students.
           </p>
         </Card>
       </div>

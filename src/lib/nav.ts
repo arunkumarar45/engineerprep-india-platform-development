@@ -62,8 +62,9 @@ export const SIDEBARS: Record<string, NavSection> = {
       { label: "Question Papers", href: "/vtu/question-papers", icon: FileText },
       { label: "Syllabus", href: "/vtu/syllabus", icon: ScrollText },
       { label: "Lab Manuals", href: "/vtu/lab-manuals", icon: BookMarked },
-      { label: "Assignments", href: "/vtu/assignments", icon: ClipboardList },
+      { label: "Important Questions", href: "/vtu/assignments", icon: ClipboardList },
       { label: "All Resources", href: "/vtu/resources", icon: FileStack },
+      { label: "Upload Resource", href: "/vtu/upload", icon: Upload },
       { label: "My Downloads", href: "/my-downloads", icon: Database },
     ],
   },
@@ -98,6 +99,11 @@ export const SIDEBARS: Record<string, NavSection> = {
         label: "Interview Questions",
         href: "/placements/interview-questions",
         icon: MessagesSquare,
+      },
+      {
+        label: "Resume Builder",
+        href: "/resume",
+        icon: FileText,
       },
     ],
   },
@@ -156,6 +162,7 @@ export const SIDEBARS: Record<string, NavSection> = {
       { label: "Mock Tests", href: "/admin/mock-tests", icon: ListChecks },
       { label: "Opportunities", href: "/admin/jobs", icon: Briefcase },
       { label: "VTU Updates", href: "/admin/updates", icon: CalendarClock },
+      { label: "VTU Resource Collector", href: "/admin/vtu-collector", icon: Database },
       { label: "Resources", href: "/admin/resources", icon: FileText },
       { label: "Students", href: "/admin/students", icon: Users },
       {
@@ -170,7 +177,7 @@ export const SIDEBARS: Record<string, NavSection> = {
 
 export function sectionForPath(pathname: string): string {
   if (pathname.startsWith("/vtu")) return "vtu";
-  if (pathname.startsWith("/placements")) return "placements";
+  if (pathname.startsWith("/placements") || pathname.startsWith("/resume")) return "placements";
   if (pathname.startsWith("/jobs")) return "jobs";
   if (pathname.startsWith("/admin")) return "admin";
   return "dashboard";

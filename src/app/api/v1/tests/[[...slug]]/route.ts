@@ -183,94 +183,97 @@ export async function POST(
 
     if (slug?.[0] === "submit" && slug?.[1]) {
       const attemptId = slug[1];
-      const [attempt] = await db
-        .select()
-        .from(testAttempts)
-        .where(eq(testAttempts.id, attemptId))
-        .limit(1);
-      if (!attempt || attempt.userId !== user.id)
-        return apiError("Attempt not found", 404);
-      if (attempt.status !== "IN_PROGRESS")
-        return apiSuccess({ attemptId }, "Attempt already submitted");
 
-      const test = await getMockTest(attempt.testId);
-      if (!test) return apiError("Test not found", 404);
+      return await db.transaction(async (tx) => {
+        const [attempt] = await tx
+          .select()
+          .from(testAttempts)
+          .where(eq(testAttempts.id, attemptId))
+          .limit(1);
+        if (!attempt || attempt.userId !== user.id)
+          return apiError("Attempt not found", 404);
+        if (attempt.status !== "IN_PROGRESS")
+          return apiSuccess({ attemptId }, "Attempt already submitted");
 
-      const qIds = test.questions.map((q) => q.id);
-      const opts = await db
-        .select()
-        .from(questionOptions)
-        .where(inArray(questionOptions.questionId, qIds));
-      const correctByOption = new Map(
-        opts.filter((o) => o.isCorrect).map((o) => [o.id, o.questionId]),
-      );
-      const correctByQuestion = new Map(
-        opts.filter((o) => o.isCorrect).map((o) => [o.questionId, o.id]),
-      );
+        const test = await getMockTest(attempt.testId);
+        if (!test) return apiError("Test not found", 404);
 
-      const responses = await db
-        .select()
-        .from(testResponses)
-        .where(eq(testResponses.attemptId, attempt.id));
+        const qIds = test.questions.map((q) => q.id);
+        const opts = await tx
+          .select()
+          .from(questionOptions)
+          .where(inArray(questionOptions.questionId, qIds));
+        const correctByOption = new Map(
+          opts.filter((o) => o.isCorrect).map((o) => [o.id, o.questionId]),
+        );
+        const correctByQuestion = new Map(
+          opts.filter((o) => o.isCorrect).map((o) => [o.questionId, o.id]),
+        );
 
-      let score = 0;
-      let correct = 0;
-      let incorrect = 0;
-      const topicPerformance: Record<
-        string,
-        { total: number; correct: number; incorrect: number }
-      > = {};
+        const responses = await tx
+          .select()
+          .from(testResponses)
+          .where(eq(testResponses.attemptId, attempt.id));
 
-      for (const q of test.questions) {
-        const response = responses.find((r) => r.questionId === q.id);
-        const bucket =
-          topicPerformance[q.topic] ??
-          (topicPerformance[q.topic] = { total: 0, correct: 0, incorrect: 0 });
-        bucket.total += 1;
-        if (response?.optionId) {
-          const isRight = correctByOption.get(response.optionId) === q.id;
-          await db
-            .update(testResponses)
-            .set({ isCorrect: isRight })
-            .where(eq(testResponses.id, response.id));
-          if (isRight) {
-            correct += 1;
-            score += Number(q.marks);
-            bucket.correct += 1;
-          } else {
-            incorrect += 1;
-            score -= Number(q.negativeMarks);
-            bucket.incorrect += 1;
+        let score = 0;
+        let correct = 0;
+        let incorrect = 0;
+        const topicPerformance: Record<
+          string,
+          { total: number; correct: number; incorrect: number }
+        > = {};
+
+        for (const q of test.questions) {
+          const response = responses.find((r) => r.questionId === q.id);
+          const bucket =
+            topicPerformance[q.topic] ??
+            (topicPerformance[q.topic] = { total: 0, correct: 0, incorrect: 0 });
+          bucket.total += 1;
+          if (response?.optionId) {
+            const isRight = correctByOption.get(response.optionId) === q.id;
+            await tx
+              .update(testResponses)
+              .set({ isCorrect: isRight })
+              .where(eq(testResponses.id, response.id));
+            if (isRight) {
+              correct += 1;
+              score += Number(q.marks);
+              bucket.correct += 1;
+            } else {
+              incorrect += 1;
+              score -= Number(q.negativeMarks);
+              bucket.incorrect += 1;
+            }
           }
+          void correctByQuestion;
         }
-        void correctByQuestion;
-      }
 
-      const total = test.questions.length;
-      const unattempted = Math.max(0, total - correct - incorrect);
-      const percentage = test.test.totalMarks
-        ? Math.max(0, Math.round((score / test.test.totalMarks) * 100))
-        : 0;
+        const total = test.questions.length;
+        const unattempted = Math.max(0, total - correct - incorrect);
+        const percentage = test.test.totalMarks
+          ? Math.max(0, Math.round((score / test.test.totalMarks) * 100))
+          : 0;
 
-      const [updated] = await db
-        .update(testAttempts)
-        .set({
-          status: "SUBMITTED",
-          submittedAt: new Date(),
-          score: Math.max(0, Math.round(score)),
-          correctCount: correct,
-          incorrectCount: incorrect,
-          unattemptedCount: unattempted,
-          percentage: String(percentage),
-          topicPerformance,
-        })
-        .where(eq(testAttempts.id, attempt.id))
-        .returning();
+        const [updated] = await tx
+          .update(testAttempts)
+          .set({
+            status: "SUBMITTED",
+            submittedAt: new Date(),
+            score: Math.max(0, Math.round(score)),
+            correctCount: correct,
+            incorrectCount: incorrect,
+            unattemptedCount: unattempted,
+            percentage: String(percentage),
+            topicPerformance,
+          })
+          .where(eq(testAttempts.id, attempt.id))
+          .returning();
 
-      return apiSuccess(
-        { attempt: updated, topicPerformance },
-        "Test submitted and scored",
-      );
+        return apiSuccess(
+          { attempt: updated, topicPerformance },
+          "Test submitted and scored",
+        );
+      });
     }
 
     return apiError("Unknown test action", 404);

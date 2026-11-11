@@ -1,0 +1,369 @@
+{
+  "topics": [
+    {
+      "id": "speed-time-distance",
+      "title": "Speed, Time & Distance",
+      "icon": "Gauge",
+      "tint": "#FF5A00",
+      "summary": "Master relative speed, trains crossing platforms/poles, and boats & streams.",
+      "formulas": [
+        {
+          "name": "Unit Conversion",
+          "rule": "Speed in m/s = Speed in km/h × (5/18); km/h = m/s × (18/5)"
+        },
+        {
+          "name": "Average Speed",
+          "rule": "If a distance is covered at x km/h and returned at y km/h, Avg Speed = 2xy / (x + y)"
+        },
+        {
+          "name": "Trains Passing Pole",
+          "rule": "Time to cross stationary point object = Length of Train / Speed of Train"
+        },
+        {
+          "name": "Trains Passing Platform",
+          "rule": "Time to cross platform of length P = (Length of Train + P) / Speed of Train"
+        },
+        {
+          "name": "Relative Speed",
+          "rule": "Same direction: S1 - S2; Opposite direction: S1 + S2"
+        },
+        {
+          "name": "Boats & Streams",
+          "rule": "Downstream Speed = u + v; Upstream Speed = u - v; Boat speed u = (D + U)/2; Stream speed v = (D - U)/2"
+        }
+      ],
+      "questions": [
+        {
+          "id": "std-1",
+          "question": "A train 240 m long passes a pole in 24 seconds. How long will it take to pass a platform 650 m long?",
+          "options": [
+            "A) 65 seconds",
+            "B) 89 seconds",
+            "C) 100 seconds",
+            "D) 72 seconds"
+          ],
+          "correct": "B) 89 seconds",
+          "explanation": "Speed of train = Length / Time = 240 / 24 = 10 m/s. Total distance to cross platform = 240 + 650 = 890 m. Time required = 890 / 10 = 89 seconds.",
+          "shortcutTrick": "Direct formula: Total time = (Train Length + Platform Length) / Speed = (240 + 650)/10 = 89s."
+        },
+        {
+          "id": "std-2",
+          "question": "A man covers a certain distance by car at 60 km/h and returns to starting point at 40 km/h. What is his average speed for the whole journey?",
+          "options": [
+            "A) 50 km/h",
+            "B) 48 km/h",
+            "C) 52 km/h",
+            "D) 45 km/h"
+          ],
+          "correct": "B) 48 km/h",
+          "explanation": "Average speed for equal distances = 2xy / (x + y) = 2 × 60 × 40 / (60 + 40) = 4800 / 100 = 48 km/h.",
+          "shortcutTrick": "Harmonic mean: 2 × 60 × 40 / 100 = 48 km/h. Never take the arithmetic mean (50) for equal distances!"
+        },
+        {
+          "id": "std-3",
+          "question": "A boat can travel with a speed of 13 km/h in still water. If the speed of the stream is 4 km/h, find the time taken by the boat to go 68 km downstream.",
+          "options": [
+            "A) 4 hours",
+            "B) 5 hours",
+            "C) 3 hours",
+            "D) 6 hours"
+          ],
+          "correct": "A) 4 hours",
+          "explanation": "Downstream speed = Boat speed + Stream speed = 13 + 4 = 17 km/h. Time = Distance / Speed = 68 / 17 = 4 hours.",
+          "shortcutTrick": "Downstream speed is always (u + v). 68 / 17 = 4 hours directly."
+        },
+        {
+          "id": "std-4",
+          "question": "Two trains 140 m and 160 m long run at speeds of 60 km/h and 40 km/h respectively in opposite directions on parallel tracks. What is the time taken to cross each other?",
+          "options": [
+            "A) 10.8 seconds",
+            "B) 9.5 seconds",
+            "C) 12.0 seconds",
+            "D) 15.2 seconds"
+          ],
+          "correct": "A) 10.8 seconds",
+          "explanation": "Total distance = 140 + 160 = 300 m. Relative speed in opposite direction = 60 + 40 = 100 km/h = 100 × (5/18) = 250/9 m/s. Time = 300 / (250/9) = 300 × 9 / 250 = 10.8 seconds.",
+          "shortcutTrick": "Time = (L1 + L2) / (Relative Speed in m/s) = 300 / (100 × 5/18) = 10.8 seconds."
+        }
+      ]
+    },
+    {
+      "id": "percentages-profit-loss",
+      "title": "Percentages & Profit/Loss",
+      "icon": "Percent",
+      "tint": "#10B981",
+      "summary": "Cost price, marked price, successive discounts, and profit-loss percentages.",
+      "formulas": [
+        {
+          "name": "Profit & Loss %",
+          "rule": "Profit % = (Profit / CP) × 100; Loss % = (Loss / CP) × 100 (always calculated on CP)"
+        },
+        {
+          "name": "Selling Price",
+          "rule": "SP = CP × (100 + P%) / 100 = CP × (100 - L%) / 100"
+        },
+        {
+          "name": "Successive Percentage Change",
+          "rule": "Net change = a + b + (ab / 100)%"
+        },
+        {
+          "name": "Successive Discounts",
+          "rule": "Equivalent single discount for d1 and d2 = [d1 + d2 - (d1 × d2 / 100)]%"
+        },
+        {
+          "name": "Dishonest Dealer",
+          "rule": "Gain % = [Error / (True Value - Error)] × 100"
+        }
+      ],
+      "questions": [
+        {
+          "id": "pl-1",
+          "question": "An article is sold for ₹840 at a profit of 20%. What was the cost price of the article?",
+          "options": [
+            "A) ₹700",
+            "B) ₹720",
+            "C) ₹680",
+            "D) ₹750"
+          ],
+          "correct": "A) ₹700",
+          "explanation": "SP = CP × 1.20 => 840 = CP × 1.2 => CP = 840 / 1.2 = ₹700.",
+          "shortcutTrick": "20% profit = 1/5 profit. So SP is 6/5 of CP. CP = 840 × (5/6) = 700."
+        },
+        {
+          "id": "pl-2",
+          "question": "A shopkeeper offers two successive discounts of 20% and 10% on an item. What is the net single discount percentage?",
+          "options": [
+            "A) 30%",
+            "B) 28%",
+            "C) 25%",
+            "D) 27%"
+          ],
+          "correct": "B) 28%",
+          "explanation": "Equivalent discount = d1 + d2 - (d1 × d2 / 100) = 20 + 10 - (200 / 100) = 30 - 2 = 28%.",
+          "shortcutTrick": "Let initial = 100. After 20% off = 80. After 10% of 80 off = 80 - 8 = 72. Total discount = 100 - 72 = 28%."
+        },
+        {
+          "id": "pl-3",
+          "question": "If the cost price of 12 pens is equal to the selling price of 8 pens, find the gain percentage.",
+          "options": [
+            "A) 33.33%",
+            "B) 50%",
+            "C) 25%",
+            "D) 40%"
+          ],
+          "correct": "B) 50%",
+          "explanation": "12 × CP = 8 × SP => SP / CP = 12 / 8 = 3/2. Profit = 3 - 2 = 1 on CP of 2. Profit % = (1/2) × 100 = 50%.",
+          "shortcutTrick": "Direct formula: [(Goods bought - Goods sold) / Goods sold] × 100 = [(12 - 8)/8] × 100 = 50%."
+        }
+      ]
+    },
+    {
+      "id": "time-and-work",
+      "title": "Time & Work",
+      "icon": "Clock",
+      "tint": "#3B82F6",
+      "summary": "Work efficiency, combined work, pipe and cistern problems.",
+      "formulas": [
+        {
+          "name": "One Day Work",
+          "rule": "If A can finish work in n days, A's 1 day work = 1/n"
+        },
+        {
+          "name": "Combined Work (A + B)",
+          "rule": "Time taken together = (A × B) / (A + B) days"
+        },
+        {
+          "name": "Efficiency Ratio",
+          "rule": "Time ratio is inverse of efficiency ratio: Time_A / Time_B = Eff_B / Eff_A"
+        },
+        {
+          "name": "Men-Days-Hours (MDH)",
+          "rule": "(M1 × D1 × H1) / W1 = (M2 × D2 × H2) / W2"
+        },
+        {
+          "name": "Pipes & Cisterns",
+          "rule": "Inlet pipe adds (+1/n), Outlet pipe empties (-1/m). Net = (1/n) - (1/m)"
+        }
+      ],
+      "questions": [
+        {
+          "id": "tw-1",
+          "question": "A can do a piece of work in 12 days and B can do it in 15 days. How long will they take to complete the work together?",
+          "options": [
+            "A) 6.67 days",
+            "B) 7.5 days",
+            "C) 6 days",
+            "D) 8 days"
+          ],
+          "correct": "A) 6.67 days",
+          "explanation": "LCM of 12 and 15 = 60 units. Efficiency of A = 60/12 = 5 units/day. Efficiency of B = 60/15 = 4 units/day. Combined efficiency = 9 units/day. Time = 60 / 9 = 20/3 = 6.67 days.",
+          "shortcutTrick": "Formula (A × B)/(A + B) = (12 × 15)/(12 + 15) = 180 / 27 = 20/3 = 6.67 days."
+        },
+        {
+          "id": "tw-2",
+          "question": "15 men can complete a project in 10 days working 8 hours a day. How many men are needed to complete the same work in 5 days working 6 hours a day?",
+          "options": [
+            "A) 35 men",
+            "B) 40 men",
+            "C) 45 men",
+            "D) 50 men"
+          ],
+          "correct": "B) 40 men",
+          "explanation": "Using MDH formula: M1 × D1 × H1 = M2 × D2 × H2 => 15 × 10 × 8 = M2 × 5 × 6 => 1200 = M2 × 30 => M2 = 1200 / 30 = 40 men.",
+          "shortcutTrick": "M2 = (15 × 10 × 8) / (5 × 6) = 1200 / 30 = 40 men directly."
+        }
+      ]
+    },
+    {
+      "id": "number-system",
+      "title": "Number System & LCM/HCF",
+      "icon": "Hash",
+      "tint": "#8B5CF6",
+      "summary": "Divisibility, unit digit cycles, remainders, and prime factorization.",
+      "formulas": [
+        {
+          "name": "LCM × HCF Property",
+          "rule": "LCM(a, b) × HCF(a, b) = a × b"
+        },
+        {
+          "name": "Unit Digit Cyclicity",
+          "rule": "Digits 2, 3, 7, 8 have cyclicity of 4; Digits 4, 9 have cyclicity of 2; Digits 0, 1, 5, 6 have cyclicity of 1."
+        },
+        {
+          "name": "Divisibility by 11",
+          "rule": "(Sum of odd place digits - Sum of even place digits) must be 0 or divisible by 11."
+        },
+        {
+          "name": "Sum of First n Naturals",
+          "rule": "Sum = n(n + 1) / 2; Sum of squares = n(n + 1)(2n + 1) / 6"
+        }
+      ],
+      "questions": [
+        {
+          "id": "ns-1",
+          "question": "What is the unit digit of (7^95 - 3^58)?",
+          "options": [
+            "A) 0",
+            "B) 4",
+            "C) 6",
+            "D) 7"
+          ],
+          "correct": "B) 4",
+          "explanation": "7 cyclicity is 4. 95 mod 4 = 3 => 7^3 = 343 => unit digit is 3. 3 cyclicity is 4. 58 mod 4 = 2 => 3^2 = 9 => unit digit is 9. Unit digit = (13 - 9) = 4.",
+          "shortcutTrick": "Since 3 < 9, borrow 10: 13 - 9 = 4."
+        },
+        {
+          "id": "ns-2",
+          "question": "The HCF of two numbers is 11 and their LCM is 7700. If one of the numbers is 275, find the other number.",
+          "options": [
+            "A) 279",
+            "B) 283",
+            "C) 308",
+            "D) 318"
+          ],
+          "correct": "C) 308",
+          "explanation": "Product of numbers = HCF × LCM => 275 × Other = 11 × 7700 => Other = (11 × 7700) / 275 = 84700 / 275 = 308.",
+          "shortcutTrick": "Other = 7700 / (275 / 11) = 7700 / 25 = 308."
+        }
+      ]
+    },
+    {
+      "id": "logical-reasoning",
+      "title": "Logical Reasoning & Syllogisms",
+      "icon": "Brain",
+      "tint": "#F59E0B",
+      "summary": "Deductive reasoning, blood relations, direction sense, and series completion.",
+      "formulas": [
+        {
+          "name": "Direction Sense",
+          "rule": "Turning right = 90° clockwise; Turning left = 90° counter-clockwise. Distance = √(x² + y²)"
+        },
+        {
+          "name": "Blood Relations",
+          "rule": "+ for male, - for female; = for spouses; | for child/parent relationship"
+        },
+        {
+          "name": "Syllogism Rules",
+          "rule": "All A are B + All B are C => All A are C; Some A are B != All B are A"
+        }
+      ],
+      "questions": [
+        {
+          "id": "lr-1",
+          "question": "A man walks 5 km East, then turns right and walks 12 km. How far is he from his starting point?",
+          "options": [
+            "A) 17 km",
+            "B) 13 km",
+            "C) 15 km",
+            "D) 10 km"
+          ],
+          "correct": "B) 13 km",
+          "explanation": "By Pythagoras theorem: Distance = √(5² + 12²) = √(25 + 144) = √169 = 13 km.",
+          "shortcutTrick": "Recognize Pythagorean triplet: (5, 12, 13). Answer is 13 km instantly."
+        },
+        {
+          "id": "lr-2",
+          "question": "Pointing to a photograph, Rohit said, 'She is the daughter of my grandfather's only son.' How is Rohit related to the girl?",
+          "options": [
+            "A) Brother",
+            "B) Cousin",
+            "C) Father",
+            "D) Uncle"
+          ],
+          "correct": "A) Brother",
+          "explanation": "Grandfather's only son = Rohit's father. Daughter of Rohit's father = Rohit's sister. So Rohit is her brother.",
+          "shortcutTrick": "Break backwards: 'grandfather's only son' = Father. 'daughter of Father' = Sister. Therefore, Rohit is Brother."
+        }
+      ]
+    },
+    {
+      "id": "data-interpretation",
+      "title": "Data Interpretation (DI)",
+      "icon": "BarChart3",
+      "tint": "#0EA5E9",
+      "summary": "Tables, bar charts, pie charts, percentage growth and ratio analysis.",
+      "formulas": [
+        {
+          "name": "Percentage Growth / Increase",
+          "rule": "[(Final Value - Initial Value) / Initial Value] × 100"
+        },
+        {
+          "name": "Pie Chart Angle Conversion",
+          "rule": "Angle = (Value / Total Value) × 360°; 1% = 3.6°"
+        },
+        {
+          "name": "Ratio Comparison Shortcut",
+          "rule": "If a/b and c/d: cross multiply ad vs bc. If ad > bc then a/b > c/d"
+        }
+      ],
+      "questions": [
+        {
+          "id": "di-1",
+          "question": "In a pie chart, an expenditure item accounts for 25% of the total budget. What is the central angle of this sector?",
+          "options": [
+            "A) 75°",
+            "B) 90°",
+            "C) 100°",
+            "D) 80°"
+          ],
+          "correct": "B) 90°",
+          "explanation": "Central angle = (25 / 100) × 360° = 0.25 × 360° = 90°.",
+          "shortcutTrick": "1% = 3.6°. So 25% = 25 × 3.6 = 90° directly."
+        },
+        {
+          "id": "di-2",
+          "question": "Company sales increased from ₹40 Lakhs in 2022 to ₹52 Lakhs in 2023. What was the percentage growth rate?",
+          "options": [
+            "A) 25%",
+            "B) 30%",
+            "C) 20%",
+            "D) 35%"
+          ],
+          "correct": "B) 30%",
+          "explanation": "Increase = 52 - 40 = ₹12 Lakhs. Growth % = (12 / 40) × 100 = (3 / 10) × 100 = 30%.",
+          "shortcutTrick": "(12/40) = 3/10 = 30%."
+        }
+      ]
+    }
+  ]
+}

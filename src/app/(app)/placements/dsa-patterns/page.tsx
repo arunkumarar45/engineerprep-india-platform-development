@@ -30,7 +30,7 @@ export default async function DsaPatternsPage() {
           { label: "DSA Patterns" },
         ]}
         title="DSA Patterns"
-        subtitle="Master the 20 essential coding patterns asked in every interview."
+        subtitle="Master the 24 essential coding patterns asked in top product and tech interviews."
         actions={<Badge tone="brand">{patterns.length} patterns</Badge>}
       />
 

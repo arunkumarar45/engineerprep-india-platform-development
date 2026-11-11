@@ -11,9 +11,11 @@ import {
   Clock,
   Download,
   ExternalLink,
+  Eye,
   FileText,
   GraduationCap,
   MapPin,
+  ArrowRight,
   Users,
 } from "lucide-react";
 import { Badge, Button, Card, ProgressBar, difficultyTone } from "@/components/ui";
@@ -139,7 +141,13 @@ export function ResourceCard({
       </div>
 
       <h3 className="mt-3 line-clamp-2 text-sm font-bold leading-snug text-ink-900">
-        {resource.title}
+        <Link
+          href={`/vtu/view/${resource.id}`}
+          target="_blank"
+          className="transition-colors hover:text-brand-600 hover:underline"
+        >
+          {resource.title}
+        </Link>
       </h3>
       <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-ink-500">
         {resource.description}
@@ -168,9 +176,18 @@ export function ResourceCard({
         <span className="text-[0.68rem] text-ink-500">
           {resource.fileSize} · {resource.downloadCount.toLocaleString()} downloads
         </span>
-        <Button size="sm" onClick={onDownload} loading={downloading}>
-          <Download className="size-3.5" /> Download
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Link
+            href={`/vtu/view/${resource.id}`}
+            target="_blank"
+            className="inline-flex h-8 items-center gap-1 rounded-lg border border-line bg-surface px-2.5 text-xs font-semibold text-ink-700 transition-colors hover:border-brand-400 hover:text-brand-600"
+          >
+            <Eye className="size-3.5" /> View
+          </Link>
+          <Button size="sm" onClick={onDownload} loading={downloading}>
+            <Download className="size-3.5" /> Download
+          </Button>
+        </div>
       </div>
     </Card>
   );
@@ -189,6 +206,7 @@ export function UpdateCard({
     summary?: string | null;
     publishedAt: Date | string;
     fileSize?: string | null;
+    fileUrl?: string | null;
   };
   onDownload?: () => void;
 }) {
@@ -210,9 +228,20 @@ export function UpdateCard({
           {update.fileSize ? ` · ${update.fileSize}` : ""}
         </p>
       </div>
-      <Button size="sm" variant="outline" className="mt-3 sm:mt-0 sm:ml-4" onClick={onDownload}>
-        <Download className="size-3.5" /> Download
-      </Button>
+      {update.fileUrl ? (
+        <a
+          href={update.fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-3 text-xs font-bold text-ink-900 hover:border-brand-300 hover:text-brand-600 sm:mt-0 sm:ml-4"
+        >
+          <Download className="size-3.5" /> Download PDF
+        </a>
+      ) : (
+        <Button size="sm" variant="outline" className="mt-3 sm:mt-0 sm:ml-4" onClick={onDownload}>
+          <Download className="size-3.5" /> Official Notice
+        </Button>
+      )}
     </Card>
   );
 }
@@ -241,6 +270,9 @@ export function DSASheetCard({
     difficulty: string;
     totalProblems: number;
     coverTint?: string | null;
+    coverImageUrl?: string | null;
+    thumbnailUrl?: string | null;
+    thumbnailAlt?: string | null;
     slug?: string;
   };
   index: number;
@@ -250,50 +282,88 @@ export function DSASheetCard({
   const percent = sheet.totalProblems
     ? Math.round((solved / sheet.totalProblems) * 100)
     : 0;
+
+  const thumbnailSrc =
+    sheet.thumbnailUrl ||
+    sheet.coverImageUrl ||
+    (sheet.slug ? `/thumbnails/dsa-sheets/${sheet.slug}.jpg` : null);
+
   return (
-    <Card hover className="flex h-full flex-col">
-      <div
-        className="relative h-28 overflow-hidden"
-        style={{ background: sheet.coverTint ?? SHEET_TINTS[index % SHEET_TINTS.length] }}
-      >
+    <Card hover className="group flex h-full flex-col overflow-hidden p-0 border border-line bg-surface transition-all duration-300 hover:shadow-lg">
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-ink-950">
+        {thumbnailSrc ? (
+          <img
+            src={thumbnailSrc}
+            alt={sheet.thumbnailAlt || sheet.title}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              const target = e.currentTarget;
+              target.style.display = "none";
+              const fallback = target.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = "flex";
+            }}
+          />
+        ) : null}
+
+        {/* Graceful Fallback if image missing or error */}
         <div
-          className="absolute inset-0 opacity-25"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.6), transparent 45%), radial-gradient(circle at 80% 70%, rgba(0,0,0,0.35), transparent 50%)",
-          }}
-          aria-hidden
-        />
-        <div className="absolute inset-x-4 bottom-3 flex items-end justify-between gap-2">
-          <div>
-            <p className="text-[0.65rem] font-bold uppercase tracking-wider text-white/75">
-              {sheet.author ?? "Educator sheet"}
-            </p>
-            <p className="text-base font-extrabold leading-tight text-white">
-              {sheet.totalProblems} problems
-            </p>
-          </div>
-          <Badge tone="dark" className="backdrop-blur">
+          className={cn(
+            "absolute inset-0 flex-col justify-end p-4 text-white",
+            thumbnailSrc ? "hidden" : "flex",
+          )}
+          style={{ background: sheet.coverTint ?? SHEET_TINTS[index % SHEET_TINTS.length] }}
+        >
+          <p className="text-[0.65rem] font-bold uppercase tracking-wider text-white/80">
+            {sheet.author ?? "Educator Sheet"}
+          </p>
+          <p className="text-base font-extrabold leading-tight text-white">
+            {sheet.totalProblems} problems
+          </p>
+        </div>
+
+        {/* Top Badges Overlay */}
+        <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2 pointer-events-none">
+          <Badge tone="brand" className="backdrop-blur-md bg-white/95 font-bold text-[0.68rem] text-brand-700 shadow-xs">
+            {sheet.author || "Curated DSA"}
+          </Badge>
+          <Badge tone="dark" className="backdrop-blur-md bg-ink-900/85 text-[0.68rem] font-semibold text-white shadow-xs">
             {sheet.difficulty}
           </Badge>
         </div>
+
+        {/* Bottom Problems Pill */}
+        <div className="absolute bottom-2.5 left-3 pointer-events-none">
+          <span className="inline-flex items-center rounded-md bg-ink-950/85 px-2.5 py-1 text-[0.7rem] font-bold text-white shadow-xs backdrop-blur-xs">
+            {sheet.totalProblems} Problems
+          </span>
+        </div>
       </div>
+
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="line-clamp-2 text-sm font-bold leading-snug text-ink-900">
+        <h3 className="line-clamp-2 text-sm font-bold leading-snug text-ink-900 group-hover:text-brand-600 transition-colors">
           {sheet.title}
         </h3>
-        <div className="mt-3">
-          <div className="mb-1 flex items-center justify-between text-[0.68rem] font-semibold text-ink-500">
+        <p className="mt-1 text-xs text-ink-500">
+          Curated by <span className="font-semibold text-ink-700">{sheet.author ?? "Top Educator"}</span>
+        </p>
+
+        <div className="mt-3.5 pt-3 border-t border-line/60">
+          <div className="mb-1.5 flex items-center justify-between text-[0.68rem] font-semibold text-ink-500">
             <span>Completion</span>
-            <span className="tabular-nums text-ink-900">{percent}%</span>
+            <span className="tabular-nums font-bold text-ink-900">
+              {solved} / {sheet.totalProblems} ({percent}%)
+            </span>
           </div>
           <ProgressBar value={percent} showLabel={false} />
         </div>
+
         <Link
           href={href}
-          className="mt-4 inline-flex h-9 items-center justify-center rounded-lg bg-brand-500 text-xs font-bold text-white transition-colors hover:bg-brand-600"
+          className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-brand-500 text-xs font-bold text-white transition-all hover:bg-brand-600 hover:shadow-xs active:scale-[0.99]"
         >
-          View Sheet
+          <span>View Sheet</span>
+          <ArrowRight className="size-3.5" />
         </Link>
       </div>
     </Card>

@@ -62,6 +62,12 @@ export default async function DsaSheetDetailPage({
                 difficulty: p.difficulty,
                 slug: p.slug,
                 patternName: p.patternName,
+                practiceUrl: p.practiceUrl,
+                platform: p.platform,
+                topic: p.topic,
+                subtopic: p.subtopic,
+                videoUrl: p.videoUrl,
+                statement: p.statement,
               }))}
               solvedIds={[...progress.keys()]}
               isLoggedIn={Boolean(user)}

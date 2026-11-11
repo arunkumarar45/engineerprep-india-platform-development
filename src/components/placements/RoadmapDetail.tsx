@@ -81,7 +81,7 @@ export function RoadmapDetail({
   async function toggle(topic: RoadmapTopic) {
     if (!isLoggedIn) {
       router.push(
-        `/login?next=${encodeURIComponent(`/placements/roadmaps/${roadmap.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`)}`,
+        `/login?next=${encodeURIComponent(`/placements/roadmaps/${(roadmap?.title ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`)}`,
       );
       return;
     }

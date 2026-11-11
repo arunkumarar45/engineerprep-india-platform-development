@@ -86,30 +86,12 @@ const verifyEmailSchema = z.object({
   token: z.string().min(8, "A valid verification token is required"),
 });
 
-/* ------------------------- Simple Rate Limiter --------------------- */
+import { rateLimit, resetRateLimit } from "@/lib/rate-limiter";
 
-const loginAttempts = new Map<string, { count: number; firstAttempt: number }>();
+/* ------------------------- Rate Limiter Helpers -------------------- */
+
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_LOGIN_MAX ?? "5", 10);
-const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_SECONDS ?? "900", 10) * 1000;
-
-function checkRateLimit(key: string): boolean {
-  const now = Date.now();
-  const record = loginAttempts.get(key);
-
-  if (!record || now - record.firstAttempt > RATE_LIMIT_WINDOW_MS) {
-    loginAttempts.set(key, { count: 1, firstAttempt: now });
-    return true;
-  }
-
-  if (record.count >= RATE_LIMIT_MAX) return false;
-
-  record.count += 1;
-  return true;
-}
-
-function clearRateLimit(key: string): void {
-  loginAttempts.delete(key);
-}
+const RATE_LIMIT_WINDOW_SECONDS = parseInt(process.env.RATE_LIMIT_WINDOW_SECONDS ?? "900", 10);
 
 function getRateLimitKey(request: Request, prefix: string): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -203,9 +185,10 @@ export async function POST(
     /* --------------------- LOGIN -------------------------------- */
     if (action === "login") {
       const rateLimitKey = getRateLimitKey(request, "login");
-      if (!checkRateLimit(rateLimitKey)) {
+      const limit = await rateLimit(rateLimitKey, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_SECONDS);
+      if (!limit.allowed) {
         return apiError(
-          "Too many login attempts. Please wait 15 minutes before trying again.",
+          `Too many login attempts. Please wait ${Math.ceil(limit.resetInSeconds / 60)} minutes before trying again.`,
           429,
         );
       }
@@ -230,7 +213,7 @@ export async function POST(
         return apiError("This account has been deactivated", 403);
 
       // Clear rate limit on successful login
-      clearRateLimit(rateLimitKey);
+      await resetRateLimit(rateLimitKey);
 
       // SECURITY: Transparently upgrade bcrypt hashes to Argon2id
       if (isLegacyBcryptHash(user.passwordHash)) {
@@ -275,9 +258,10 @@ export async function POST(
     /* --------------------- FORGOT PASSWORD ---------------------- */
     if (action === "forgot-password") {
       const rateLimitKey = getRateLimitKey(request, "forgot");
-      if (!checkRateLimit(rateLimitKey)) {
+      const limit = await rateLimit(rateLimitKey, 3, 300);
+      if (!limit.allowed) {
         return apiError(
-          "Too many password reset requests. Please wait before trying again.",
+          `Too many password reset requests. Please wait ${Math.ceil(limit.resetInSeconds / 60)} minutes before trying again.`,
           429,
         );
       }

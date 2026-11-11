@@ -4,6 +4,7 @@
     "scripts": {
         "dev": "next dev",
         "build": "next build",
+        "build:worker": "esbuild src/workers/worker.ts --bundle --platform=node --target=node20 --outfile=dist/worker.js --packages=external",
         "start": "next start",
         "lint": "eslint .",
         "typecheck": "tsc --noEmit",
@@ -42,6 +43,7 @@
         "multer": "^2.5.0",
         "next": "16.2.6",
         "nodemailer": "^10.3.1",
+        "pdf-lib": "^1.17.1",
         "pg": "8.20.0",
         "rate-limiter-flexible": "^11.2.4",
         "react": "19.2.6",
