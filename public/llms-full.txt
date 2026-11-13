@@ -1,0 +1,77 @@
+# EngineerPrep India — Complete Platform Knowledge Base
+
+## Overview
+EngineerPrep India is an open engineering education and career readiness platform tailored for university students, especially those affiliated with Visvesvaraya Technological University (VTU) and aspiring software engineers preparing for tech campus placements across India.
+
+Canonical URL: https://engineerprep.in
+Support: support@engineerprep.in
+
+---
+
+## Detailed Directory of Resources
+
+### VTU Curriculum Directory
+1. **Computer Science & Engineering (CSE) / Information Science (ISE)**
+   - Schemes: 2022 Scheme (NEP/CBCS), 2021 Scheme, 2018 Scheme
+   - Semesters: Semester 1 through Semester 8
+   - Core Subjects:
+     - BCS301 / 21MAT31: Transform Calculus, Fourier Series and Numerical Techniques
+     - BCS302: Data Structures and Applications
+     - BCS303: Analog and Digital Electronics
+     - BCS304: Computer Organization and Architecture
+     - BCS401: Mathematical Foundations for Computing
+     - BCS402: Analysis & Design of Algorithms (ADA)
+     - BCS403: Database Management Systems (DBMS)
+     - BCS404: Operating Systems (OS)
+     - BCS501: Software Engineering & Project Management
+     - BCS502: Computer Networks (CN)
+     - BCS503: Theory of Computation / Automata
+     - BCS701: Internet of Things (IoT)
+     - BCS702: Cloud Computing & Virtualization
+     - BCS703: Cryptography and Network Security
+     - BCS714B: Natural Language Processing (NLP)
+
+2. **Resource Types Available**
+   - **Notes**: High-clarity handwritten and typed chapter notes organized by module (Modules 1 through 5).
+   - **Question Papers**: University semester-end examination papers with subject code identification.
+   - **Syllabus**: Official VTU Scheme of Teaching and Examination with credit distribution (CIE/SEE marks).
+   - **Lab Manuals**: Detailed experiment code, test data, and external examiner viva voce Q&A.
+   - **Important Questions**: Exam revision question banks compiled from repeated university patterns.
+
+---
+
+### Placement Preparation Directory
+1. **Curated DSA Sheets**
+   - **Striver's A2Z DSA Sheet** (Raj Vikramaditya): 455 problems across Basics, Arrays, Binary Search, Strings, Linked Lists, Recursion, Bit Manipulation, Stacks & Queues, Sliding Window, Heaps, Greedy, Binary Trees, BST, Graphs, Dynamic Programming, and Tries.
+   - **Love Babbar DSA Sheet** (CodeHelp): 430 core placement interview problems covering all foundational data structures and advanced recursion/DP.
+   - **NeetCode 150 Sheet**: 150 essential LeetCode problems categorized by pattern.
+   - **Shradha Khapra Sheet** (Apna College): 403 handpicked problems for college campus placements.
+   - **Rohit Negi Sheet** (Coder Army): 726 in-depth conceptual and algorithmic problems.
+   - **Arsh Goyal Sheet**: 287 problems from the "6 Companies 30 Days" challenge.
+   - **20 Essential DSA Patterns**: Curated guide covering Two Pointers, Sliding Window, Fast & Slow Pointers, Monotonic Stack, Interval Merging, Cyclic Sort, In-Place Reversal, Top K Elements, and DP patterns.
+
+2. **Developer Career Roadmaps**
+   - Full Stack Developer (Frontend, Backend, DevOps, DB)
+   - Backend Engineer (Java, Spring Boot, Node.js, Microservices, Message Queues)
+   - DevOps & Cloud Engineer (Linux, Docker, Kubernetes, CI/CD, Terraform, AWS)
+   - Data Analyst / Data Scientist (Python, SQL, PowerBI, Pandas, Statistics)
+   - AI / Machine Learning Engineer (PyTorch, TensorFlow, LLMs, Vector DBs)
+
+3. **Core CS & Interview Subjects**
+   - Operating Systems: Process Synchronization, Deadlocks, Memory Management, Paging, Virtual Memory, CPU Scheduling.
+   - Database Management Systems: Normalization (1NF to BCNF), ACID Properties, Transactions, Indexing (B-Trees), SQL joins.
+   - Computer Networks: OSI 7-Layer Model, TCP/IP, Three-Way Handshake, DNS, HTTP/HTTPS, Subnetting, Routing Protocols.
+   - System Design: High-Level Architecture, Microservices, Caching (Redis), Load Balancing, Rate Limiting, Sharding, Message Brokers (Kafka/RabbitMQ).
+
+4. **Jobs & Opportunities**
+   - Active internship listings for pre-final and final year students.
+   - Full-time entry-level graduate engineering trainee (GET) and software engineer roles.
+   - Direct verified application URLs to company career portals.
+
+---
+
+## Technical Standards
+- Mobile responsive across phone, tablet, and desktop viewports.
+- Clean semantic HTML5 structure with strict accessible color contrast.
+- Fully typed data layer powered by TypeScript and PostgreSQL.
+

@@ -402,7 +402,8 @@ export function Navbar({
         }
       >
         <p className="text-sm text-ink-700">
-          Your demo progress stays saved on this device and in the demo database.
+          Your progress, notes and activity will be saved. You can log back in
+          at any time to continue where you left off.
         </p>
       </Modal>
     </header>

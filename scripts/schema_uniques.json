@@ -1,0 +1,7 @@
+[
+  {
+    "table_name": "playlists",
+    "column_name": "slug",
+    "constraint_name": "playlists_slug_key"
+  }
+]

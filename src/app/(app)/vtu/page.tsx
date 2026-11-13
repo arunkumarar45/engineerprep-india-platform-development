@@ -1,5 +1,23 @@
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout";
 import { VtuOverviewClient } from "@/components/vtu/VtuOverviewClient";
+import { absoluteUrl } from "@/lib/site-config";
+import { BreadcrumbsJsonLd } from "@/components/seo/JsonLd";
+
+export const metadata: Metadata = {
+  title: "VTU Notes & Academic Resources | EngineerPrep India",
+  description:
+    "Comprehensive VTU study library: verified module-wise notes, previous year question papers, official syllabus schemes, and lab manuals across CSE, ISE, ECE, EEE, ME, and Civil.",
+  alternates: {
+    canonical: absoluteUrl("/vtu"),
+  },
+  openGraph: {
+    title: "VTU Notes & Academic Resources | EngineerPrep India",
+    description:
+      "All VTU updates, module-wise study notes, question papers, and syllabus schemes in one unified repository.",
+    url: absoluteUrl("/vtu"),
+  },
+};
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -29,6 +47,12 @@ export default async function VtuOverviewPage() {
 
   return (
     <>
+      <BreadcrumbsJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "VTU Notes & Resources", url: "/vtu" },
+        ]}
+      />
       <PageHeader
         breadcrumb={[{ label: "VTU Notes & Resources" }]}
         title="VTU Notes & Resources"

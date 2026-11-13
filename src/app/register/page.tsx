@@ -289,8 +289,10 @@ export default function RegisterPage() {
               className="mt-0.5 size-4 rounded border-line accent-brand-500"
             />
             <span>
-              I accept the terms and conditions and agree that this is a demo
-              environment.
+              I accept the{" "}
+              <a href="/terms" className="text-brand-600 hover:underline font-semibold">Terms of Service</a>
+              {" "}and{" "}
+              <a href="/privacy-policy" className="text-brand-600 hover:underline font-semibold">Privacy Policy</a>.
             </span>
           </label>
           {errors.accept && (

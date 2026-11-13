@@ -1,0 +1,20 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FF7A1A" />
+        <stop offset="100%" stop-color="#FF5A00" />
+      </linearGradient>
+      <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+        <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#FF5A00" flood-opacity="0.3" />
+      </filter>
+    </defs>
+    <!-- Background rounded squircle -->
+    <rect x="32" y="32" width="448" height="448" rx="112" fill="url(#brandGrad)" filter="url(#shadow)" />
+    
+    <!-- Graduation Cap Icon -->
+    <path d="M256 140L80 236L256 332L432 236L256 140Z" fill="white" />
+    <path d="M144 271V356C144 380 194 400 256 400C318 400 368 380 368 356V271L256 332L144 271Z" fill="white" fill-opacity="0.9" />
+    <!-- Tassel -->
+    <path d="M400 254V340C400 354 390 364 384 364C378 364 374 354 374 340V268L400 254Z" fill="#FFF2E6" />
+    <circle cx="400" cy="254" r="10" fill="white" />
+  </svg>

@@ -49,10 +49,65 @@ const nextConfig: NextConfig = {
   // Disable x-powered-by header
   poweredByHeader: false,
 
+  // Ensure production browser source maps are not publicly exposed
+  productionBrowserSourceMaps: false,
+
+  // Canonical 301 redirects for legacy or alternate URL patterns
+  async redirects() {
+    return [
+      {
+        source: "/vtu-notes",
+        destination: "/vtu/notes",
+        permanent: true,
+      },
+      {
+        source: "/dsa-sheets",
+        destination: "/placements/dsa-sheets",
+        permanent: true,
+      },
+      {
+        source: "/dsa",
+        destination: "/placements/dsa-sheets",
+        permanent: true,
+      },
+      {
+        source: "/roadmaps",
+        destination: "/placements/roadmaps",
+        permanent: true,
+      },
+      {
+        source: "/playlists",
+        destination: "/placements/dsa-playlists",
+        permanent: true,
+      },
+      {
+        source: "/mock-tests",
+        destination: "/placements/mock-tests",
+        permanent: true,
+      },
+      {
+        source: "/placements/resume-builder",
+        destination: "/resume",
+        permanent: true,
+      },
+    ];
+  },
+
   // Environment validation at build time
   env: {
     NEXT_PUBLIC_APP_NAME: "EngineerPrep India",
     NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version || "1.0.0",
+  },
+
+  // Image optimization: allow AVIF/WebP and common remote patterns
+  images: {
+    formats: ["image/avif", "image/webp"],
+    remotePatterns: [
+      { protocol: "https", hostname: "i.ytimg.com" },
+      { protocol: "https", hostname: "img.youtube.com" },
+      { protocol: "https", hostname: "yt3.ggpht.com" },
+      { protocol: "https", hostname: "yt3.googleusercontent.com" },
+    ],
   },
 };
 

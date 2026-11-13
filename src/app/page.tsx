@@ -1,16 +1,15 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   BookOpen,
   Briefcase,
-  Building2,
   Code2,
   FileStack,
   Flame,
   GraduationCap,
   Sparkles,
   TrendingUp,
-  Users,
 } from "lucide-react";
 import { Badge, Card } from "@/components/ui";
 import { Brandmark } from "@/components/layout/Navbar";
@@ -48,13 +47,7 @@ const ENTRY_CARDS = [
   },
 ];
 
-const STATS = [
-  { value: "20K+", label: "Students", icon: Users },
-  { value: "500+", label: "DSA Problems", icon: Code2 },
-  { value: "300+", label: "Resources", icon: FileStack },
-  { value: "100+", label: "Companies", icon: Building2 },
-  { value: "Daily", label: "VTU Updates", icon: Flame },
-];
+// Stats are computed from live DB in the page component below
 
 const HIGHLIGHTS = [
   {
@@ -174,11 +167,12 @@ export default async function HomePage() {
                 }}
                 aria-hidden
               />
-              <img
+              <Image
                 src="/images/hero-student.png"
                 alt="Engineering student preparing with EngineerPrep India"
                 width={640}
                 height={520}
+                priority
                 className="relative mx-auto h-auto w-full max-w-md drop-shadow-[0_24px_48px_rgba(23,33,43,0.14)]"
               />
             </div>
@@ -223,7 +217,13 @@ export default async function HomePage() {
         {/* Stats */}
         <section className="border-y border-line bg-white">
           <div className="mx-auto grid max-w-7xl gap-5 px-4 py-10 sm:grid-cols-3 lg:grid-cols-5 lg:px-6">
-            {STATS.map((stat) => {
+            {[
+              { value: `${(stats.NOTES || 0).toLocaleString()}+`, label: "Study Notes", icon: FileStack },
+              { value: `${(stats.QUESTION_PAPER || 0).toLocaleString()}+`, label: "Question Papers", icon: Code2 },
+              { value: `${(stats.SYLLABUS || 0).toLocaleString()}+`, label: "Syllabus Docs", icon: BookOpen },
+              { value: `${(stats.ASSIGNMENT || 0).toLocaleString()}+`, label: "Important Questions", icon: GraduationCap },
+              { value: "Daily", label: "VTU Updates", icon: Flame },
+            ].map((stat) => {
               const Icon = stat.icon;
               return (
                 <div key={stat.label} className="flex items-center gap-3">

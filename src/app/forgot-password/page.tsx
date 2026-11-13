@@ -62,30 +62,17 @@ export default function ForgotPasswordPage() {
       {result ? (
         <div className="mt-6 rounded-xl border border-success-500/25 bg-success-500/8 p-4">
           <p className="flex items-center gap-2 text-sm font-bold text-success-500">
-            <CheckCircle2 className="size-4" /> Reset instructions generated
+            <CheckCircle2 className="size-4" /> Check your inbox
           </p>
           <p className="mt-2 text-xs leading-relaxed text-ink-700">
             If an account exists for{" "}
-            <span className="font-bold">{result.email}</span>, a reset link has
-            been sent. In this frontend demo, real password recovery requires
-            SMTP email integration, so the token is shown below for testing.
+            <span className="font-bold">{result.email}</span>, a password reset
+            link has been sent. Please check your inbox and spam folder.
           </p>
-          {result.resetToken && (
-            <div className="mt-3 rounded-lg border border-line bg-white p-3">
-              <p className="text-[0.65rem] font-bold uppercase tracking-wider text-ink-500">
-                Demo reset token
-              </p>
-              <p className="mt-1 break-all font-mono text-[0.7rem] text-ink-900">
-                {result.resetToken}
-              </p>
-              <Link
-                href={`/reset-password?token=${result.resetToken}`}
-                className="mt-2 inline-block text-xs font-bold text-brand-600 hover:underline"
-              >
-                Continue to reset password →
-              </Link>
-            </div>
-          )}
+          <p className="mt-2 text-xs text-ink-500">
+            The link expires in 1 hour. If you don&apos;t receive it, try again
+            or contact support.
+          </p>
         </div>
       ) : (
         <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>

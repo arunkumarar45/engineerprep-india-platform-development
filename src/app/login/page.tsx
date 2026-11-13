@@ -8,10 +8,6 @@ import { AuthLayout } from "@/components/layout";
 import { Brandmark } from "@/components/layout/Navbar";
 import { Button, Field, Input, useToast } from "@/components/ui";
 
-const DEMO_ACCOUNTS = [
-  { label: "Student", email: "arun@engineerprep.in", password: "Student@123" },
-  { label: "Admin", email: "admin@engineerprep.in", password: "Admin@123" },
-];
 
 function LoginForm() {
   const router = useRouter();
@@ -189,32 +185,12 @@ function LoginForm() {
         <ShieldCheck className="size-4" /> Continue with Google
       </Button>
 
-      <div className="mt-5 rounded-xl border border-line bg-surface p-3.5">
-        <p className="text-[0.7rem] font-bold uppercase tracking-wider text-ink-500">
-          Demo accounts
-        </p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {DEMO_ACCOUNTS.map((account) => (
-            <button
-              key={account.email}
-              type="button"
-              onClick={() => {
-                setEmail(account.email);
-                setPassword(account.password);
-                setErrors({});
-              }}
-              className="rounded-lg border border-line bg-white px-3 py-2 text-left hover:border-brand-300"
-            >
-              <span className="block text-xs font-bold text-ink-900">
-                {account.label}
-              </span>
-              <span className="block text-[0.65rem] text-ink-500">
-                {account.email}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <p className="mt-4 text-center text-xs text-ink-500">
+        New to the platform?{" "}
+        <Link href="/register" className="font-bold text-brand-600 hover:underline">
+          Create a free account
+        </Link>
+      </p>
 
       <p className="mt-6 text-sm text-ink-500">
         Don&apos;t have an account?{" "}

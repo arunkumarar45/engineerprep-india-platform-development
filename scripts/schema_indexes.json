@@ -1,0 +1,617 @@
+[
+  {
+    "tablename": "audit_logs",
+    "indexname": "audit_logs_actor_idx",
+    "indexdef": "CREATE INDEX audit_logs_actor_idx ON public.audit_logs USING btree (actor_id)"
+  },
+  {
+    "tablename": "audit_logs",
+    "indexname": "audit_logs_entity_idx",
+    "indexdef": "CREATE INDEX audit_logs_entity_idx ON public.audit_logs USING btree (entity, entity_id)"
+  },
+  {
+    "tablename": "audit_logs",
+    "indexname": "audit_logs_pkey",
+    "indexdef": "CREATE UNIQUE INDEX audit_logs_pkey ON public.audit_logs USING btree (id)"
+  },
+  {
+    "tablename": "automation_executions",
+    "indexname": "automation_executions_created_idx",
+    "indexdef": "CREATE INDEX automation_executions_created_idx ON public.automation_executions USING btree (created_at)"
+  },
+  {
+    "tablename": "automation_executions",
+    "indexname": "automation_executions_pkey",
+    "indexdef": "CREATE UNIQUE INDEX automation_executions_pkey ON public.automation_executions USING btree (id)"
+  },
+  {
+    "tablename": "automation_executions",
+    "indexname": "automation_executions_rule_idx",
+    "indexdef": "CREATE INDEX automation_executions_rule_idx ON public.automation_executions USING btree (rule_id)"
+  },
+  {
+    "tablename": "automation_executions",
+    "indexname": "automation_executions_status_idx",
+    "indexdef": "CREATE INDEX automation_executions_status_idx ON public.automation_executions USING btree (status)"
+  },
+  {
+    "tablename": "automation_rules",
+    "indexname": "automation_rules_key_idx",
+    "indexdef": "CREATE UNIQUE INDEX automation_rules_key_idx ON public.automation_rules USING btree (key)"
+  },
+  {
+    "tablename": "automation_rules",
+    "indexname": "automation_rules_pkey",
+    "indexdef": "CREATE UNIQUE INDEX automation_rules_pkey ON public.automation_rules USING btree (id)"
+  },
+  {
+    "tablename": "automation_rules",
+    "indexname": "automation_rules_status_idx",
+    "indexdef": "CREATE INDEX automation_rules_status_idx ON public.automation_rules USING btree (status)"
+  },
+  {
+    "tablename": "automation_settings",
+    "indexname": "automation_settings_pkey",
+    "indexdef": "CREATE UNIQUE INDEX automation_settings_pkey ON public.automation_settings USING btree (id)"
+  },
+  {
+    "tablename": "bookmarks",
+    "indexname": "bookmarks_pkey",
+    "indexdef": "CREATE UNIQUE INDEX bookmarks_pkey ON public.bookmarks USING btree (id)"
+  },
+  {
+    "tablename": "bookmarks",
+    "indexname": "bookmarks_user_kind_idx",
+    "indexdef": "CREATE UNIQUE INDEX bookmarks_user_kind_idx ON public.bookmarks USING btree (user_id, kind, ref_id)"
+  },
+  {
+    "tablename": "branches",
+    "indexname": "branches_pkey",
+    "indexdef": "CREATE UNIQUE INDEX branches_pkey ON public.branches USING btree (id)"
+  },
+  {
+    "tablename": "companies",
+    "indexname": "companies_pkey",
+    "indexdef": "CREATE UNIQUE INDEX companies_pkey ON public.companies USING btree (id)"
+  },
+  {
+    "tablename": "downloads",
+    "indexname": "downloads_pkey",
+    "indexdef": "CREATE UNIQUE INDEX downloads_pkey ON public.downloads USING btree (id)"
+  },
+  {
+    "tablename": "downloads",
+    "indexname": "downloads_resource_idx",
+    "indexdef": "CREATE INDEX downloads_resource_idx ON public.downloads USING btree (resource_id)"
+  },
+  {
+    "tablename": "downloads",
+    "indexname": "downloads_user_idx",
+    "indexdef": "CREATE INDEX downloads_user_idx ON public.downloads USING btree (user_id)"
+  },
+  {
+    "tablename": "dsa_patterns",
+    "indexname": "dsa_patterns_pkey",
+    "indexdef": "CREATE UNIQUE INDEX dsa_patterns_pkey ON public.dsa_patterns USING btree (id)"
+  },
+  {
+    "tablename": "dsa_problems",
+    "indexname": "dsa_problems_pattern_idx",
+    "indexdef": "CREATE INDEX dsa_problems_pattern_idx ON public.dsa_problems USING btree (pattern_id)"
+  },
+  {
+    "tablename": "dsa_problems",
+    "indexname": "dsa_problems_pkey",
+    "indexdef": "CREATE UNIQUE INDEX dsa_problems_pkey ON public.dsa_problems USING btree (id)"
+  },
+  {
+    "tablename": "dsa_problems",
+    "indexname": "dsa_problems_sheet_idx",
+    "indexdef": "CREATE INDEX dsa_problems_sheet_idx ON public.dsa_problems USING btree (sheet_id)"
+  },
+  {
+    "tablename": "dsa_problems",
+    "indexname": "dsa_problems_slug_idx",
+    "indexdef": "CREATE UNIQUE INDEX dsa_problems_slug_idx ON public.dsa_problems USING btree (slug)"
+  },
+  {
+    "tablename": "dsa_progress",
+    "indexname": "dsa_progress_pkey",
+    "indexdef": "CREATE UNIQUE INDEX dsa_progress_pkey ON public.dsa_progress USING btree (id)"
+  },
+  {
+    "tablename": "dsa_progress",
+    "indexname": "dsa_progress_user_idx",
+    "indexdef": "CREATE INDEX dsa_progress_user_idx ON public.dsa_progress USING btree (user_id)"
+  },
+  {
+    "tablename": "dsa_progress",
+    "indexname": "dsa_progress_user_problem_idx",
+    "indexdef": "CREATE UNIQUE INDEX dsa_progress_user_problem_idx ON public.dsa_progress USING btree (user_id, problem_id)"
+  },
+  {
+    "tablename": "dsa_sheets",
+    "indexname": "dsa_sheets_pkey",
+    "indexdef": "CREATE UNIQUE INDEX dsa_sheets_pkey ON public.dsa_sheets USING btree (id)"
+  },
+  {
+    "tablename": "dsa_solutions",
+    "indexname": "dsa_solutions_pkey",
+    "indexdef": "CREATE UNIQUE INDEX dsa_solutions_pkey ON public.dsa_solutions USING btree (id)"
+  },
+  {
+    "tablename": "dsa_solutions",
+    "indexname": "dsa_solutions_problem_idx",
+    "indexdef": "CREATE INDEX dsa_solutions_problem_idx ON public.dsa_solutions USING btree (problem_id)"
+  },
+  {
+    "tablename": "email_verification_tokens",
+    "indexname": "email_verification_tokens_hash_idx",
+    "indexdef": "CREATE UNIQUE INDEX email_verification_tokens_hash_idx ON public.email_verification_tokens USING btree (token_hash)"
+  },
+  {
+    "tablename": "email_verification_tokens",
+    "indexname": "email_verification_tokens_pkey",
+    "indexdef": "CREATE UNIQUE INDEX email_verification_tokens_pkey ON public.email_verification_tokens USING btree (id)"
+  },
+  {
+    "tablename": "import_jobs",
+    "indexname": "import_jobs_created_by_idx",
+    "indexdef": "CREATE INDEX import_jobs_created_by_idx ON public.import_jobs USING btree (created_by)"
+  },
+  {
+    "tablename": "import_jobs",
+    "indexname": "import_jobs_pkey",
+    "indexdef": "CREATE UNIQUE INDEX import_jobs_pkey ON public.import_jobs USING btree (id)"
+  },
+  {
+    "tablename": "import_jobs",
+    "indexname": "import_jobs_status_idx",
+    "indexdef": "CREATE INDEX import_jobs_status_idx ON public.import_jobs USING btree (status)"
+  },
+  {
+    "tablename": "job_applications",
+    "indexname": "job_applications_opportunity_idx",
+    "indexdef": "CREATE INDEX job_applications_opportunity_idx ON public.job_applications USING btree (opportunity_id)"
+  },
+  {
+    "tablename": "job_applications",
+    "indexname": "job_applications_pkey",
+    "indexdef": "CREATE UNIQUE INDEX job_applications_pkey ON public.job_applications USING btree (id)"
+  },
+  {
+    "tablename": "job_applications",
+    "indexname": "job_applications_user_idx",
+    "indexdef": "CREATE INDEX job_applications_user_idx ON public.job_applications USING btree (user_id)"
+  },
+  {
+    "tablename": "job_applications",
+    "indexname": "job_applications_user_opportunity_idx",
+    "indexdef": "CREATE UNIQUE INDEX job_applications_user_opportunity_idx ON public.job_applications USING btree (user_id, opportunity_id)"
+  },
+  {
+    "tablename": "learning_activities",
+    "indexname": "learning_activities_pkey",
+    "indexdef": "CREATE UNIQUE INDEX learning_activities_pkey ON public.learning_activities USING btree (id)"
+  },
+  {
+    "tablename": "learning_activities",
+    "indexname": "learning_activities_user_idx",
+    "indexdef": "CREATE INDEX learning_activities_user_idx ON public.learning_activities USING btree (user_id, occurred_at)"
+  },
+  {
+    "tablename": "mock_tests",
+    "indexname": "mock_tests_pkey",
+    "indexdef": "CREATE UNIQUE INDEX mock_tests_pkey ON public.mock_tests USING btree (id)"
+  },
+  {
+    "tablename": "notification_deliveries",
+    "indexname": "notification_deliveries_idempotency_idx",
+    "indexdef": "CREATE UNIQUE INDEX notification_deliveries_idempotency_idx ON public.notification_deliveries USING btree (notification_id, channel)"
+  },
+  {
+    "tablename": "notification_deliveries",
+    "indexname": "notification_deliveries_notification_idx",
+    "indexdef": "CREATE INDEX notification_deliveries_notification_idx ON public.notification_deliveries USING btree (notification_id)"
+  },
+  {
+    "tablename": "notification_deliveries",
+    "indexname": "notification_deliveries_pkey",
+    "indexdef": "CREATE UNIQUE INDEX notification_deliveries_pkey ON public.notification_deliveries USING btree (id)"
+  },
+  {
+    "tablename": "notification_deliveries",
+    "indexname": "notification_deliveries_status_idx",
+    "indexdef": "CREATE INDEX notification_deliveries_status_idx ON public.notification_deliveries USING btree (status)"
+  },
+  {
+    "tablename": "notification_outbox",
+    "indexname": "notification_outbox_idempotency_idx",
+    "indexdef": "CREATE UNIQUE INDEX notification_outbox_idempotency_idx ON public.notification_outbox USING btree (idempotency_key)"
+  },
+  {
+    "tablename": "notification_outbox",
+    "indexname": "notification_outbox_pkey",
+    "indexdef": "CREATE UNIQUE INDEX notification_outbox_pkey ON public.notification_outbox USING btree (id)"
+  },
+  {
+    "tablename": "notification_outbox",
+    "indexname": "notification_outbox_status_idx",
+    "indexdef": "CREATE INDEX notification_outbox_status_idx ON public.notification_outbox USING btree (status)"
+  },
+  {
+    "tablename": "notification_preferences",
+    "indexname": "notification_preferences_pkey",
+    "indexdef": "CREATE UNIQUE INDEX notification_preferences_pkey ON public.notification_preferences USING btree (id)"
+  },
+  {
+    "tablename": "notification_preferences",
+    "indexname": "notification_preferences_user_idx",
+    "indexdef": "CREATE UNIQUE INDEX notification_preferences_user_idx ON public.notification_preferences USING btree (user_id)"
+  },
+  {
+    "tablename": "notification_templates",
+    "indexname": "notification_templates_key_idx",
+    "indexdef": "CREATE UNIQUE INDEX notification_templates_key_idx ON public.notification_templates USING btree (key)"
+  },
+  {
+    "tablename": "notification_templates",
+    "indexname": "notification_templates_pkey",
+    "indexdef": "CREATE UNIQUE INDEX notification_templates_pkey ON public.notification_templates USING btree (id)"
+  },
+  {
+    "tablename": "notifications",
+    "indexname": "notifications_created_idx",
+    "indexdef": "CREATE INDEX notifications_created_idx ON public.notifications USING btree (created_at)"
+  },
+  {
+    "tablename": "notifications",
+    "indexname": "notifications_pkey",
+    "indexdef": "CREATE UNIQUE INDEX notifications_pkey ON public.notifications USING btree (id)"
+  },
+  {
+    "tablename": "notifications",
+    "indexname": "notifications_user_idx",
+    "indexdef": "CREATE INDEX notifications_user_idx ON public.notifications USING btree (user_id, is_read)"
+  },
+  {
+    "tablename": "opportunities",
+    "indexname": "opportunities_company_idx",
+    "indexdef": "CREATE INDEX opportunities_company_idx ON public.opportunities USING btree (company_id)"
+  },
+  {
+    "tablename": "opportunities",
+    "indexname": "opportunities_pkey",
+    "indexdef": "CREATE UNIQUE INDEX opportunities_pkey ON public.opportunities USING btree (id)"
+  },
+  {
+    "tablename": "opportunities",
+    "indexname": "opportunities_posted_idx",
+    "indexdef": "CREATE INDEX opportunities_posted_idx ON public.opportunities USING btree (posted_at)"
+  },
+  {
+    "tablename": "opportunities",
+    "indexname": "opportunities_status_idx",
+    "indexdef": "CREATE INDEX opportunities_status_idx ON public.opportunities USING btree (status)"
+  },
+  {
+    "tablename": "opportunities",
+    "indexname": "opportunities_type_idx",
+    "indexdef": "CREATE INDEX opportunities_type_idx ON public.opportunities USING btree (opportunity_type)"
+  },
+  {
+    "tablename": "password_reset_tokens",
+    "indexname": "password_reset_tokens_hash_idx",
+    "indexdef": "CREATE UNIQUE INDEX password_reset_tokens_hash_idx ON public.password_reset_tokens USING btree (token_hash)"
+  },
+  {
+    "tablename": "password_reset_tokens",
+    "indexname": "password_reset_tokens_pkey",
+    "indexdef": "CREATE UNIQUE INDEX password_reset_tokens_pkey ON public.password_reset_tokens USING btree (id)"
+  },
+  {
+    "tablename": "playlists",
+    "indexname": "playlists_category_idx",
+    "indexdef": "CREATE INDEX playlists_category_idx ON public.playlists USING btree (category)"
+  },
+  {
+    "tablename": "playlists",
+    "indexname": "playlists_pkey",
+    "indexdef": "CREATE UNIQUE INDEX playlists_pkey ON public.playlists USING btree (id)"
+  },
+  {
+    "tablename": "playlists",
+    "indexname": "playlists_slug_idx",
+    "indexdef": "CREATE UNIQUE INDEX playlists_slug_idx ON public.playlists USING btree (slug)"
+  },
+  {
+    "tablename": "playlists",
+    "indexname": "playlists_slug_key",
+    "indexdef": "CREATE UNIQUE INDEX playlists_slug_key ON public.playlists USING btree (slug)"
+  },
+  {
+    "tablename": "question_options",
+    "indexname": "question_options_pkey",
+    "indexdef": "CREATE UNIQUE INDEX question_options_pkey ON public.question_options USING btree (id)"
+  },
+  {
+    "tablename": "question_options",
+    "indexname": "question_options_question_idx",
+    "indexdef": "CREATE INDEX question_options_question_idx ON public.question_options USING btree (question_id)"
+  },
+  {
+    "tablename": "questions",
+    "indexname": "questions_pkey",
+    "indexdef": "CREATE UNIQUE INDEX questions_pkey ON public.questions USING btree (id)"
+  },
+  {
+    "tablename": "questions",
+    "indexname": "questions_test_idx",
+    "indexdef": "CREATE INDEX questions_test_idx ON public.questions USING btree (test_id)"
+  },
+  {
+    "tablename": "refresh_tokens",
+    "indexname": "refresh_tokens_hash_idx",
+    "indexdef": "CREATE UNIQUE INDEX refresh_tokens_hash_idx ON public.refresh_tokens USING btree (token_hash)"
+  },
+  {
+    "tablename": "refresh_tokens",
+    "indexname": "refresh_tokens_pkey",
+    "indexdef": "CREATE UNIQUE INDEX refresh_tokens_pkey ON public.refresh_tokens USING btree (id)"
+  },
+  {
+    "tablename": "refresh_tokens",
+    "indexname": "refresh_tokens_user_idx",
+    "indexdef": "CREATE INDEX refresh_tokens_user_idx ON public.refresh_tokens USING btree (user_id)"
+  },
+  {
+    "tablename": "resources",
+    "indexname": "resources_branch_idx",
+    "indexdef": "CREATE INDEX resources_branch_idx ON public.resources USING btree (branch_id)"
+  },
+  {
+    "tablename": "resources",
+    "indexname": "resources_file_hash_idx",
+    "indexdef": "CREATE INDEX resources_file_hash_idx ON public.resources USING btree (file_hash)"
+  },
+  {
+    "tablename": "resources",
+    "indexname": "resources_pkey",
+    "indexdef": "CREATE UNIQUE INDEX resources_pkey ON public.resources USING btree (id)"
+  },
+  {
+    "tablename": "resources",
+    "indexname": "resources_scheme_idx",
+    "indexdef": "CREATE INDEX resources_scheme_idx ON public.resources USING btree (scheme_id)"
+  },
+  {
+    "tablename": "resources",
+    "indexname": "resources_semester_idx",
+    "indexdef": "CREATE INDEX resources_semester_idx ON public.resources USING btree (semester_id)"
+  },
+  {
+    "tablename": "resources",
+    "indexname": "resources_status_idx",
+    "indexdef": "CREATE INDEX resources_status_idx ON public.resources USING btree (status)"
+  },
+  {
+    "tablename": "resources",
+    "indexname": "resources_subject_idx",
+    "indexdef": "CREATE INDEX resources_subject_idx ON public.resources USING btree (subject_id)"
+  },
+  {
+    "tablename": "resources",
+    "indexname": "resources_type_idx",
+    "indexdef": "CREATE INDEX resources_type_idx ON public.resources USING btree (resource_type)"
+  },
+  {
+    "tablename": "roadmap_progress",
+    "indexname": "roadmap_progress_pkey",
+    "indexdef": "CREATE UNIQUE INDEX roadmap_progress_pkey ON public.roadmap_progress USING btree (id)"
+  },
+  {
+    "tablename": "roadmap_progress",
+    "indexname": "roadmap_progress_user_idx",
+    "indexdef": "CREATE INDEX roadmap_progress_user_idx ON public.roadmap_progress USING btree (user_id)"
+  },
+  {
+    "tablename": "roadmap_progress",
+    "indexname": "roadmap_progress_user_roadmap_topic_idx",
+    "indexdef": "CREATE UNIQUE INDEX roadmap_progress_user_roadmap_topic_idx ON public.roadmap_progress USING btree (user_id, roadmap_id, topic_id)"
+  },
+  {
+    "tablename": "roadmap_stages",
+    "indexname": "roadmap_stages_pkey",
+    "indexdef": "CREATE UNIQUE INDEX roadmap_stages_pkey ON public.roadmap_stages USING btree (id)"
+  },
+  {
+    "tablename": "roadmap_stages",
+    "indexname": "roadmap_stages_roadmap_idx",
+    "indexdef": "CREATE INDEX roadmap_stages_roadmap_idx ON public.roadmap_stages USING btree (roadmap_id)"
+  },
+  {
+    "tablename": "roadmap_topics",
+    "indexname": "roadmap_topics_pkey",
+    "indexdef": "CREATE UNIQUE INDEX roadmap_topics_pkey ON public.roadmap_topics USING btree (id)"
+  },
+  {
+    "tablename": "roadmap_topics",
+    "indexname": "roadmap_topics_stage_idx",
+    "indexdef": "CREATE INDEX roadmap_topics_stage_idx ON public.roadmap_topics USING btree (stage_id)"
+  },
+  {
+    "tablename": "roadmaps",
+    "indexname": "roadmaps_pkey",
+    "indexdef": "CREATE UNIQUE INDEX roadmaps_pkey ON public.roadmaps USING btree (id)"
+  },
+  {
+    "tablename": "saved_opportunities",
+    "indexname": "saved_opportunities_pkey",
+    "indexdef": "CREATE UNIQUE INDEX saved_opportunities_pkey ON public.saved_opportunities USING btree (id)"
+  },
+  {
+    "tablename": "saved_opportunities",
+    "indexname": "saved_opportunities_user_opportunity_idx",
+    "indexdef": "CREATE UNIQUE INDEX saved_opportunities_user_opportunity_idx ON public.saved_opportunities USING btree (user_id, opportunity_id)"
+  },
+  {
+    "tablename": "scheduled_tasks",
+    "indexname": "scheduled_tasks_name_idx",
+    "indexdef": "CREATE UNIQUE INDEX scheduled_tasks_name_idx ON public.scheduled_tasks USING btree (name)"
+  },
+  {
+    "tablename": "scheduled_tasks",
+    "indexname": "scheduled_tasks_pkey",
+    "indexdef": "CREATE UNIQUE INDEX scheduled_tasks_pkey ON public.scheduled_tasks USING btree (id)"
+  },
+  {
+    "tablename": "schemes",
+    "indexname": "schemes_pkey",
+    "indexdef": "CREATE UNIQUE INDEX schemes_pkey ON public.schemes USING btree (id)"
+  },
+  {
+    "tablename": "semesters",
+    "indexname": "semesters_pkey",
+    "indexdef": "CREATE UNIQUE INDEX semesters_pkey ON public.semesters USING btree (id)"
+  },
+  {
+    "tablename": "student_streaks",
+    "indexname": "student_streaks_pkey",
+    "indexdef": "CREATE UNIQUE INDEX student_streaks_pkey ON public.student_streaks USING btree (id)"
+  },
+  {
+    "tablename": "student_streaks",
+    "indexname": "student_streaks_user_idx",
+    "indexdef": "CREATE UNIQUE INDEX student_streaks_user_idx ON public.student_streaks USING btree (user_id)"
+  },
+  {
+    "tablename": "subjects",
+    "indexname": "subjects_branch_idx",
+    "indexdef": "CREATE INDEX subjects_branch_idx ON public.subjects USING btree (branch_id, semester_id)"
+  },
+  {
+    "tablename": "subjects",
+    "indexname": "subjects_code_idx",
+    "indexdef": "CREATE INDEX subjects_code_idx ON public.subjects USING btree (code)"
+  },
+  {
+    "tablename": "subjects",
+    "indexname": "subjects_pkey",
+    "indexdef": "CREATE UNIQUE INDEX subjects_pkey ON public.subjects USING btree (id)"
+  },
+  {
+    "tablename": "test_attempts",
+    "indexname": "test_attempts_pkey",
+    "indexdef": "CREATE UNIQUE INDEX test_attempts_pkey ON public.test_attempts USING btree (id)"
+  },
+  {
+    "tablename": "test_attempts",
+    "indexname": "test_attempts_test_idx",
+    "indexdef": "CREATE INDEX test_attempts_test_idx ON public.test_attempts USING btree (test_id)"
+  },
+  {
+    "tablename": "test_attempts",
+    "indexname": "test_attempts_user_idx",
+    "indexdef": "CREATE INDEX test_attempts_user_idx ON public.test_attempts USING btree (user_id)"
+  },
+  {
+    "tablename": "test_responses",
+    "indexname": "test_responses_attempt_idx",
+    "indexdef": "CREATE INDEX test_responses_attempt_idx ON public.test_responses USING btree (attempt_id)"
+  },
+  {
+    "tablename": "test_responses",
+    "indexname": "test_responses_attempt_question_idx",
+    "indexdef": "CREATE UNIQUE INDEX test_responses_attempt_question_idx ON public.test_responses USING btree (attempt_id, question_id)"
+  },
+  {
+    "tablename": "test_responses",
+    "indexname": "test_responses_pkey",
+    "indexdef": "CREATE UNIQUE INDEX test_responses_pkey ON public.test_responses USING btree (id)"
+  },
+  {
+    "tablename": "users",
+    "indexname": "users_email_idx",
+    "indexdef": "CREATE UNIQUE INDEX users_email_idx ON public.users USING btree (email)"
+  },
+  {
+    "tablename": "users",
+    "indexname": "users_pkey",
+    "indexdef": "CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)"
+  },
+  {
+    "tablename": "users",
+    "indexname": "users_role_idx",
+    "indexdef": "CREATE INDEX users_role_idx ON public.users USING btree (role)"
+  },
+  {
+    "tablename": "vtu_collection_jobs",
+    "indexname": "vtu_collection_jobs_pkey",
+    "indexdef": "CREATE UNIQUE INDEX vtu_collection_jobs_pkey ON public.vtu_collection_jobs USING btree (id)"
+  },
+  {
+    "tablename": "vtu_collection_jobs",
+    "indexname": "vtu_jobs_created_idx",
+    "indexdef": "CREATE INDEX vtu_jobs_created_idx ON public.vtu_collection_jobs USING btree (created_at)"
+  },
+  {
+    "tablename": "vtu_collection_jobs",
+    "indexname": "vtu_jobs_status_idx",
+    "indexdef": "CREATE INDEX vtu_jobs_status_idx ON public.vtu_collection_jobs USING btree (status)"
+  },
+  {
+    "tablename": "vtu_collection_jobs",
+    "indexname": "vtu_jobs_type_idx",
+    "indexdef": "CREATE INDEX vtu_jobs_type_idx ON public.vtu_collection_jobs USING btree (job_type)"
+  },
+  {
+    "tablename": "vtu_discovered_resources",
+    "indexname": "vtu_discovered_approval_idx",
+    "indexdef": "CREATE INDEX vtu_discovered_approval_idx ON public.vtu_discovered_resources USING btree (approval_status)"
+  },
+  {
+    "tablename": "vtu_discovered_resources",
+    "indexname": "vtu_discovered_category_idx",
+    "indexdef": "CREATE INDEX vtu_discovered_category_idx ON public.vtu_discovered_resources USING btree (category)"
+  },
+  {
+    "tablename": "vtu_discovered_resources",
+    "indexname": "vtu_discovered_download_status_idx",
+    "indexdef": "CREATE INDEX vtu_discovered_download_status_idx ON public.vtu_discovered_resources USING btree (download_status)"
+  },
+  {
+    "tablename": "vtu_discovered_resources",
+    "indexname": "vtu_discovered_hash_idx",
+    "indexdef": "CREATE INDEX vtu_discovered_hash_idx ON public.vtu_discovered_resources USING btree (file_hash)"
+  },
+  {
+    "tablename": "vtu_discovered_resources",
+    "indexname": "vtu_discovered_orig_url_idx",
+    "indexdef": "CREATE INDEX vtu_discovered_orig_url_idx ON public.vtu_discovered_resources USING btree (original_file_url)"
+  },
+  {
+    "tablename": "vtu_discovered_resources",
+    "indexname": "vtu_discovered_resources_pkey",
+    "indexdef": "CREATE UNIQUE INDEX vtu_discovered_resources_pkey ON public.vtu_discovered_resources USING btree (id)"
+  },
+  {
+    "tablename": "vtu_discovered_resources",
+    "indexname": "vtu_discovered_source_idx",
+    "indexdef": "CREATE INDEX vtu_discovered_source_idx ON public.vtu_discovered_resources USING btree (source_website)"
+  },
+  {
+    "tablename": "vtu_discovered_resources",
+    "indexname": "vtu_discovered_validation_status_idx",
+    "indexdef": "CREATE INDEX vtu_discovered_validation_status_idx ON public.vtu_discovered_resources USING btree (validation_status)"
+  },
+  {
+    "tablename": "vtu_updates",
+    "indexname": "vtu_updates_pkey",
+    "indexdef": "CREATE UNIQUE INDEX vtu_updates_pkey ON public.vtu_updates USING btree (id)"
+  },
+  {
+    "tablename": "vtu_updates",
+    "indexname": "vtu_updates_published_idx",
+    "indexdef": "CREATE INDEX vtu_updates_published_idx ON public.vtu_updates USING btree (published_at)"
+  }
+]

@@ -160,28 +160,18 @@ export function Footer() {
           </div>
         </div>
         <nav className="flex flex-wrap gap-x-4 gap-y-1.5 text-[0.72rem] font-semibold text-ink-500">
-          <Link href="/vtu" className="hover:text-brand-600">
-            VTU Notes
-          </Link>
-          <Link href="/placements" className="hover:text-brand-600">
-            Placements
-          </Link>
-          <Link href="/jobs" className="hover:text-brand-600">
-            Jobs
-          </Link>
-          <Link href="/placements/mock-tests" className="hover:text-brand-600">
-            Mock Tests
-          </Link>
-          <Link href="/dashboard" className="hover:text-brand-600">
-            Dashboard
-          </Link>
-          <Link href="/admin" className="hover:text-brand-600">
-            Admin
-          </Link>
+          <Link href="/vtu" className="hover:text-brand-600">VTU Notes</Link>
+          <Link href="/placements" className="hover:text-brand-600">Placements</Link>
+          <Link href="/jobs" className="hover:text-brand-600">Jobs</Link>
+          <Link href="/placements/mock-tests" className="hover:text-brand-600">Mock Tests</Link>
+          <Link href="/about" className="hover:text-brand-600">About</Link>
+          <Link href="/contact" className="hover:text-brand-600">Contact</Link>
+          <Link href="/privacy-policy" className="hover:text-brand-600">Privacy</Link>
+          <Link href="/terms" className="hover:text-brand-600">Terms</Link>
         </nav>
         <p className="flex items-center gap-1 text-[0.68rem] text-ink-500">
           Built with <Heart className="size-3 text-brand-500" /> for engineering
-          students · Demo data
+          students across Karnataka · © {new Date().getFullYear()} EngineerPrep India
         </p>
       </div>
     </footer>
@@ -217,10 +207,10 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             </p>
             <ul className="mt-8 grid gap-3 sm:grid-cols-2">
               {[
-                "20K+ students preparing daily",
+                "VTU notes & study materials",
                 "500+ curated DSA problems",
-                "300+ verified VTU resources",
-                "100+ hiring companies",
+                "Verified syllabus & question papers",
+                "Jobs & internship listings",
               ].map((item) => (
                 <li
                   key={item}
@@ -232,8 +222,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             </ul>
           </div>
           <p className="text-[0.68rem] text-white/45">
-            Demo environment · authentication state is stored in HTTP-only
-            cookies and the PostgreSQL demo database.
+            Your data is secured with encrypted sessions and stored securely.
           </p>
         </div>
       </div>
