@@ -1,0 +1,164 @@
+[
+  {
+    "id": "acid-properties",
+    "question": "Explain ACID properties in DBMS with a real-world banking transaction example.",
+    "category": "dbms",
+    "frequency": "High Frequency",
+    "difficulty": "Easy",
+    "tags": ["DBMS", "Transactions", "Campus Favorite"],
+    "summary": "ACID guarantees reliability in transactional database operations: Atomicity, Consistency, Isolation, and Durability.",
+    "answer": [
+      "Atomicity (All or Nothing): If transferring ₹5,000 from Account A to Account B, either debiting A and crediting B both succeed, or neither happens. If power fails mid-way, the transaction is rolled back.",
+      "Consistency: State changes from one valid state to another, maintaining constraints (e.g. Account balance cannot be negative, total sum of money across accounts remains invariant).",
+      "Isolation: Concurrent transactions execute independently without interfering. Intermediate uncommitted changes in A's balance are not visible to transaction T2 until T1 commits.",
+      "Durability: Once committed, updates persist even if the server crashes immediately after. Backed by Write-Ahead Logging (WAL)."
+    ],
+    "followUp": "How do database isolation levels (Read Uncommitted, Read Committed, Repeatable Read, Serializable) prevent dirty reads and phantom reads?"
+  },
+  {
+    "id": "process-vs-thread",
+    "question": "What is the difference between a Process and a Thread? Why is context switching between threads cheaper?",
+    "category": "os",
+    "frequency": "High Frequency",
+    "difficulty": "Easy",
+    "tags": ["Operating Systems", "Concurrency", "Core CS"],
+    "summary": "A process is an executing program with isolated memory space; threads are lightweight execution units within a process sharing the same address space.",
+    "answer": [
+      "Address Space & Memory: Each process gets its own virtual address space (code, data, heap, stack). Threads inside the same process share code, data, and heap, but each maintains its own stack and program counter.",
+      "Communication: Inter-Process Communication (IPC) requires OS primitives (pipes, message queues, shared memory sockets). Inter-thread communication simply reads/writes shared heap variables.",
+      "Context Switching: Thread switching is significantly cheaper because the CPU does not need to invalidate the Translation Lookaside Buffer (TLB) or reload page tables.",
+      "Failure Isolation: If a thread faults (e.g. segmentation fault), the entire host process crashes. Separate processes run in isolation."
+    ],
+    "followUp": "What is a race condition and what synchronization primitives (mutex, semaphore, spinlock) do you use to prevent it?"
+  },
+  {
+    "id": "virtual-memory-paging",
+    "question": "How does Virtual Memory work? Trace what happens during a Page Fault.",
+    "category": "os",
+    "frequency": "High Frequency",
+    "difficulty": "Medium",
+    "tags": ["Operating Systems", "Memory Management"],
+    "summary": "Virtual memory maps logical addresses to physical RAM frames via the MMU and page tables, allowing processes to execute without requiring contiguous physical memory.",
+    "answer": [
+      "Address Translation: CPU generates a virtual address (Virtual Page Number + Offset). The MMU checks the TLB (Translation Lookaside Buffer). If hit, physical frame is retrieved in ~1 clock cycle.",
+      "Page Fault Trigger: If the page table entry indicates the valid bit is 0, the page is currently on secondary storage (swap/disk), generating a hardware trap (Page Fault Interrupt).",
+      "OS Handler: The kernel traps to OS page fault handler. It verifies the address was legal and locates the page on disk.",
+      "Frame Allocation & Swap-in: OS finds a free physical frame (or evicts an existing page via LRU/Clock replacement). The missing page is read from disk into RAM via DMA.",
+      "Table Update & Restart: OS updates the page table entry (valid bit = 1, frame number recorded), flushes stale TLB entries, and restarts the faulting instruction seamlessly."
+    ],
+    "followUp": "What is thrashing in operating systems and how does the working set model prevent it?"
+  },
+  {
+    "id": "tcp-vs-udp",
+    "question": "Compare TCP vs UDP. Why does DNS use UDP for queries but TCP for zone transfers?",
+    "category": "cn",
+    "frequency": "High Frequency",
+    "difficulty": "Medium",
+    "tags": ["Computer Networks", "Transport Layer", "Protocols"],
+    "summary": "TCP provides reliable, ordered, stream-oriented transport with congestion control; UDP is lightweight, connectionless, and datagram-oriented.",
+    "answer": [
+      "Connection Setup: TCP requires a 3-way handshake (SYN, SYN-ACK, ACK) before any payload is sent. UDP sends packets immediately with zero handshake overhead.",
+      "Reliability & Ordering: TCP uses sequence numbers, ACKs, checksums, and retransmission timers (ARQ). UDP has no guaranteed delivery, ordering, or retransmission.",
+      "Congestion & Flow Control: TCP adjusts window size via slow start, congestion avoidance, and receiver buffer flow control. UDP transmits at application rate.",
+      "Why DNS uses UDP: Standard lookups are small (< 512 bytes) and latency-critical. Setting up a 3-way handshake would double lookup time. If lost, client just re-queries.",
+      "Why DNS Zone Transfers use TCP: Zone transfers sync large DNS records across nameservers where reliability, integrity, and packet loss recovery are paramount."
+    ],
+    "followUp": "Explain how TCP handles congestion collapse with Slow Start, AIMD (Additive Increase Multiplicative Decrease), and Fast Recovery."
+  },
+  {
+    "id": "dbms-indexing",
+    "question": "How do B+ Trees work in Database Indexing? When should an index NOT be created?",
+    "category": "dbms",
+    "frequency": "High Frequency",
+    "difficulty": "Medium",
+    "tags": ["DBMS", "SQL", "Performance Optimization"],
+    "summary": "B+ Trees provide balanced log(N) search, insert, and delete operations with high fan-out and doubly linked leaf nodes optimized for range scans.",
+    "answer": [
+      "Why B+ Tree over Binary Search Tree: Disks read in block pages (4KB-16KB). A B+ tree node holds hundreds of keys, keeping tree height extremely shallow (3-4 levels for millions of rows), minimizing disk I/O.",
+      "Leaf Node Chain: All record pointers reside strictly at the leaf level, connected in a bidirectional linked list, enabling O(log N + K) range queries (e.g. WHERE age BETWEEN 20 AND 30).",
+      "Clustered vs Non-Clustered: A clustered index physically dictates the on-disk ordering of rows (one per table, usually primary key). Secondary indexes point to the clustering key.",
+      "When NOT to Index: On small tables (full table scan is faster), on columns with low cardinality (e.g. boolean gender/status flags), or on write-heavy tables where frequent INSERT/UPDATE/DELETE incurs high B+ tree rebalancing overhead."
+    ],
+    "followUp": "What is a covering index and how does index-only scan avoid hitting table heap pages?"
+  },
+  {
+    "id": "oop-polymorphism",
+    "question": "Explain Compile-time vs Runtime Polymorphism in Java/C++ with examples.",
+    "category": "oop",
+    "frequency": "High Frequency",
+    "difficulty": "Easy",
+    "tags": ["OOP", "Java", "C++", "Fundamentals"],
+    "summary": "Compile-time polymorphism is resolved at build time via overloading; runtime polymorphism is resolved dynamically via method overriding and virtual tables.",
+    "answer": [
+      "Compile-time (Static) Polymorphism: Method Overloading and Operator Overloading. The compiler inspects method signatures (parameter types and count) during compilation to bind the function call.",
+      "Runtime (Dynamic) Polymorphism: Method Overriding using inheritance. The sub-class provides a specific implementation of a method defined in the parent class.",
+      "Mechanism: In Java, all non-static/non-final methods are virtual by default. In C++, methods must be marked `virtual`. At runtime, the JVM / vtable resolves the call based on the actual object on heap, not the reference type.",
+      "Code Example: Shape s = new Circle(); s.draw(); calls Circle's draw() dynamically."
+    ],
+    "followUp": "Can you override private, static, or final methods in Java? Explain method hiding vs overriding."
+  },
+  {
+    "id": "deadlock-conditions",
+    "question": "What are Coffman's 4 conditions for Deadlock? How do modern systems handle them?",
+    "category": "os",
+    "frequency": "Medium Frequency",
+    "difficulty": "Medium",
+    "tags": ["Operating Systems", "Deadlock", "Concurrency"],
+    "summary": "Deadlock occurs when a set of concurrent processes are blocked because each is holding a resource and waiting for another resource held by another process.",
+    "answer": [
+      "Mutual Exclusion: At least one resource must be non-shareable.",
+      "Hold and Wait: A process holds at least one resource and is waiting to acquire additional resources held by other processes.",
+      "No Preemption: Resources cannot be forcibly taken from a process; they must be released voluntarily.",
+      "Circular Wait: A closed chain of processes exists where each process holds resources needed by the next process in the cycle.",
+      "Prevention & Avoidance: Banker's algorithm (safe state check), global lock ordering (e.g. acquire locks in monotonic ID order to break circular wait), or lock timeouts."
+    ],
+    "followUp": "How does PostgreSQL detect deadlocks in transactions and what error code does it return?"
+  },
+  {
+    "id": "rest-vs-graphql",
+    "question": "Compare REST API architecture with GraphQL. Discuss over-fetching and under-fetching.",
+    "category": "web",
+    "frequency": "High Frequency",
+    "difficulty": "Medium",
+    "tags": ["Web Development", "Backend Architecture", "APIs"],
+    "summary": "REST uses standard HTTP methods on resource endpoints; GraphQL uses a single endpoint with client-specified schema queries.",
+    "answer": [
+      "Over-fetching: In REST, an endpoint `/users/1` returns 40 fields even if the mobile client only needs `name` and `avatar`. GraphQL solves this by letting clients declare exact fields: `{ user(id: 1) { name avatar } }`.",
+      "Under-fetching: In REST, showing a user profile and their last 5 posts requires 2 separate requests (`/users/1` then `/users/1/posts`). GraphQL fetches both in a single round-trip.",
+      "Caching: REST leverages standard HTTP edge caching (Cache-Control, ETag, CDN). GraphQL uses POST for queries, requiring client-side normalized caching (Apollo/Relay).",
+      "Idempotency: GET, PUT, and DELETE in REST are idempotent. POST is non-idempotent."
+    ],
+    "followUp": "What is the N+1 query problem in GraphQL backends and how does DataLoader solve it with batching?"
+  },
+  {
+    "id": "hr-star-method-conflict",
+    "question": "Tell me about a time you had a technical disagreement with a team member in a project. How did you resolve it?",
+    "category": "hr",
+    "frequency": "High Frequency",
+    "difficulty": "Easy",
+    "tags": ["HR & Behavioral", "STAR Method", "Soft Skills"],
+    "summary": "Use the STAR technique (Situation, Task, Action, Result) focusing on objective criteria, professional collaboration, and successful project delivery.",
+    "answer": [
+      "Situation: In our final year engineering project, our 4-person team had a disagreement regarding database architecture—whether to use MongoDB (NoSQL) or PostgreSQL (Relational).",
+      "Task: As the backend lead, my responsibility was to ensure we chose a scalable, maintainable database that fit our schema requirements while keeping the team aligned and on schedule.",
+      "Action: Instead of subjective arguing, I proposed benchmark evaluation criteria: data consistency needs (foreign keys and ACID transactions for our reservation logic), query complexity, and developer familiarity. We created a proof-of-concept prototype for both and evaluated write latencies and schema migration effort.",
+      "Result: The data showed PostgreSQL prevented data inconsistency in concurrent bookings. My teammate agreed with the benchmark evidence. We delivered the project on time and earned an S-grade in our department review."
+    ],
+    "followUp": "What did you learn from that experience about technical leadership and disagreeing constructively?"
+  },
+  {
+    "id": "hr-why-join-company",
+    "question": "Why do you want to join our company, and where do you see yourself in 3 to 5 years?",
+    "category": "hr",
+    "frequency": "High Frequency",
+    "difficulty": "Easy",
+    "tags": ["HR & Behavioral", "Career Vision", "Cultural Fit"],
+    "summary": "Connect the company's real products and engineering culture with your skill trajectory, showing grounded ambition and commitment to continuous learning.",
+    "answer": [
+      "Specific Alignment: Research the company's core products, recent tech stack migrations, and engineering blog. Mention specific engineering challenges they solve that excite you (e.g., high-throughput distributed systems or scalable enterprise products).",
+      "Contribution as a Fresher: Emphasize eagerness to contribute high-quality code from day one, adapt to company coding standards, write robust unit tests, and absorb mentorship from senior engineers.",
+      "3-5 Year Vision: In 3 to 5 years, I see myself growing into an independent Senior Software Engineer who takes end-to-end ownership of microservices, designs resilient backend components, and mentors incoming campus recruits."
+    ],
+    "followUp": "What are your salary expectations and are you open to relocation across our Bangalore/Hyderabad/Pune offices?"
+  }
+]

@@ -29,14 +29,17 @@ import {
   Table2,
   Trophy,
   Video,
+  RotateCcw,
 } from "lucide-react";
 import { Badge, Button, Card, CodeBlock, Modal, ProgressBar, SegmentedControl, useToast } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
-import playlistsData from "@/data/playlists.json";
+import playlistsData from "@/data/playlists-meta.json";
 import systemDesignData from "@/data/system-design.json";
 import sqlSheetData from "@/data/sql-sheet.json";
 import aptitudeData from "@/data/aptitude.json";
+import interviewQuestionsData from "@/data/interview-questions.json";
+import challengeData from "@/data/placement-challenge.json";
 
 /* --------------------------- DSA Playlists --------------------------- */
 
@@ -46,6 +49,7 @@ export function PlaylistsSection() {
   const [selectedPlaylist, setSelectedPlaylist] = useState<any | null>(null);
   const [activeVideo, setActiveVideo] = useState<any | null>(null);
   const [lectureSearch, setLectureSearch] = useState("");
+  const [loadingLectures, setLoadingLectures] = useState(false);
 
   const filtered = useMemo(() => {
     return playlistsData.filter((p: any) => {
@@ -88,15 +92,53 @@ export function PlaylistsSection() {
     );
   }, [selectedLectures, lectureSearch]);
 
-  const handleOpenPlaylist = (playlist: any) => {
+  const handleOpenPlaylist = async (playlist: any) => {
     setSelectedPlaylist(playlist);
     setLectureSearch("");
-    const lecs = Array.isArray(playlist.lectures) && playlist.lectures.length > 0
-      ? playlist.lectures
-      : Array.isArray(playlist.sections)
-      ? playlist.sections.flatMap((s: any) => s.videos || [])
-      : [];
-    setActiveVideo(lecs[0] || null);
+
+    const hasVideos =
+      (Array.isArray(playlist.lectures) && playlist.lectures.length > 0) ||
+      (Array.isArray(playlist.sections) && playlist.sections.length > 0);
+
+    if (hasVideos) {
+      const lecs =
+        Array.isArray(playlist.lectures) && playlist.lectures.length > 0
+          ? playlist.lectures
+          : Array.isArray(playlist.sections)
+          ? playlist.sections.flatMap((s: any) => s.videos || [])
+          : [];
+      setActiveVideo(lecs[0] || null);
+      return;
+    }
+
+    setLoadingLectures(true);
+    try {
+      const res = await fetch(`/api/v1/dsa/playlists/${playlist.slug}`);
+      if (res.ok) {
+        const json = await res.json();
+        const full = json.data?.playlist;
+        if (full) {
+          setSelectedPlaylist({ ...playlist, ...full });
+          const lecs =
+            Array.isArray(full.lectures) && full.lectures.length > 0
+              ? full.lectures
+              : Array.isArray(full.sections)
+              ? full.sections.flatMap((s: any) =>
+                  (s.videos || []).map((v: any, vIdx: number) => ({
+                    ...v,
+                    index: v.index || vIdx + 1,
+                    sectionTitle: v.sectionTitle || s.title,
+                  }))
+                )
+              : [];
+          setActiveVideo(lecs[0] || null);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch playlist details", e);
+    } finally {
+      setLoadingLectures(false);
+    }
   };
 
   return (
@@ -296,140 +338,149 @@ export function PlaylistsSection() {
           }
         >
           <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
-            {/* Embedded Active Video Player */}
-            {activeVideo && (
-              <div className="space-y-2">
-                <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-md border border-line">
-                  <iframe
-                    className="size-full"
-                    src={`https://www.youtube-nocookie.com/embed/${
-                      activeVideo.youtubeId ||
-                      activeVideo.videoUrl?.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]+)/)?.[1] ||
-                      ""
-                    }?autoplay=1&rel=0`}
-                    title={activeVideo.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-                <div className="flex items-center justify-between gap-2 p-3 bg-surface-elevated rounded-xl border border-line">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-ink-900 truncate">
-                      {activeVideo.title}
-                    </p>
-                    <p className="text-[0.68rem] text-ink-500">
-                      {activeVideo.sectionTitle || selectedPlaylist.title} · {activeVideo.duration || "Video"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {activeVideo.problemUrl && (
-                      <a
-                        href={activeVideo.problemUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[0.68rem] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2.5 py-1 rounded-md"
-                      >
-                        <span>Practice Problem</span>
-                        <ExternalLink className="size-2.5" />
-                      </a>
-                    )}
-                    <a
-                      href={activeVideo.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[0.68rem] font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-2.5 py-1 rounded-md"
-                    >
-                      <span>Watch on YouTube</span>
-                      <ExternalLink className="size-2.5" />
-                    </a>
-                  </div>
-                </div>
+            {loadingLectures ? (
+              <div className="py-16 text-center">
+                <div className="inline-block size-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+                <p className="mt-3 text-xs text-ink-500 font-medium">Loading playlist curriculum & lectures...</p>
               </div>
-            )}
-
-            {/* Lecture Filter Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-ink-400" />
-              <input
-                type="text"
-                placeholder="Search lectures in this playlist..."
-                value={lectureSearch}
-                onChange={(e) => setLectureSearch(e.target.value)}
-                className="w-full rounded-lg border border-line bg-surface pl-8 pr-3 py-1.5 text-xs text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none"
-              />
-            </div>
-
-            {/* Lectures List */}
-            <div className="divide-y divide-line rounded-xl border border-line overflow-hidden bg-surface">
-              {filteredLectures.length === 0 ? (
-                <div className="p-6 text-center text-xs text-ink-500">
-                  No lectures match "{lectureSearch}".
-                </div>
-              ) : (
-                filteredLectures.map((lec: any, idx: number) => {
-                  const isCurrent =
-                    activeVideo &&
-                    (activeVideo.id === lec.id || activeVideo.title === lec.title);
-
-                  return (
-                    <div
-                      key={lec.id || idx}
-                      className={cn(
-                        "flex items-center justify-between gap-3 py-2.5 px-3 hover:bg-surface-elevated transition",
-                        isCurrent && "bg-brand-50/60 border-l-2 border-brand-500"
-                      )}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <span className="w-6 text-xs font-bold text-ink-400 tabular-nums">
-                          #{lec.index || idx + 1}
-                        </span>
-                        <div className="min-w-0">
-                          <p
-                            className={cn(
-                              "text-xs font-semibold truncate cursor-pointer hover:text-brand-600 transition",
-                              isCurrent ? "text-brand-600 font-bold" : "text-ink-900"
-                            )}
-                            onClick={() => setActiveVideo(lec)}
-                          >
-                            {lec.title}
-                          </p>
-                          {lec.sectionTitle && (
-                            <p className="text-[0.68rem] text-ink-500 truncate">
-                              {lec.sectionTitle}
-                            </p>
-                          )}
-                        </div>
+            ) : (
+              <>
+                {/* Embedded Active Video Player */}
+                {activeVideo && (
+                  <div className="space-y-2">
+                    <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-md border border-line">
+                      <iframe
+                        className="size-full"
+                        src={`https://www.youtube-nocookie.com/embed/${
+                          activeVideo.youtubeId ||
+                          activeVideo.videoUrl?.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]+)/)?.[1] ||
+                          ""
+                        }?autoplay=1&rel=0`}
+                        title={activeVideo.title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                    <div className="flex items-center justify-between gap-2 p-3 bg-surface-elevated rounded-xl border border-line">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-ink-900 truncate">
+                          {activeVideo.title}
+                        </p>
+                        <p className="text-[0.68rem] text-ink-500">
+                          {activeVideo.sectionTitle || selectedPlaylist.title} · {activeVideo.duration || "Video"}
+                        </p>
                       </div>
-
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[0.68rem] text-ink-400 font-medium">
-                          {lec.duration || "Video"}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant={isCurrent ? "primary" : "outline"}
-                          className="h-6 text-[0.68rem] px-2"
-                          onClick={() => setActiveVideo(lec)}
-                        >
-                          <PlayCircle className="size-3" />
-                          <span>{isCurrent ? "Playing" : "Watch"}</span>
-                        </Button>
+                        {activeVideo.problemUrl && (
+                          <a
+                            href={activeVideo.problemUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[0.68rem] font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2.5 py-1 rounded-md"
+                          >
+                            <span>Practice Problem</span>
+                            <ExternalLink className="size-2.5" />
+                          </a>
+                        )}
                         <a
-                          href={lec.videoUrl}
+                          href={activeVideo.videoUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[0.68rem] font-bold text-red-600 hover:bg-red-100 transition"
-                          title="Open directly on YouTube"
+                          className="inline-flex items-center gap-1 text-[0.68rem] font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-2.5 py-1 rounded-md"
                         >
-                          <span>YouTube</span>
+                          <span>Watch on YouTube</span>
                           <ExternalLink className="size-2.5" />
                         </a>
                       </div>
                     </div>
-                  );
-                })
-              )}
-            </div>
+                  </div>
+                )}
+
+                {/* Lecture Filter Input */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-ink-400" />
+                  <input
+                    type="text"
+                    placeholder="Search lectures in this playlist..."
+                    value={lectureSearch}
+                    onChange={(e) => setLectureSearch(e.target.value)}
+                    className="w-full rounded-lg border border-line bg-surface pl-8 pr-3 py-1.5 text-xs text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none"
+                  />
+                </div>
+
+                {/* Lectures List */}
+                <div className="divide-y divide-line rounded-xl border border-line overflow-hidden bg-surface">
+                  {filteredLectures.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-ink-500">
+                      No lectures match "{lectureSearch}".
+                    </div>
+                  ) : (
+                    filteredLectures.map((lec: any, idx: number) => {
+                      const isCurrent =
+                        activeVideo &&
+                        (activeVideo.id === lec.id || activeVideo.title === lec.title);
+
+                      return (
+                        <div
+                          key={lec.id || idx}
+                          className={cn(
+                            "flex items-center justify-between gap-3 py-2.5 px-3 hover:bg-surface-elevated transition",
+                            isCurrent && "bg-brand-50/60 border-l-2 border-brand-500"
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span className="w-6 text-xs font-bold text-ink-400 tabular-nums">
+                              #{lec.index || idx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <p
+                                className={cn(
+                                  "text-xs font-semibold truncate cursor-pointer hover:text-brand-600 transition",
+                                  isCurrent ? "text-brand-600 font-bold" : "text-ink-900"
+                                )}
+                                onClick={() => setActiveVideo(lec)}
+                              >
+                                {lec.title}
+                              </p>
+                              {lec.sectionTitle && (
+                                <p className="text-[0.68rem] text-ink-500 truncate">
+                                  {lec.sectionTitle}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[0.68rem] text-ink-400 font-medium">
+                              {lec.duration || "Video"}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant={isCurrent ? "primary" : "outline"}
+                              className="h-6 text-[0.68rem] px-2"
+                              onClick={() => setActiveVideo(lec)}
+                            >
+                              <PlayCircle className="size-3" />
+                              <span>{isCurrent ? "Playing" : "Watch"}</span>
+                            </Button>
+                            <a
+                              href={lec.videoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[0.68rem] font-bold text-red-600 hover:bg-red-100 transition"
+                              title="Open directly on YouTube"
+                            >
+                              <span>YouTube</span>
+                              <ExternalLink className="size-2.5" />
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </Modal>
       )}
@@ -1664,37 +1715,452 @@ export function CompanyPreparationSection() {
 /* ----------------------- Interview questions ------------------------- */
 
 export function InterviewQuestionsSection() {
+  const { push } = useToast();
+  const [category, setCategory] = useState<string>("all");
+  const [search, setSearch] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>("acid-properties");
+
+  const categories = [
+    { id: "all", label: "All Questions" },
+    { id: "dbms", label: "DBMS" },
+    { id: "os", label: "Operating Systems" },
+    { id: "cn", label: "Computer Networks" },
+    { id: "oop", label: "OOP & Languages" },
+    { id: "web", label: "Web & APIs" },
+    { id: "hr", label: "HR & Behavioral" },
+  ];
+
+  const filtered = useMemo(() => {
+    return (interviewQuestionsData as any[]).filter((q) => {
+      if (category !== "all" && q.category !== category) return false;
+      if (search.trim()) {
+        const query = search.toLowerCase();
+        const inQuestion = q.question.toLowerCase().includes(query);
+        const inSummary = (q.summary || "").toLowerCase().includes(query);
+        const inTags = (q.tags || []).some((t: string) => t.toLowerCase().includes(query));
+        if (!inQuestion && !inSummary && !inTags) return false;
+      }
+      return true;
+    });
+  }, [category, search]);
+
+  const copyAnswer = (q: any) => {
+    const text = `${q.question}\n\nSummary:\n${q.summary}\n\nKey Points:\n${q.answer.map((a: string, i: number) => `${i + 1}. ${a}`).join("\n")}\n\nLikely Follow-up:\n${q.followUp}`;
+    navigator.clipboard.writeText(text);
+    push({
+      title: "Copied to Clipboard",
+      description: "Answer summary copied to clipboard.",
+      tone: "success",
+    });
+  };
+
   return (
-    <Card className="p-6 text-center">
-      <h3 className="text-sm font-bold text-ink-900">Technical & HR Interview Questions</h3>
-      <p className="mt-1 text-xs text-ink-500">
-        Curated question bank with behavioral, CS core, and scenario-based interview guides.
-      </p>
-      <Link
-        href="/placements/interview-questions"
-        className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-xs font-bold text-white hover:bg-brand-700"
-      >
-        View Interview Question Bank
-      </Link>
-    </Card>
+    <div className="space-y-5">
+      {/* Search and Filters */}
+      <Card className="p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative min-w-0 flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-400" />
+            <input
+              type="text"
+              placeholder="Search interview questions by topic, keyword, or concept..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-lg border border-line bg-surface pl-9 pr-3 py-1.5 text-xs text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-ink-400 hover:text-ink-700"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            {categories.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setCategory(tab.id)}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
+                  category === tab.id
+                    ? "bg-brand-600 text-white shadow-xs"
+                    : "border border-line bg-surface text-ink-600 hover:bg-surface-elevated hover:text-ink-900"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* Header Info */}
+      <div className="flex items-center justify-between text-xs text-ink-500 px-1">
+        <span>
+          Showing <span className="font-bold text-ink-900">{filtered.length}</span> verified interview questions
+        </span>
+        <span className="text-[0.7rem] text-ink-400">
+          Click any question card to expand in-depth explanations & follow-up questions
+        </span>
+      </div>
+
+      {/* Questions List */}
+      {filtered.length === 0 ? (
+        <Card className="p-10 text-center text-sm text-ink-500">
+          No interview questions match your search or filter.
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((item: any) => {
+            const isExpanded = expandedId === item.id;
+            return (
+              <Card
+                key={item.id}
+                className="overflow-hidden p-0 border border-line bg-surface transition hover:border-brand-300"
+              >
+                <div
+                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                  className="flex cursor-pointer items-start justify-between gap-3 p-4 sm:p-5 hover:bg-surface-elevated transition select-none"
+                >
+                  <div className="space-y-2 min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge tone="neutral" className="text-[0.65rem] font-bold uppercase tracking-wider">
+                        {item.category}
+                      </Badge>
+                      <Badge
+                        tone={item.frequency.includes("High") ? "brand" : "info"}
+                        className="text-[0.65rem]"
+                      >
+                        {item.frequency}
+                      </Badge>
+                      <span className="text-[0.7rem] font-medium text-ink-400">
+                        {item.difficulty}
+                      </span>
+                    </div>
+
+                    <h3 className="text-sm font-bold text-ink-900 leading-snug">
+                      {item.question}
+                    </h3>
+
+                    <p className="text-xs text-ink-500 leading-relaxed">
+                      {item.summary}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 pt-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="size-7 p-0 text-ink-400 hover:text-ink-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyAnswer(item);
+                      }}
+                      title="Copy Answer Summary"
+                    >
+                      <Copy className="size-3.5" />
+                    </Button>
+                    <div className="text-ink-400">
+                      {isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                    </div>
+                  </div>
+                </div>
+
+                {isExpanded && (
+                  <div className="border-t border-line bg-surface-elevated/50 p-4 sm:p-5 space-y-4">
+                    <div className="space-y-2.5">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-ink-500">
+                        Model Answer & Core Arguments
+                      </h4>
+                      <div className="space-y-2">
+                        {item.answer.map((point: string, idx: number) => (
+                          <div key={idx} className="flex items-start gap-2.5 text-xs text-ink-700 leading-relaxed">
+                            <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-brand-100 text-[0.65rem] font-bold text-brand-700">
+                              {idx + 1}
+                            </span>
+                            <span>{point}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {item.followUp && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 flex items-start gap-3">
+                        <HelpCircle className="size-4 text-amber-600 shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-amber-900">
+                            Interviewer Follow-up Question:
+                          </p>
+                          <p className="mt-0.5 text-xs text-amber-800 leading-relaxed">
+                            "{item.followUp}"
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {(item.tags || []).map((t: string) => (
+                          <span
+                            key={t}
+                            className="rounded-md bg-surface border border-line px-2 py-0.5 text-[0.65rem] font-medium text-ink-500"
+                          >
+                            #{t}
+                          </span>
+                        ))}
+                      </div>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs"
+                        onClick={() => copyAnswer(item)}
+                      >
+                        <Copy className="size-3.5" />
+                        <span>Copy Model Answer</span>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
 /* -------------------------- Challenge -------------------------------- */
 
 export function ChallengeSection() {
+  const { push } = useToast();
+  const [completedDays, setCompletedDays] = useState<number[]>([]);
+  const [selectedWeek, setSelectedWeek] = useState<number | "all">("all");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("engineerprep_challenge_completed_days");
+      if (saved) {
+        setCompletedDays(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error("Failed to load completed challenge days", e);
+    }
+  }, []);
+
+  const toggleDay = (day: number) => {
+    setCompletedDays((prev) => {
+      const next = prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day];
+      try {
+        localStorage.setItem("engineerprep_challenge_completed_days", JSON.stringify(next));
+      } catch (e) {
+        console.error("Failed to save challenge progress", e);
+      }
+      if (!prev.includes(day)) {
+        push({
+          title: `Day ${day} Completed!`,
+          description: "Progress saved. Keep pushing your placement preparation!",
+          tone: "success",
+        });
+      }
+      return next;
+    });
+  };
+
+  const resetProgress = () => {
+    if (window.confirm("Are you sure you want to reset your 30-Day Challenge progress?")) {
+      setCompletedDays([]);
+      try {
+        localStorage.removeItem("engineerprep_challenge_completed_days");
+      } catch (e) {
+        console.error(e);
+      }
+      push({
+        title: "Progress Reset",
+        description: "Your 30-day challenge checklist has been reset.",
+        tone: "info",
+      });
+    }
+  };
+
+  const filteredDays = useMemo(() => {
+    return (challengeData as any[]).filter((d) => {
+      if (selectedWeek !== "all" && d.week !== selectedWeek) return false;
+      return true;
+    });
+  }, [selectedWeek]);
+
+  const totalDays = 30;
+  const completedCount = completedDays.length;
+  const progressPercent = Math.round((completedCount / totalDays) * 100);
+
   return (
-    <Card className="p-6 text-center">
-      <h3 className="text-sm font-bold text-ink-900">30-Day Placement Challenge</h3>
-      <p className="mt-1 text-xs text-ink-500">
-        Intensive 30-day curriculum with daily DSA, Aptitude, and CS fundamentals targets.
-      </p>
-      <Link
-        href="/placements/challenge"
-        className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-xs font-bold text-white hover:bg-brand-700"
-      >
-        Start 30-Day Challenge
-      </Link>
-    </Card>
+    <div className="space-y-6">
+      {/* Progress Milestone Banner */}
+      <Card className="overflow-hidden border border-brand-200 bg-gradient-to-br from-brand-50/80 via-surface to-brand-50/40 p-5 sm:p-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="flex size-7 items-center justify-center rounded-lg bg-brand-600 text-white shadow-xs">
+                <Trophy className="size-4" />
+              </span>
+              <h3 className="text-base font-bold text-ink-900">
+                Your 30-Day Placement Challenge Tracker
+              </h3>
+            </div>
+            <p className="text-xs text-ink-600">
+              Structured daily curriculum covering high-yield DSA patterns, DBMS, OS, Networks, and Aptitude.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <span className="text-xl font-extrabold text-brand-700">
+                {completedCount} <span className="text-xs font-semibold text-ink-500">/ {totalDays} Days</span>
+              </span>
+              <p className="text-[0.7rem] font-bold text-ink-500">
+                {progressPercent}% Completed
+              </p>
+            </div>
+            {completedCount > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-ink-400 hover:text-ink-700 h-8 px-2"
+                onClick={resetProgress}
+                title="Reset Progress"
+              >
+                <RotateCcw className="size-3.5" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <ProgressBar value={progressPercent} size="md" />
+        </div>
+      </Card>
+
+      {/* Week Selector Tabs */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[
+          { id: "all", label: "All 30 Days" },
+          { id: 1, label: "Week 1: Foundations & Arrays" },
+          { id: 2, label: "Week 2: Stacks, Binary Search & SQL" },
+          { id: 3, label: "Week 3: Trees, Graphs & Networks" },
+          { id: 4, label: "Week 4: DP, System Design & Mocks" },
+        ].map((tab) => (
+          <button
+            key={String(tab.id)}
+            onClick={() => setSelectedWeek(tab.id as any)}
+            className={cn(
+              "rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors",
+              selectedWeek === tab.id
+                ? "bg-brand-600 text-white shadow-xs"
+                : "border border-line bg-surface text-ink-600 hover:bg-surface-elevated hover:text-ink-900"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Day Cards Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {filteredDays.map((item: any) => {
+          const isDone = completedDays.includes(item.day);
+          return (
+            <Card
+              key={item.day}
+              className={cn(
+                "flex flex-col justify-between p-4 sm:p-5 border transition-all duration-200",
+                isDone
+                  ? "border-emerald-300 bg-emerald-50/30"
+                  : "border-line bg-surface hover:border-brand-300 hover:shadow-xs"
+              )}
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "rounded-md px-2 py-0.5 text-[0.7rem] font-extrabold uppercase tracking-wide",
+                        isDone
+                          ? "bg-emerald-600 text-white"
+                          : "bg-brand-100 text-brand-800"
+                      )}
+                    >
+                      Day {item.day}
+                    </span>
+                    <span className="text-[0.68rem] font-semibold text-ink-400">
+                      Week {item.week}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-[0.7rem] font-medium text-ink-500">
+                    <Clock className="size-3 text-ink-400" />
+                    <span>{item.estimatedTime}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold text-ink-900 line-clamp-1">
+                    {item.title}
+                  </h4>
+                  <p className="mt-0.5 text-[0.68rem] font-medium text-brand-600">
+                    {item.domain}
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  {item.tasks.map((task: string, tIdx: number) => (
+                    <div key={tIdx} className="flex items-start gap-2 text-[0.72rem] text-ink-700 leading-tight">
+                      <span className="mt-1 size-1.5 shrink-0 rounded-full bg-brand-500" />
+                      <span>{task}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-line flex items-center justify-between gap-2">
+                <button
+                  onClick={() => toggleDay(item.day)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer select-none",
+                    isDone
+                      ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                      : "bg-surface-elevated text-ink-600 hover:bg-ink-100 border border-line"
+                  )}
+                >
+                  {isDone ? (
+                    <>
+                      <CheckCircle2 className="size-3.5 text-emerald-600" />
+                      <span>Done</span>
+                    </>
+                  ) : (
+                    <>
+                      <Circle className="size-3.5 text-ink-400" />
+                      <span>Mark Complete</span>
+                    </>
+                  )}
+                </button>
+
+                <Link
+                  href={item.resourceLink}
+                  className="inline-flex items-center gap-1 text-[0.7rem] font-bold text-brand-600 hover:text-brand-700 hover:underline"
+                >
+                  <span>Practice</span>
+                  <ExternalLink className="size-3" />
+                </Link>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
   );
 }

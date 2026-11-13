@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { AuthLayout } from "@/components/layout";
 import { Brandmark } from "@/components/layout/Navbar";
 import { Button, Field, Input, useToast } from "@/components/ui";
@@ -160,45 +160,13 @@ function LoginForm() {
         </Button>
       </form>
 
-      <div className="my-5 flex items-center gap-3">
-        <span className="h-px flex-1 bg-line" />
-        <span className="text-[0.65rem] font-bold uppercase tracking-wider text-ink-500">
-          or
-        </span>
-        <span className="h-px flex-1 bg-line" />
-      </div>
-
-      <Button
-        variant="outline"
-        block
-        size="lg"
-        type="button"
-        onClick={() =>
-          push({
-            title: "Google sign-in unavailable",
-            description:
-              "OAuth requires a configured Google client ID on the backend.",
-            tone: "info",
-          })
-        }
-      >
-        <ShieldCheck className="size-4" /> Continue with Google
-      </Button>
-
-      <p className="mt-4 text-center text-xs text-ink-500">
-        New to the platform?{" "}
-        <Link href="/register" className="font-bold text-brand-600 hover:underline">
-          Create a free account
-        </Link>
-      </p>
-
-      <p className="mt-6 text-sm text-ink-500">
+      <p className="mt-6 text-center text-sm text-ink-500">
         Don&apos;t have an account?{" "}
         <Link
           href="/register"
           className="font-bold text-brand-600 hover:underline"
         >
-          Register
+          Create an account
         </Link>
       </p>
     </AuthLayout>

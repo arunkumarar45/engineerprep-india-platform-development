@@ -133,10 +133,11 @@ export async function POST(
       return apiSuccess({ bookmarked: true }, "Resource bookmarked");
     }
 
-    // Students, contributors and admins can upload resources
-    const user = await getSessionUser();
+    // Authenticated users (students, contributors, admins) can upload resources
+    const user = await requireUser();
     const body = createSchema.parse(await request.json());
-    const status = body.status ?? "PUBLISHED";
+    // Only admins can directly publish; community and student submissions default to DRAFT for review
+    const status = user.role === "ADMIN" ? (body.status ?? "PUBLISHED") : "DRAFT";
     const [created] = await db
       .insert(resources)
       .values({
@@ -144,11 +145,15 @@ export async function POST(
         status,
         subjectId: body.subjectId ?? null,
         moduleNumber: body.moduleNumber ?? null,
-        uploadedBy: user?.id ?? null,
+        uploadedBy: user.id,
         fileSize: body.fileSize ?? "—",
       })
       .returning();
-    return apiSuccess({ resource: created }, "Resource published successfully", 201);
+    const message =
+      status === "PUBLISHED"
+        ? "Resource published successfully"
+        : "Resource submitted for review";
+    return apiSuccess({ resource: created }, message, 201);
   } catch (error) {
     return handleError(error, "Resource action failed");
   }

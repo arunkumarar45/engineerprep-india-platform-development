@@ -1,0 +1,428 @@
+[
+  {
+    "day": 1,
+    "week": 1,
+    "title": "Two Pointers & Arrays Fundamentals",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Review Two Pointers pattern: Converging pointers and running reader/writer",
+      "Solve LeetCode #167: Two Sum II (Input Array Is Sorted)",
+      "Solve LeetCode #26: Remove Duplicates from Sorted Array",
+      "Aptitude: Number Systems, LCM & HCF basic properties"
+    ],
+    "estimatedTime": "2.5 hrs",
+    "resourceLink": "/placements/dsa-playlists"
+  },
+  {
+    "day": 2,
+    "week": 1,
+    "title": "Sliding Window Technique (Fixed & Dynamic)",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Understand Fixed vs Dynamic sliding window boundaries",
+      "Solve LeetCode #643: Maximum Average Subarray I",
+      "Solve LeetCode #3: Longest Substring Without Repeating Characters",
+      "Aptitude: Percentages, Profit and Loss calculations"
+    ],
+    "estimatedTime": "2.5 hrs",
+    "resourceLink": "/placements/dsa-playlists"
+  },
+  {
+    "day": 3,
+    "week": 1,
+    "title": "Prefix Sums & Matrix Traversal",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Implement 1D Prefix Sum and 2D Matrix Prefix Sum",
+      "Solve LeetCode #560: Subarray Sum Equals K (Hash map + prefix sum)",
+      "Solve LeetCode #54: Spiral Matrix",
+      "CS Core: OS Process vs Thread differences & memory layout"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/technical-subjects"
+  },
+  {
+    "day": 4,
+    "week": 1,
+    "title": "Strings & Anagrams Mastery",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Review character frequency maps and rolling hash concepts",
+      "Solve LeetCode #49: Group Anagrams",
+      "Solve LeetCode #5: Longest Palindromic Substring",
+      "Aptitude: Simple Interest, Compound Interest formulas"
+    ],
+    "estimatedTime": "2.5 hrs",
+    "resourceLink": "/placements/aptitude"
+  },
+  {
+    "day": 5,
+    "week": 1,
+    "title": "Fast & Slow Pointers (Floyd's Cycle Detection)",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Master Floyd's cycle detection logic and mathematical proof",
+      "Solve LeetCode #141: Linked List Cycle",
+      "Solve LeetCode #142: Linked List Cycle II (Find entry node)",
+      "Solve LeetCode #202: Happy Number",
+      "CS Core: CPU Scheduling algorithms (FCFS, SJF, Round Robin)"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/technical-subjects"
+  },
+  {
+    "day": 6,
+    "week": 1,
+    "title": "Linked List Inversion & Merging",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Solve LeetCode #206: Reverse Linked List (Iterative & Recursive)",
+      "Solve LeetCode #21: Merge Two Sorted Lists",
+      "Solve LeetCode #234: Palindrome Linked List (O(1) auxiliary space)",
+      "Aptitude: Ratio, Proportion, and Mixtures"
+    ],
+    "estimatedTime": "2.5 hrs",
+    "resourceLink": "/placements/aptitude"
+  },
+  {
+    "day": 7,
+    "week": 1,
+    "title": "Week 1 Review & Full Mock Test",
+    "domain": "Assessment & Revision",
+    "tasks": [
+      "Attempt EngineerPrep 45-minute Week 1 Aptitude & DSA mock test",
+      "Review mistaken submissions from Days 1 to 6",
+      "Refine personal cheat-sheet of edge cases (null pointer, single element arrays)"
+    ],
+    "estimatedTime": "2 hrs",
+    "resourceLink": "/mock-tests"
+  },
+  {
+    "day": 8,
+    "week": 2,
+    "title": "Monotonic Stack Patterns",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Understand Monotonic Increasing vs Decreasing stack invariants",
+      "Solve LeetCode #739: Daily Temperatures",
+      "Solve LeetCode #84: Largest Rectangle in Histogram",
+      "DBMS: ACID properties & transaction recovery logs"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/technical-subjects"
+  },
+  {
+    "day": 9,
+    "week": 2,
+    "title": "Queues, Deques & Sliding Window Maximum",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Implement Queue using Stacks and Stack using Queues",
+      "Solve LeetCode #239: Sliding Window Maximum (Monotonic Deque)",
+      "SQL: DDL vs DML commands and WHERE vs HAVING clauses",
+      "Solve SQL Sheet Questions #1 to #5"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/sql"
+  },
+  {
+    "day": 10,
+    "week": 2,
+    "title": "Binary Search on Sorted Arrays & Answers",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Review lower bound, upper bound, and boundary condition invariants",
+      "Solve LeetCode #33: Search in Rotated Sorted Array",
+      "Solve LeetCode #875: Koko Eating Bananas (Binary search on answer space)",
+      "Aptitude: Time, Speed and Distance, Relative speed in trains"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/aptitude"
+  },
+  {
+    "day": 11,
+    "week": 2,
+    "title": "SQL Joins, Aggregations & Group By",
+    "domain": "DBMS & SQL",
+    "tasks": [
+      "Master INNER JOIN, LEFT JOIN, RIGHT JOIN, and FULL OUTER JOIN",
+      "Solve SQL Sheet: Department Top Three Salaries (DENSE_RANK)",
+      "Solve SQL Sheet: Consecutive Numbers & Duplicate Emails",
+      "CS Core: Database Normalization (1NF, 2NF, 3NF, BCNF) with anomaly examples"
+    ],
+    "estimatedTime": "2.5 hrs",
+    "resourceLink": "/placements/sql"
+  },
+  {
+    "day": 12,
+    "week": 2,
+    "title": "Recursion & Backtracking Foundations",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Formulate base cases, choices, and state rollback in backtracking",
+      "Solve LeetCode #78: Subsets",
+      "Solve LeetCode #46: Permutations",
+      "Solve LeetCode #39: Combination Sum",
+      "Aptitude: Time and Work, Pipes and Cisterns"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/aptitude"
+  },
+  {
+    "day": 13,
+    "week": 2,
+    "title": "Advanced Backtracking: N-Queens & Sudoku",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Solve LeetCode #51: N-Queens (Bitmasking or hash set pruning)",
+      "Solve LeetCode #79: Word Search (Grid backtracking)",
+      "CS Core: Deadlocks, Coffman conditions, and Banker's algorithm"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/technical-subjects"
+  },
+  {
+    "day": 14,
+    "week": 2,
+    "title": "Week 2 Assessment & SQL Challenge",
+    "domain": "Assessment & Revision",
+    "tasks": [
+      "Take 15-question live SQL and DBMS quiz",
+      "Solve 3 mid-level coding challenges within 60 minutes",
+      "Review memory leaks and GC fundamentals in Java / V8"
+    ],
+    "estimatedTime": "2 hrs",
+    "resourceLink": "/mock-tests"
+  },
+  {
+    "day": 15,
+    "week": 3,
+    "title": "Binary Trees: Traversals & Height Properties",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Implement In-order, Pre-order, Post-order (Iterative using 1 stack)",
+      "Solve LeetCode #102: Binary Tree Level Order Traversal (BFS queue)",
+      "Solve LeetCode #104: Maximum Depth of Binary Tree",
+      "Solve LeetCode #543: Diameter of Binary Tree",
+      "CN: OSI 7-Layer model and functions of each layer"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/technical-subjects"
+  },
+  {
+    "day": 16,
+    "week": 3,
+    "title": "Binary Search Trees (BST) & Lowest Common Ancestor",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Review BST property: Left < Root < Right, sorted In-order traversal",
+      "Solve LeetCode #98: Validate Binary Search Tree",
+      "Solve LeetCode #235: Lowest Common Ancestor of a BST",
+      "Solve LeetCode #236: Lowest Common Ancestor of a Binary Tree",
+      "Aptitude: Permutations, Combinations, and Probability"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/aptitude"
+  },
+  {
+    "day": 17,
+    "week": 3,
+    "title": "Graph Representations, BFS & DFS",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Build Adjacency List and Matrix representation with visited array",
+      "Solve LeetCode #200: Number of Islands (Grid DFS / BFS)",
+      "Solve LeetCode #133: Clone Graph",
+      "Solve LeetCode #695: Max Area of Island",
+      "CN: TCP 3-Way Handshake, TCP vs UDP, and flow control"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/technical-subjects"
+  },
+  {
+    "day": 18,
+    "week": 3,
+    "title": "Topological Sort & Cycle Detection in Graphs",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Implement Kahn's Algorithm (in-degree BFS) and DFS topological sort",
+      "Solve LeetCode #207: Course Schedule (Cycle detection in directed graph)",
+      "Solve LeetCode #210: Course Schedule II",
+      "Aptitude: Syllogisms, Statement & Assumptions, Blood Relations"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/aptitude"
+  },
+  {
+    "day": 19,
+    "week": 3,
+    "title": "Shortest Paths (Dijkstra) & Disjoint Set Union (DSU)",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Implement Dijkstra algorithm with Min-Heap priority queue",
+      "Implement Disjoint Set Union (DSU) with Path Compression and Union by Rank",
+      "Solve LeetCode #684: Redundant Connection",
+      "Solve LeetCode #743: Network Delay Time",
+      "CN: DNS lookup flow, ARP protocol, and DHCP address assignment"
+    ],
+    "estimatedTime": "3.5 hrs",
+    "resourceLink": "/placements/technical-subjects"
+  },
+  {
+    "day": 20,
+    "week": 3,
+    "title": "Heaps & Top-K Elements Pattern",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Master Min-Heap vs Max-Heap selection strategy",
+      "Solve LeetCode #215: Kth Largest Element in an Array",
+      "Solve LeetCode #347: Top K Frequent Elements",
+      "Solve LeetCode #295: Find Median from Data Stream (Two Heaps)",
+      "Aptitude: Data Interpretation (Tables, Bar charts, Pie charts)"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/aptitude"
+  },
+  {
+    "day": 21,
+    "week": 3,
+    "title": "Week 3 Assessment & Comprehensive Core CS Review",
+    "domain": "Assessment & Revision",
+    "tasks": [
+      "Attempt 30-question CS Core Mock (OS, DBMS, CN, OOP)",
+      "Complete 2 LeetCode Medium graph problems under 45 minutes",
+      "Revise all formulas and standard complexity tables"
+    ],
+    "estimatedTime": "2 hrs",
+    "resourceLink": "/mock-tests"
+  },
+  {
+    "day": 22,
+    "week": 4,
+    "title": "1D Dynamic Programming: Fibonacci & Robber Series",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Identify optimal substructure, overlapping subproblems, memoization vs tabulation",
+      "Solve LeetCode #70: Climbing Stairs",
+      "Solve LeetCode #198: House Robber",
+      "Solve LeetCode #213: House Robber II",
+      "Solve LeetCode #322: Coin Change (Unbounded knapsack style)",
+      "System Design: Horizontal vs Vertical scaling and Load Balancers (L4 vs L7)"
+    ],
+    "estimatedTime": "3.5 hrs",
+    "resourceLink": "/placements/system-design"
+  },
+  {
+    "day": 23,
+    "week": 4,
+    "title": "2D Dynamic Programming: Grid Paths & Knapsack",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Formulate 0/1 Knapsack recurrence relation and space optimization",
+      "Solve LeetCode #62: Unique Paths",
+      "Solve LeetCode #64: Minimum Path Sum",
+      "Solve LeetCode #416: Partition Equal Subset Sum",
+      "System Design: Caching strategies (Write-through, Write-back, Cache-aside, Eviction policies)"
+    ],
+    "estimatedTime": "3.5 hrs",
+    "resourceLink": "/placements/system-design"
+  },
+  {
+    "day": 24,
+    "week": 4,
+    "title": "Strings DP: Longest Common Subsequence & Edit Distance",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Solve LeetCode #1143: Longest Common Subsequence (LCS)",
+      "Solve LeetCode #72: Edit Distance",
+      "Solve LeetCode #300: Longest Increasing Subsequence (O(N log N) patience sorting)",
+      "System Design: CAP Theorem, PACELC, and Eventual Consistency in distributed systems"
+    ],
+    "estimatedTime": "3.5 hrs",
+    "resourceLink": "/placements/system-design"
+  },
+  {
+    "day": 25,
+    "week": 4,
+    "title": "Greedy Algorithms & Interval Scheduling",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Learn greedy choice property and exchange arguments",
+      "Solve LeetCode #55: Jump Game",
+      "Solve LeetCode #45: Jump Game II",
+      "Solve LeetCode #435: Non-overlapping Intervals",
+      "Solve LeetCode #56: Merge Intervals",
+      "System Design: Database Sharding, Replication, and Read Replicas"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/system-design"
+  },
+  {
+    "day": 26,
+    "week": 4,
+    "title": "Bit Manipulation & Math Tricks",
+    "domain": "DSA & Coding",
+    "tasks": [
+      "Review XOR properties, x & (x-1) lowest set bit extraction",
+      "Solve LeetCode #136: Single Number",
+      "Solve LeetCode #191: Number of 1 Bits",
+      "Solve LeetCode #268: Missing Number",
+      "Solve LeetCode #338: Counting Bits",
+      "HR Prep: Prepare STAR stories for final year project and leadership situations"
+    ],
+    "estimatedTime": "2.5 hrs",
+    "resourceLink": "/placements/interview-questions"
+  },
+  {
+    "day": 27,
+    "week": 4,
+    "title": "System Design High-Level Architecture Walkthrough",
+    "domain": "System Design & Architecture",
+    "tasks": [
+      "Study URL Shortener (TinyURL) system design: ID generation (Snowflake/Base62), schema, cache",
+      "Study WhatsApp / Chat system design: WebSockets, message brokers (Kafka/RabbitMQ), delivery statuses",
+      "Review Rate Limiting algorithms (Token Bucket, Leaky Bucket, Sliding Window Counter)"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/placements/system-design"
+  },
+  {
+    "day": 28,
+    "week": 4,
+    "title": "Resume Polish & ATS Keyword Verification",
+    "domain": "Resume & Career Portfolio",
+    "tasks": [
+      "Run Resume Builder on EngineerPrep: ensure Action Verbs + Metrics in project bullet points",
+      "Ensure GitHub profile README and LinkedIn profile links are updated",
+      "Select 3 verified internships / jobs on EngineerPrep and submit tailored applications"
+    ],
+    "estimatedTime": "2 hrs",
+    "resourceLink": "/resume"
+  },
+  {
+    "day": 29,
+    "week": 4,
+    "title": "Behavioral & HR Interview Simulation",
+    "domain": "HR & Soft Skills",
+    "tasks": [
+      "Practice 'Tell me about yourself' (90-second elevator pitch)",
+      "Answer 'Why this company?' with genuine product knowledge",
+      "Prepare 3 insightful questions to ask the interviewer at the end of the round"
+    ],
+    "estimatedTime": "2 hrs",
+    "resourceLink": "/placements/interview-questions"
+  },
+  {
+    "day": 30,
+    "week": 4,
+    "title": "Grand Final Full-Length Placement Simulation",
+    "domain": "Placement Readiness Capstone",
+    "tasks": [
+      "Take full 90-minute timed mock test: 20 Aptitude + 20 Core CS + 2 Coding Problems",
+      "Verify all 30 days completed in challenge tracker",
+      "Celebrate milestone and graduate to active job application cycle!"
+    ],
+    "estimatedTime": "3 hrs",
+    "resourceLink": "/mock-tests"
+  }
+]

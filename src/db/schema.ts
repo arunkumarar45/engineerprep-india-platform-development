@@ -328,6 +328,8 @@ export const resources = pgTable(
     schemeIdx: index("resources_scheme_idx").on(t.schemeId),
     semesterIdx: index("resources_semester_idx").on(t.semesterId),
     hashIdx: index("resources_file_hash_idx").on(t.fileHash),
+    subjectCodeIdx: index("resources_subject_code_idx").on(t.subjectCode),
+    typeStatusIdx: index("resources_type_status_idx").on(t.resourceType, t.status),
   }),
 );
 
@@ -475,23 +477,29 @@ export const downloads = pgTable(
 /* C. DSA management                                                  */
 /* ------------------------------------------------------------------ */
 
-export const dsaSheets = pgTable("dsa_sheets", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  title: varchar("title", { length: 200 }).notNull(),
-  author: varchar("author", { length: 160 }),
-  description: text("description"),
-  coverImageUrl: text("cover_image_url"),
-  thumbnailUrl: text("thumbnail_url"),
-  thumbnailSource: varchar("thumbnail_source", { length: 120 }),
-  thumbnailSourceUrl: text("thumbnail_source_url"),
-  thumbnailAlt: varchar("thumbnail_alt", { length: 240 }),
-  thumbnailStatus: varchar("thumbnail_status", { length: 40 }).default("ACTIVE"),
-  coverTint: varchar("cover_tint", { length: 40 }).default("#FF5A00"),
-  difficulty: difficulty("difficulty").notNull().default("BEGINNER"),
-  totalProblems: integer("total_problems").notNull().default(0),
-  slug: varchar("slug", { length: 120 }).notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
+export const dsaSheets = pgTable(
+  "dsa_sheets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: varchar("title", { length: 200 }).notNull(),
+    author: varchar("author", { length: 160 }),
+    description: text("description"),
+    coverImageUrl: text("cover_image_url"),
+    thumbnailUrl: text("thumbnail_url"),
+    thumbnailSource: varchar("thumbnail_source", { length: 120 }),
+    thumbnailSourceUrl: text("thumbnail_source_url"),
+    thumbnailAlt: varchar("thumbnail_alt", { length: 240 }),
+    thumbnailStatus: varchar("thumbnail_status", { length: 40 }).default("ACTIVE"),
+    coverTint: varchar("cover_tint", { length: 40 }).default("#FF5A00"),
+    difficulty: difficulty("difficulty").notNull().default("BEGINNER"),
+    totalProblems: integer("total_problems").notNull().default(0),
+    slug: varchar("slug", { length: 120 }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (t) => ({
+    slugIdx: uniqueIndex("dsa_sheets_slug_idx").on(t.slug),
+  }),
+);
 
 export const playlists = pgTable(
   "playlists",
@@ -523,17 +531,23 @@ export const playlists = pgTable(
   }),
 );
 
-export const dsaPatterns = pgTable("dsa_patterns", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: varchar("name", { length: 160 }).notNull(),
-  slug: varchar("slug", { length: 120 }).notNull(),
-  summary: text("summary"),
-  about: text("about"),
-  whenToUse: jsonb("when_to_use").default(sql`'[]'::jsonb`),
-  templates: jsonb("templates").default(sql`'{}'::jsonb`),
-  icon: varchar("icon", { length: 60 }).default("sparkles"),
-  tint: varchar("tint", { length: 40 }).default("#FF5A00"),
-});
+export const dsaPatterns = pgTable(
+  "dsa_patterns",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name", { length: 160 }).notNull(),
+    slug: varchar("slug", { length: 120 }).notNull(),
+    summary: text("summary"),
+    about: text("about"),
+    whenToUse: jsonb("when_to_use").default(sql`'[]'::jsonb`),
+    templates: jsonb("templates").default(sql`'{}'::jsonb`),
+    icon: varchar("icon", { length: 60 }).default("sparkles"),
+    tint: varchar("tint", { length: 40 }).default("#FF5A00"),
+  },
+  (t) => ({
+    slugIdx: uniqueIndex("dsa_patterns_slug_idx").on(t.slug),
+  }),
+);
 
 export const dsaProblems = pgTable(
   "dsa_problems",
@@ -567,6 +581,7 @@ export const dsaProblems = pgTable(
     sheetIdx: index("dsa_problems_sheet_idx").on(t.sheetId),
     patternIdx: index("dsa_problems_pattern_idx").on(t.patternId),
     slugIdx: uniqueIndex("dsa_problems_slug_idx").on(t.slug),
+    diffTopicIdx: index("dsa_problems_diff_topic_idx").on(t.difficulty, t.topic),
   }),
 );
 
@@ -639,19 +654,26 @@ export const bookmarks = pgTable(
 /* D. Developer roadmaps                                              */
 /* ------------------------------------------------------------------ */
 
-export const roadmaps = pgTable("roadmaps", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  title: varchar("title", { length: 200 }).notNull(),
-  slug: varchar("slug", { length: 140 }).notNull(),
-  description: text("description"),
-  category: varchar("category", { length: 60 }).notNull().default("Web Dev"),
-  coverImageUrl: text("cover_image_url"),
-  coverTint: varchar("cover_tint", { length: 40 }).default("#FF5A00"),
-  icon: varchar("icon", { length: 60 }).default("route"),
-  stepCount: integer("step_count").notNull().default(0),
-  estimatedDuration: varchar("estimated_duration", { length: 60 }),
-  difficulty: difficulty("difficulty").notNull().default("BEGINNER"),
-});
+export const roadmaps = pgTable(
+  "roadmaps",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: varchar("title", { length: 200 }).notNull(),
+    slug: varchar("slug", { length: 140 }).notNull(),
+    description: text("description"),
+    category: varchar("category", { length: 60 }).notNull().default("Web Dev"),
+    coverImageUrl: text("cover_image_url"),
+    coverTint: varchar("cover_tint", { length: 40 }).default("#FF5A00"),
+    icon: varchar("icon", { length: 60 }).default("route"),
+    stepCount: integer("step_count").notNull().default(0),
+    estimatedDuration: varchar("estimated_duration", { length: 60 }),
+    difficulty: difficulty("difficulty").notNull().default("BEGINNER"),
+  },
+  (t) => ({
+    slugIdx: uniqueIndex("roadmaps_slug_idx").on(t.slug),
+    categoryIdx: index("roadmaps_category_idx").on(t.category),
+  }),
+);
 
 export const roadmapStages = pgTable(
   "roadmap_stages",
@@ -719,20 +741,27 @@ export const roadmapProgress = pgTable(
 /* E. Mock tests & assessments                                        */
 /* ------------------------------------------------------------------ */
 
-export const mockTests = pgTable("mock_tests", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  title: varchar("title", { length: 220 }).notNull(),
-  slug: varchar("slug", { length: 160 }).notNull(),
-  subject: varchar("subject", { length: 120 }).notNull(),
-  description: text("description"),
-  difficulty: difficulty("difficulty").notNull().default("MEDIUM"),
-  durationMinutes: integer("duration_minutes").notNull().default(60),
-  totalMarks: integer("total_marks").notNull().default(100),
-  isPublished: boolean("is_published").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const mockTests = pgTable(
+  "mock_tests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: varchar("title", { length: 220 }).notNull(),
+    slug: varchar("slug", { length: 160 }).notNull(),
+    subject: varchar("subject", { length: 120 }).notNull(),
+    description: text("description"),
+    difficulty: difficulty("difficulty").notNull().default("MEDIUM"),
+    durationMinutes: integer("duration_minutes").notNull().default(60),
+    totalMarks: integer("total_marks").notNull().default(100),
+    isPublished: boolean("is_published").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    slugIdx: uniqueIndex("mock_tests_slug_idx").on(t.slug),
+    subjectIdx: index("mock_tests_subject_idx").on(t.subject),
+  }),
+);
 
 export const questions = pgTable(
   "questions",
@@ -881,6 +910,8 @@ export const opportunities = pgTable(
     statusIdx: index("opportunities_status_idx").on(t.status),
     companyIdx: index("opportunities_company_idx").on(t.companyId),
     postedIdx: index("opportunities_posted_idx").on(t.postedAt),
+    deadlineIdx: index("opportunities_deadline_idx").on(t.applicationDeadline),
+    workModeIdx: index("opportunities_work_mode_idx").on(t.workMode),
   }),
 );
 

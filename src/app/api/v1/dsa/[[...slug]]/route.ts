@@ -1,17 +1,19 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { dsaProgress } from "@/db/schema";
+import { dsaProgress, playlists } from "@/db/schema";
 import {
   getDsaPattern,
   getDsaPatterns,
   getDsaProblems,
   getDsaSheet,
   getDsaSheets,
+  getPlaylists,
   getProblemBySlug,
 } from "@/lib/queries";
 import { requireUser } from "@/lib/auth";
 import { apiError, apiSuccess, handleError } from "@/lib/api";
+import playlistsData from "@/data/playlists.json";
 
 export async function GET(
   request: Request,
@@ -43,6 +45,24 @@ export async function GET(
       }
       const patterns = await getDsaPatterns();
       return apiSuccess({ patterns }, "DSA patterns fetched");
+    }
+
+    if (kind === "playlists") {
+      if (id) {
+        const fullPlaylist = (playlistsData as any[]).find((p: any) => p.slug === id);
+        if (fullPlaylist) {
+          return apiSuccess({ playlist: fullPlaylist }, "Playlist fetched");
+        }
+        const [pl] = await db
+          .select()
+          .from(playlists)
+          .where(eq(playlists.slug, id))
+          .limit(1);
+        if (!pl) return apiError("Playlist not found", 404);
+        return apiSuccess({ playlist: pl }, "Playlist fetched");
+      }
+      const list = await getPlaylists();
+      return apiSuccess({ playlists: list }, "Playlists fetched");
     }
 
     if (kind === "problems") {

@@ -97,6 +97,7 @@ export function ResourceCard({
     subjectCode?: string | null;
     semesterNumber?: number | null;
     branchCode?: string | null;
+    fileUrl?: string | null;
   };
   bookmarked?: boolean;
   onBookmark?: () => void;
@@ -184,9 +185,15 @@ export function ResourceCard({
           >
             <Eye className="size-3.5" /> View
           </Link>
-          <Button size="sm" onClick={onDownload} loading={downloading}>
-            <Download className="size-3.5" /> Download
-          </Button>
+          {resource.fileUrl && resource.fileUrl.trim() !== "" ? (
+            <Button size="sm" onClick={onDownload} loading={downloading}>
+              <Download className="size-3.5" /> Download
+            </Button>
+          ) : (
+            <span className="inline-flex h-8 items-center rounded-lg border border-line bg-surface/60 px-2 text-[0.65rem] font-semibold text-ink-500">
+              Curriculum Link
+            </span>
+          )}
         </div>
       </div>
     </Card>

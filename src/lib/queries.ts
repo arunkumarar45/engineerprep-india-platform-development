@@ -24,6 +24,7 @@ import {
   notificationPreferences,
   notifications,
   opportunities,
+  playlists,
   questionOptions,
   questions,
   resources,
@@ -81,6 +82,8 @@ export type ResourceFilters = {
   subjectId?: string;
   module?: string;
   type?: string;
+  limit?: number;
+  offset?: number;
 };
 
 export async function getResources(filters: ResourceFilters = {}) {
@@ -161,6 +164,8 @@ export async function getResources(filters: ResourceFilters = {}) {
       fileUrl: resources.fileUrl,
       fileSize: resources.fileSize,
       downloadCount: resources.downloadCount,
+      downloadStatus: resources.downloadStatus,
+      verificationStatus: resources.verificationStatus,
       createdAt: resources.createdAt,
       subjectId: subjects.id,
       subjectName: subjects.name,
@@ -177,7 +182,9 @@ export async function getResources(filters: ResourceFilters = {}) {
     .leftJoin(branches, eq(subjects.branchId, branches.id))
     .leftJoin(schemes, eq(subjects.schemeId, schemes.id))
     .where(and(...conds))
-    .orderBy(desc(resources.createdAt));
+    .orderBy(desc(resources.createdAt))
+    .limit(filters.limit ?? 1000)
+    .offset(filters.offset ?? 0);
 }
 
 export async function getResourceById(id: string) {
@@ -280,6 +287,10 @@ export async function recordDownload(userId: string, resourceId: string) {
 
 export async function getDsaSheets() {
   return db.select().from(dsaSheets).orderBy(dsaSheets.title);
+}
+
+export async function getPlaylists() {
+  return db.select().from(playlists).orderBy(playlists.orderIndex);
 }
 
 export async function getDsaSheet(slug: string) {
@@ -825,7 +836,7 @@ export async function getAutomationExecutions(limit = 25) {
     .limit(limit);
 }
 
-export async function getAllUsers() {
+export async function getAllUsers(limit = 100, offset = 0) {
   return db
     .select({
       id: users.id,
@@ -838,7 +849,9 @@ export async function getAllUsers() {
       createdAt: users.createdAt,
     })
     .from(users)
-    .orderBy(desc(users.createdAt));
+    .orderBy(desc(users.createdAt))
+    .limit(limit)
+    .offset(offset);
 }
 
 export async function getContentForAdmin() {

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout";
 import {
   AptitudeSection,
@@ -67,6 +67,9 @@ export default async function PlacementSectionPage({
   params: Promise<{ section: string }>;
 }) {
   const { section } = await params;
+  if (section === "resume-builder" || section === "resume") {
+    redirect("/resume");
+  }
   const config = SECTIONS[section];
   if (!config) notFound();
 

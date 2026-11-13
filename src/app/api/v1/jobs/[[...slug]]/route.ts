@@ -130,6 +130,9 @@ export async function POST(
       }
       descParts.push(`Posted via Community Job Upload.`);
 
+      // Only administrators can immediately post live; community submissions require moderation
+      const status = user?.role === "ADMIN" ? "OPEN" : "PENDING";
+
       const [created] = await db
         .insert(opportunities)
         .values({
@@ -146,7 +149,7 @@ export async function POST(
           salaryMin: body.salaryMin,
           salaryMax: body.salaryMax,
           stipend: body.stipend,
-          status: "OPEN", // Immediately visible on the live job board!
+          status,
           postedAt: new Date(),
         })
         .returning();
@@ -156,16 +159,24 @@ export async function POST(
         await queueNotification({
           userId: user.id,
           type: "SYSTEM",
-          title: "Opportunity posted live!",
-          body: `Your job posting for "${body.title}" at ${body.companyName} is now live on the board.`,
-          linkUrl: `/jobs/${created.id}`,
+          title: status === "OPEN" ? "Opportunity posted live!" : "Opportunity submitted for review",
+          body:
+            status === "OPEN"
+              ? `Your job posting for "${body.title}" at ${body.companyName} is now live on the board.`
+              : `Your job posting for "${body.title}" at ${body.companyName} has been received and is pending administrator moderation.`,
+          linkUrl: status === "OPEN" ? `/jobs/${created.id}` : "/jobs",
           idempotencyKey: `job-submit-${created.id}-${user.id}`,
         });
       }
 
+      const responseMessage =
+        status === "OPEN"
+          ? "Job opportunity published successfully! It is now live on the job board."
+          : "Opportunity submitted for review. It will appear on the board once approved by our moderation team.";
+
       return apiSuccess(
-        { opportunityId: created.id, status: "OPEN" },
-        "Job opportunity published successfully! It is now live on the job board.",
+        { opportunityId: created.id, status },
+        responseMessage,
         201,
       );
     }
