@@ -1025,7 +1025,7 @@
   },
   "tags": [
     { "name": "Authentication", "description": "Login, register, tokens, password management" },
-    { "name": "VTU Resources", "description": "Notes, question papers, syllabus, lab manuals" },
+    { "name": "VTU Resources", "description": "Notes, question papers, syllabus, academic assignments" },
     { "name": "DSA", "description": "DSA sheets, patterns, problems, progress tracking" },
     { "name": "Roadmaps", "description": "Learning roadmaps with stages and topics" },
     { "name": "Mock Tests", "description": "Practice tests with scoring" },

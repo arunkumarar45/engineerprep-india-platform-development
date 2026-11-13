@@ -232,7 +232,6 @@ export async function getResourceStats() {
     NOTES: 0,
     QUESTION_PAPER: 0,
     SYLLABUS: 0,
-    LAB_MANUAL: 0,
     ASSIGNMENT: 0,
     OTHER: 0,
   };

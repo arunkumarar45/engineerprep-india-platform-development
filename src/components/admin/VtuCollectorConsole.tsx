@@ -213,16 +213,9 @@ export function VtuCollectorConsole() {
             bg: "bg-purple-500/10 border-purple-500/20",
           },
           {
-            label: "Lab Manuals",
-            live: stats?.liveResources.find((r) => r.category === "LAB_MANUAL")?.count || 0,
-            discovered: stats?.discovered.byCategory.find((c) => c.category === "LAB_MANUAL")?.count || 0,
-            color: "text-amber-600 dark:text-amber-400",
-            bg: "bg-amber-500/10 border-amber-500/20",
-          },
-          {
-            label: "Important Questions",
-            live: stats?.liveResources.find((r) => r.category === "ASSIGNMENT")?.count || 0,
-            discovered: stats?.discovered.byCategory.find((c) => c.category === "ASSIGNMENT")?.count || 0,
+            label: "Subject Notes",
+            live: stats?.liveResources.find((r) => r.category === "NOTES")?.count || 0,
+            discovered: stats?.discovered.byCategory.find((c) => c.category === "NOTES")?.count || 0,
             color: "text-emerald-600 dark:text-emerald-400",
             bg: "bg-emerald-500/10 border-emerald-500/20",
           },
@@ -262,8 +255,7 @@ export function VtuCollectorConsole() {
             >
               <option value="QUESTION_PAPER">Question Papers</option>
               <option value="SYLLABUS">Syllabus</option>
-              <option value="LAB_MANUAL">Lab Manuals</option>
-              <option value="ASSIGNMENT">Important Questions</option>
+              <option value="ASSIGNMENT">Assignments</option>
             </select>
           </div>
 
@@ -351,8 +343,7 @@ export function VtuCollectorConsole() {
               <option value="ALL">All Categories</option>
               <option value="QUESTION_PAPER">Question Papers</option>
               <option value="SYLLABUS">Syllabus</option>
-              <option value="LAB_MANUAL">Lab Manuals</option>
-              <option value="ASSIGNMENT">Important Questions</option>
+              <option value="ASSIGNMENT">Assignments</option>
             </select>
             <select
               value={selectedApproval}

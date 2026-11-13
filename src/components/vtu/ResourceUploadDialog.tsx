@@ -178,7 +178,7 @@ export function ResourceUploadDialog({
           <div>
             <h2 className="font-bold text-ink-900">Upload VTU Resource</h2>
             <p className="text-xs text-ink-500">
-              Upload notes, question papers, syllabus or lab manuals (PDF only)
+              Upload notes, question papers, or syllabus copies (PDF only)
             </p>
           </div>
           <button
@@ -238,7 +238,6 @@ export function ResourceUploadDialog({
               { value: "NOTES", label: "📖 Notes" },
               { value: "QUESTION_PAPER", label: "📝 Question Paper" },
               { value: "SYLLABUS", label: "📋 Syllabus" },
-              { value: "LAB_MANUAL", label: "🔬 Lab Manual" },
               { value: "ASSIGNMENT", label: "✏️ Assignment" },
               { value: "OTHER", label: "📎 Other" },
             ].map((opt) => (

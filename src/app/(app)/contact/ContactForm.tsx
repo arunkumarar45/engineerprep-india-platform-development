@@ -111,7 +111,7 @@ export function ContactForm() {
         <input
           type="text"
           required
-          placeholder="e.g. Request for VTU 2022 Scheme Lab Manual / Question Paper"
+          placeholder="e.g. Request for VTU 2022 Scheme Notes / Question Paper"
           value={formData.subject}
           onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
           className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
@@ -144,3 +144,4 @@ export function ContactForm() {
     </form>
   );
 }
+

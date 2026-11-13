@@ -36,9 +36,11 @@ export default async function AdminOverviewPage() {
         title="Admin Overview"
         subtitle="Platform statistics, content health and automation status."
         actions={
-          <Button>
-            <Upload className="size-4" /> Bulk Content Import
-          </Button>
+          <Link href="/admin/bulk-import">
+            <Button>
+              <Upload className="size-4" /> Bulk Content Import
+            </Button>
+          </Link>
         }
       />
 

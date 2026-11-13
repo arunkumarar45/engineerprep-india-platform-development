@@ -35,8 +35,6 @@ Support: support@engineerprep.in
    - **Notes**: High-clarity handwritten and typed chapter notes organized by module (Modules 1 through 5).
    - **Question Papers**: University semester-end examination papers with subject code identification.
    - **Syllabus**: Official VTU Scheme of Teaching and Examination with credit distribution (CIE/SEE marks).
-   - **Lab Manuals**: Detailed experiment code, test data, and external examiner viva voce Q&A.
-   - **Important Questions**: Exam revision question banks compiled from repeated university patterns.
 
 ---
 

@@ -221,7 +221,7 @@ export default async function HomePage() {
               { value: `${(stats.NOTES || 0).toLocaleString()}+`, label: "Study Notes", icon: FileStack },
               { value: `${(stats.QUESTION_PAPER || 0).toLocaleString()}+`, label: "Question Papers", icon: Code2 },
               { value: `${(stats.SYLLABUS || 0).toLocaleString()}+`, label: "Syllabus Docs", icon: BookOpen },
-              { value: `${(stats.ASSIGNMENT || 0).toLocaleString()}+`, label: "Important Questions", icon: GraduationCap },
+              { value: "48+", label: "Verified Courses", icon: GraduationCap },
               { value: "Daily", label: "VTU Updates", icon: Flame },
             ].map((stat) => {
               const Icon = stat.icon;
@@ -253,7 +253,7 @@ export default async function HomePage() {
               </h2>
               <p className="mt-1 text-sm text-ink-500">
                 {stats.NOTES.toLocaleString()} notes, {stats.QUESTION_PAPER.toLocaleString()} question
-                papers and {stats.LAB_MANUAL.toLocaleString()} lab manuals are already indexed.
+                papers and {stats.SYLLABUS.toLocaleString()} syllabus documents are already indexed.
               </p>
             </div>
             <Link

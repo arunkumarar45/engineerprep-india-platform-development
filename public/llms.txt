@@ -9,8 +9,6 @@
 - **Subject Notes**: https://engineerprep.in/vtu/notes — Verified module-wise notes across 2022, 2021, and 2018 schemes for CSE, ISE, ECE, EEE, ME, and Civil branches.
 - **Previous Year Question Papers**: https://engineerprep.in/vtu/question-papers — Authentic university examination papers indexed by branch, scheme, and subject code.
 - **Official Scheme Syllabi**: https://engineerprep.in/vtu/syllabus — Scheme-specific, branch-specific, and semester-specific official curriculum documents.
-- **Lab Manuals**: https://engineerprep.in/vtu/lab-manuals — Prescribed laboratory experiments, procedures, and viva questions.
-- **Important Questions**: https://engineerprep.in/vtu/important-questions — High-yield exam preparation questions compiled from university papers.
 - **Daily Circulars & Updates**: https://engineerprep.in/vtu/updates — Notifications, timetable announcements, and revaluation circulars.
 
 ### 2. Placement Preparation & Technical Mastery

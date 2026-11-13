@@ -7,7 +7,7 @@ import { BreadcrumbsJsonLd } from "@/components/seo/JsonLd";
 export const metadata: Metadata = {
   title: "VTU Notes & Academic Resources | EngineerPrep India",
   description:
-    "Comprehensive VTU study library: verified module-wise notes, previous year question papers, official syllabus schemes, and lab manuals across CSE, ISE, ECE, EEE, ME, and Civil.",
+    "Comprehensive VTU study library: verified module-wise notes, previous year question papers, and official syllabus schemes across CSE, ISE, ECE, EEE, ME, and Civil.",
   alternates: {
     canonical: absoluteUrl("/vtu"),
   },

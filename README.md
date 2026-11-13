@@ -14,7 +14,7 @@
 | Module | Status |
 |--------|--------|
 | 🔐 Authentication (register, login, JWT, MFA-ready) | ✅ |
-| 📚 VTU Resources (notes, QP, syllabus, lab manuals) | ✅ |
+| 📚 VTU Resources (notes, QP, syllabus, assignments) | ✅ |
 | 🧮 DSA Practice (sheets, patterns, problems, progress) | ✅ |
 | 🗺️ Developer Roadmaps (stages, topics, progress) | ✅ |
 | 📝 Mock Tests (timed, scored, negative marking) | ✅ |

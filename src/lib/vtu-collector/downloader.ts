@@ -107,8 +107,7 @@ export async function downloadAndValidateFile(
       // Determine category target directory
       let categoryFolder = "vtu-official-qp";
       if (options.category === "SYLLABUS") categoryFolder = "vtu-official-syllabus";
-      else if (options.category === "LAB_MANUAL") categoryFolder = "vtu-official-labs";
-      else if (options.category === "ASSIGNMENT") categoryFolder = "vtu-official-important-questions";
+      else if (options.category === "ASSIGNMENT") categoryFolder = "vtu-official-assignments";
 
       const targetDir = path.join(process.cwd(), "public", categoryFolder);
       if (!fs.existsSync(targetDir)) {

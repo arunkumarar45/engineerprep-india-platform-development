@@ -8,6 +8,7 @@ import { AuthLayout } from "@/components/layout";
 import { Brandmark } from "@/components/layout/Navbar";
 import { Button, Field, Input, Select, useToast } from "@/components/ui";
 import { passwordStrength } from "@/lib/auth-utils";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 const BRANCHES = [
   "Computer Science & Engineering",
@@ -128,6 +129,17 @@ export default function RegisterPage() {
       <p className="mt-1.5 text-sm text-ink-500">
         Join 20K+ engineering students preparing with EngineerPrep India.
       </p>
+
+      <div className="mt-6">
+        <GoogleSignInButton text="Sign up with Google" />
+      </div>
+
+      <div className="relative my-6 flex items-center justify-center">
+        <div className="w-full border-t border-line" />
+        <span className="absolute bg-white px-3 text-xs font-medium uppercase tracking-wider text-ink-500">
+          or register with email
+        </span>
+      </div>
 
       <form className="mt-6 grid gap-4 sm:grid-cols-2" onSubmit={onSubmit} noValidate>
         <Field label="Full name" htmlFor="fullName" error={errors.fullName} required>

@@ -35,7 +35,6 @@ export const metadata: Metadata = {
     "VTU notes",
     "VTU previous year question papers",
     "VTU syllabus 2022 scheme",
-    "VTU lab manuals",
     "DSA sheets",
     "Striver A2Z DSA sheet",
     "Love Babbar DSA sheet",

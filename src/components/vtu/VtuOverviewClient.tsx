@@ -71,13 +71,6 @@ const CATEGORY_CARDS = [
     tone: "success" as const,
     key: "SYLLABUS",
   },
-  {
-    label: "Lab Manuals",
-    href: "/vtu/lab-manuals",
-    icon: BookMarked,
-    tone: "dark" as const,
-    key: "LAB_MANUAL",
-  },
 ];
 
 export function VtuOverviewClient({
@@ -155,7 +148,7 @@ export function VtuOverviewClient({
       {!isAdmin && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-200 bg-brand-50/40 p-4">
           <div>
-            <p className="text-sm font-bold text-ink-900">Have notes, question papers or lab manuals?</p>
+            <p className="text-sm font-bold text-ink-900">Have notes, question papers or study resources?</p>
             <p className="text-xs text-ink-500">
               Share your study resources with fellow engineering students across Karnataka. Instant PDF publishing.
             </p>

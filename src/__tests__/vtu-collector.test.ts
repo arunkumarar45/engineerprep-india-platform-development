@@ -144,15 +144,15 @@ describe("VTU Academic Resource Collector - Verification & Security Suite", () =
    * 5. Strict Category Isolation Rules
    * ------------------------------------------------------------- */
   describe("Academic Category Isolation", () => {
-    it("ensures Question Papers, Syllabus, Lab Manuals and Assignments never mix", () => {
-      const categories = ["QUESTION_PAPER", "SYLLABUS", "LAB_MANUAL", "ASSIGNMENT"];
+    it("ensures Question Papers, Syllabus, and Assignments never mix", () => {
+      const categories = ["QUESTION_PAPER", "SYLLABUS", "ASSIGNMENT"];
       // Every category is distinct and never equal to NOTES
       categories.forEach((cat) => {
         expect(cat).not.toBe("NOTES");
       });
       // Check all unique
       const uniqueSet = new Set(categories);
-      expect(uniqueSet.size).toBe(4);
+      expect(uniqueSet.size).toBe(3);
     });
   });
 });

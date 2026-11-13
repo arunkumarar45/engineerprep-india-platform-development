@@ -57,19 +57,12 @@ const SECTIONS: Record<
     emptyTitle: "No syllabus available",
     emptyMessage: "Try a different branch or semester filter.",
   },
-  "lab-manuals": {
-    title: "Lab Manuals",
-    subtitle: "Complete official VTU lab manuals with verified programs, outputs and viva questions.",
-    type: "LAB_MANUAL",
-    emptyTitle: "No lab manuals available",
-    emptyMessage: "Try a different branch or semester filter.",
-  },
   assignments: {
-    title: "Important Questions & Passing Packages",
-    subtitle: "Module-wise high-yield exam questions, passing packages and official question banks.",
+    title: "Academic Assignments",
+    subtitle: "Verified assignments and official coursework materials.",
     type: "ASSIGNMENT",
-    emptyTitle: "No important questions available",
-    emptyMessage: "Try a different branch or semester filter.",
+    emptyTitle: "No assignments available",
+    emptyMessage: "Authentic academic assignments will appear here as they are published.",
   },
   resources: {
     title: "All Resources",
@@ -206,8 +199,7 @@ export default async function VtuSectionPage({
             { label: "Notes", href: "/vtu/notes" },
             { label: "Question Papers", href: "/vtu/question-papers" },
             { label: "Syllabus", href: "/vtu/syllabus" },
-            { label: "Lab Manuals", href: "/vtu/lab-manuals" },
-            { label: "Important Questions", href: "/vtu/assignments" },
+            { label: "Assignments", href: "/vtu/assignments" },
           ].map((item) => (
             <a
               key={item.href}
@@ -221,9 +213,7 @@ export default async function VtuSectionPage({
         <p className="mt-2.5 text-[0.7rem] text-ink-500">
           Library totals — Notes {stats.NOTES.toLocaleString()} · Question
           papers {stats.QUESTION_PAPER.toLocaleString()} · Syllabus{" "}
-          {stats.SYLLABUS.toLocaleString()} · Lab manuals{" "}
-          {stats.LAB_MANUAL.toLocaleString()} · Important questions{" "}
-          {stats.ASSIGNMENT.toLocaleString()}
+          {stats.SYLLABUS.toLocaleString()}
         </p>
       </Card>
 

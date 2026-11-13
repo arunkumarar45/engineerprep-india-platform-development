@@ -59,7 +59,7 @@ export default function AboutPage() {
             </span>
             <h3 className="text-base font-bold text-ink-900">Authentic VTU Archive</h3>
             <p className="mt-1.5 text-xs text-ink-500 leading-relaxed">
-              Official scheme syllabi, module-wise notes, previous year question papers, and lab manuals verified against university curriculum guidelines.
+              Official scheme syllabi, module-wise notes, and previous year question papers verified against university curriculum guidelines.
             </p>
           </Card>
 

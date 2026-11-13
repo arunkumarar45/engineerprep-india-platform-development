@@ -87,13 +87,7 @@ export class VtuCollectorEngine {
         itemsToProcess.push(...officialSyllabus);
       }
 
-      // Category 3: LAB_MANUAL
-      if (!filters.category || filters.category === "LAB_MANUAL") {
-        const circleLabs = await this.circleAdapter.discoverResources("LAB_MANUAL");
-        itemsToProcess.push(...circleLabs);
-      }
-
-      // Category 4: ASSIGNMENT
+      // Category 3: ASSIGNMENT
       if (!filters.category || filters.category === "ASSIGNMENT") {
         const circleAssignments = await this.circleAdapter.discoverResources("ASSIGNMENT");
         itemsToProcess.push(...circleAssignments);

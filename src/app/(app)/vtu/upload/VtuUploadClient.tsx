@@ -178,8 +178,6 @@ export function VtuUploadPageClient({ meta }: { meta: Meta }) {
         ? "/vtu/question-papers"
         : resourceType === "SYLLABUS"
         ? "/vtu/syllabus"
-        : resourceType === "LAB_MANUAL"
-        ? "/vtu/lab-manuals"
         : "/vtu/resources";
 
     return (
@@ -276,7 +274,6 @@ export function VtuUploadPageClient({ meta }: { meta: Meta }) {
                 <option value="NOTES">Subject Notes (Handwritten / Typed)</option>
                 <option value="QUESTION_PAPER">Question Paper / Solved Paper</option>
                 <option value="SYLLABUS">Syllabus Copy</option>
-                <option value="LAB_MANUAL">Lab Manual / Programs</option>
                 <option value="ASSIGNMENT">Assignment / Formula Sheet</option>
               </Select>
             </div>

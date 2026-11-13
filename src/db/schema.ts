@@ -125,6 +125,7 @@ export const users = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     fullName: varchar("full_name", { length: 160 }).notNull(),
     email: varchar("email", { length: 200 }).notNull(),
+    googleId: varchar("google_id", { length: 120 }),
     phone: varchar("phone", { length: 24 }),
     passwordHash: text("password_hash").notNull(),
     role: userRole("role").notNull().default("STUDENT"),
@@ -145,6 +146,7 @@ export const users = pgTable(
   (t) => ({
     emailIdx: uniqueIndex("users_email_idx").on(t.email),
     roleIdx: index("users_role_idx").on(t.role),
+    googleIdIdx: uniqueIndex("users_google_id_idx").on(t.googleId),
   }),
 );
 

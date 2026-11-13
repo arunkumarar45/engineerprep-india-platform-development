@@ -90,8 +90,6 @@ export function VtuDocumentViewer({
   const sectionHref =
     doc.resourceType === "QUESTION_PAPER"
       ? "/vtu/question-papers"
-      : doc.resourceType === "LAB_MANUAL"
-      ? "/vtu/lab-manuals"
       : doc.resourceType === "ASSIGNMENT"
       ? "/vtu/assignments"
       : doc.resourceType === "NOTES"
@@ -103,10 +101,8 @@ export function VtuDocumentViewer({
   const typeLabel =
     doc.resourceType === "QUESTION_PAPER"
       ? "Question Paper"
-      : doc.resourceType === "LAB_MANUAL"
-      ? "Lab Manual"
       : doc.resourceType === "ASSIGNMENT"
-      ? "Important Questions"
+      ? "Assignment"
       : doc.resourceType === "NOTES"
       ? "Notes"
       : doc.resourceType === "SYLLABUS"
@@ -425,7 +421,7 @@ export function VtuDocumentViewer({
                 All Verified Study Materials for {doc.subjectCode ?? ""} {doc.subjectName ? `(${doc.subjectName})` : ""}
               </h3>
               <p className="mt-0.5 text-xs text-ink-500">
-                Quickly access syllabus, lecture notes, question papers, and lab manuals for this course.
+                Quickly access syllabus, lecture notes, and question papers for this course.
               </p>
             </div>
 

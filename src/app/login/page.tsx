@@ -1,13 +1,34 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { AuthLayout } from "@/components/layout";
 import { Brandmark } from "@/components/layout/Navbar";
 import { Button, Field, Input, useToast } from "@/components/ui";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
+const GOOGLE_ERROR_MESSAGES: Record<string, string> = {
+  google_not_configured:
+    "Google Sign-In is not currently configured on this environment. Please sign in with your email and password.",
+  google_access_denied:
+    "Google Sign-In was cancelled or access was denied.",
+  invalid_request:
+    "Invalid authentication request. Please try again.",
+  state_expired:
+    "Sign-in session expired. Please click Continue with Google again.",
+  invalid_state:
+    "Invalid authentication state. Please try again.",
+  state_mismatch:
+    "Security verification failed (state mismatch). Please try again.",
+  unverified_google_email:
+    "Your Google account email has not been verified by Google. Please verify it or log in with password.",
+  account_deactivated:
+    "This account has been deactivated. Please contact support.",
+  auth_failed:
+    "Google authentication could not be completed. Please try again.",
+};
 
 function LoginForm() {
   const router = useRouter();
@@ -19,6 +40,16 @@ function LoginForm() {
   const [remember, setRemember] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  const nextParam = search.get("next") || "";
+  const errorParam = search.get("error");
+  const oauthErrorMessage = useMemo(() => {
+    if (!errorParam) return null;
+    return (
+      GOOGLE_ERROR_MESSAGES[errorParam] ||
+      "An unexpected error occurred during Google Sign-In."
+    );
+  }, [errorParam]);
 
   function validate() {
     const next: Record<string, string> = {};
@@ -58,7 +89,9 @@ function LoginForm() {
         tone: "success",
       });
       const next = search.get("next");
-      router.push(next ?? (json.data.user.role === "ADMIN" ? "/admin" : "/dashboard"));
+      router.push(
+        next ?? (json.data.user.role === "ADMIN" ? "/admin" : "/dashboard"),
+      );
       router.refresh();
     } catch {
       setErrors({ form: "Network error. Please try again." });
@@ -79,8 +112,34 @@ function LoginForm() {
         Log in to continue your placement preparation.
       </p>
 
-      <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
-        <Field label="Email address" htmlFor="email" error={errors.email} required>
+      {oauthErrorMessage && (
+        <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-800">
+          <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+          <p className="font-medium leading-relaxed">{oauthErrorMessage}</p>
+        </div>
+      )}
+
+      <div className="mt-6">
+        <GoogleSignInButton
+          text="Continue with Google"
+          nextUrl={nextParam}
+        />
+      </div>
+
+      <div className="relative my-6 flex items-center justify-center">
+        <div className="w-full border-t border-line" />
+        <span className="absolute bg-white px-3 text-xs font-medium uppercase tracking-wider text-ink-500">
+          or continue with email
+        </span>
+      </div>
+
+      <form className="space-y-4" onSubmit={onSubmit} noValidate>
+        <Field
+          label="Email address"
+          htmlFor="email"
+          error={errors.email}
+          required
+        >
           <div className="relative">
             <Mail
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-500"
@@ -126,7 +185,11 @@ function LoginForm() {
               aria-label={show ? "Hide password" : "Show password"}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-500 hover:text-ink-900"
             >
-              {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              {show ? (
+                <EyeOff className="size-4" />
+              ) : (
+                <Eye className="size-4" />
+              )}
             </button>
           </div>
         </Field>

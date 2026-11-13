@@ -104,9 +104,7 @@ export function validatePdfBuffer(
     detectedCategory = "QUESTION_PAPER";
   } else if (combinedText.includes("syllabus") || combinedText.includes("scheme of teaching") || combinedText.includes("curriculum")) {
     detectedCategory = "SYLLABUS";
-  } else if (combinedText.includes("lab manual") || combinedText.includes("laboratory manual") || combinedText.includes("experiment")) {
-    detectedCategory = "LAB_MANUAL";
-  } else if (combinedText.includes("important question") || combinedText.includes("assignment") || combinedText.includes("question bank")) {
+  } else if (combinedText.includes("assignment") || combinedText.includes("coursework")) {
     detectedCategory = "ASSIGNMENT";
   }
 

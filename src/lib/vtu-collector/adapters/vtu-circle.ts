@@ -9,8 +9,7 @@ export class VtuCircleAdapter {
 
     let searchPath = "";
     if (category === "QUESTION_PAPER") searchPath = "/vtu-question-papers/";
-    else if (category === "LAB_MANUAL") searchPath = "/vtu-lab-manuals/";
-    else if (category === "ASSIGNMENT") searchPath = "/vtu-important-questions/";
+    else if (category === "ASSIGNMENT") searchPath = "/vtu-assignments/";
     else if (category === "SYLLABUS") searchPath = "/vtu-syllabus/";
 
     const targetUrl = `${this.baseUrl}${searchPath}`;

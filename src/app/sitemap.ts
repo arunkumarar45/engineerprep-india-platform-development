@@ -45,18 +45,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: absoluteUrl("/vtu/lab-manuals"),
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: absoluteUrl("/vtu/important-questions"),
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
       url: absoluteUrl("/vtu/updates"),
       lastModified: now,
       changeFrequency: "daily",

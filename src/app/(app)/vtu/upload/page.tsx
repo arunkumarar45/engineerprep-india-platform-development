@@ -23,7 +23,7 @@ export default async function VtuUploadPage() {
           { label: "Upload Resource" },
         ]}
         title="Upload VTU Study Resource"
-        subtitle="Contribute subject notes, previous year question papers, syllabus copies or lab manuals to help your fellow engineering students."
+        subtitle="Contribute subject notes, previous year question papers, or syllabus copies to help your fellow engineering students."
       />
 
       <VtuUploadPageClient

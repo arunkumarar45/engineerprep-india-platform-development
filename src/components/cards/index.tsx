@@ -108,7 +108,6 @@ export function ResourceCard({
     NOTES: "Notes",
     QUESTION_PAPER: "Question Paper",
     SYLLABUS: "Syllabus",
-    LAB_MANUAL: "Lab Manual",
     ASSIGNMENT: "Assignment",
     OTHER: "Resource",
   };

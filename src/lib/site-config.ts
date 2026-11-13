@@ -44,8 +44,6 @@ export const siteConfig = {
     { title: "VTU Notes", href: "/vtu/notes" },
     { title: "Question Papers", href: "/vtu/question-papers" },
     { title: "Syllabus", href: "/vtu/syllabus" },
-    { title: "Lab Manuals", href: "/vtu/lab-manuals" },
-    { title: "Important Questions", href: "/vtu/important-questions" },
     { title: "DSA Sheets", href: "/placements/dsa-sheets" },
     { title: "DSA Patterns", href: "/placements/dsa-patterns" },
     { title: "Roadmaps", href: "/placements/roadmaps" },

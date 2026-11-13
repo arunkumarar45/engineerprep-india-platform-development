@@ -1,7 +1,6 @@
 export type VtuAcademicCategory =
   | "QUESTION_PAPER"
   | "SYLLABUS"
-  | "LAB_MANUAL"
   | "ASSIGNMENT";
 
 export interface DiscoveredResourceInput {

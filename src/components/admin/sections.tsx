@@ -1116,15 +1116,15 @@ export function SimpleSection({
     },
     resources: {
       title: "VTU Resources",
-      description: "Upload notes, question papers, syllabus and lab manuals.",
+      description: "Upload notes, question papers, syllabus and academic assignments.",
       icon: FileText,
       items: [
-        "Notes — 240 published",
-        "Question papers — 120 published",
-        "Syllabus — 120 published",
-        "Lab manuals — 120 published",
+        "Notes — Published",
+        "Question papers — Published",
+        "Syllabus — Published",
+        "Academic Assignments — Published",
       ],
-      href: "/vtu/resources",
+      href: "/vtu/notes",
     },
   }[kind];
 
