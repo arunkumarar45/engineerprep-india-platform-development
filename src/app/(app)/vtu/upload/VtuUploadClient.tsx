@@ -47,10 +47,12 @@ export function VtuUploadPageClient({ meta }: { meta: Meta }) {
   const [semesterId, setSemesterId] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [moduleNumber, setModuleNumber] = useState("");
+  const [sourcePageUrl, setSourcePageUrl] = useState("");
   const [scheme, setScheme] = useState("2022 Scheme");
   const [year, setYear] = useState("2024");
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
+  const [isPendingReview, setIsPendingReview] = useState(true);
 
   const filteredSubjects = meta.subjects.filter((s) => {
     if (branchId && s.branchId !== branchId) return false;
@@ -144,7 +146,8 @@ export function VtuUploadPageClient({ meta }: { meta: Meta }) {
           fileName: file.name,
           fileUrl: publicUrl,
           fileSize: fileSizeStr,
-          status: "PUBLISHED",
+          sourcePageUrl: sourcePageUrl.trim() || undefined,
+          status: "DRAFT",
         }),
       });
 
@@ -153,10 +156,14 @@ export function VtuUploadPageClient({ meta }: { meta: Meta }) {
         throw new Error(resourceJson.message ?? "Resource creation failed");
       }
 
+      const reviewMode = resourceJson.data?.resource?.status === "DRAFT";
+      setIsPendingReview(reviewMode);
       setDone(true);
       push({
-        title: "Study Material Published!",
-        description: `"${title}" is now available in the VTU Resource Library.`,
+        title: reviewMode ? "Submitted for Review" : "Study Material Published!",
+        description: reviewMode
+          ? `"${title}" has been submitted and is pending administrator review.`
+          : `"${title}" is now available in the VTU Resource Library.`,
         tone: "success",
       });
     } catch (err) {
@@ -184,13 +191,23 @@ export function VtuUploadPageClient({ meta }: { meta: Meta }) {
       <div className="mx-auto max-w-2xl py-12">
         <Card className="flex flex-col items-center gap-4 p-8 text-center shadow-lg border-success-200 bg-success-50/20">
           <CheckCircle2 className="size-16 text-success-600" />
-          <h1 className="text-2xl font-bold text-ink-900">Resource Published Live!</h1>
+          <h1 className="text-2xl font-bold text-ink-900">
+            {isPendingReview ? "Resource Submitted for Review!" : "Resource Published Live!"}
+          </h1>
           <p className="max-w-md text-sm text-ink-600">
-            Thank you for contributing! Your study material <strong>"{title}"</strong> has been indexed and is immediately downloadable by all students.
+            {isPendingReview ? (
+              <>
+                Thank you for contributing! Your submission <strong>&ldquo;{title}&rdquo;</strong> has been queued for verification. Once approved by our team, it will appear in the verified library.
+              </>
+            ) : (
+              <>
+                Thank you for contributing! Your study material <strong>&ldquo;{title}&rdquo;</strong> has been published and is immediately accessible to all students.
+              </>
+            )}
           </p>
           <div className="flex flex-wrap gap-3 pt-4">
             <Button onClick={() => router.push(targetPath)}>
-              View in Library →
+              Back to Library →
             </Button>
             <Button
               variant="outline"
@@ -199,6 +216,7 @@ export function VtuUploadPageClient({ meta }: { meta: Meta }) {
                 setFile(null);
                 setTitle("");
                 setDescription("");
+                setSourcePageUrl("");
               }}
             >
               Upload Another File
@@ -393,6 +411,23 @@ export function VtuUploadPageClient({ meta }: { meta: Meta }) {
             </div>
           </div>
 
+          {/* Source URL */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-ink-800">
+              Source URL / Reference Link (Optional)
+            </label>
+            <input
+              type="url"
+              placeholder="e.g. https://vtu.ac.in/model-question-paper or official source link"
+              value={sourcePageUrl}
+              onChange={(e) => setSourcePageUrl(e.target.value)}
+              className="w-full rounded-lg border border-line bg-surface p-3 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+            <p className="mt-1 text-[0.7rem] text-ink-500">
+              Help us verify authenticity by providing the public source or departmental link where this document originates.
+            </p>
+          </div>
+
           {/* Description */}
           <div>
             <label className="mb-1.5 block text-xs font-bold text-ink-800">
@@ -407,6 +442,14 @@ export function VtuUploadPageClient({ meta }: { meta: Meta }) {
             />
           </div>
 
+          {/* Moderation Policy Notice */}
+          <div className="rounded-lg border border-brand-200 bg-brand-50/40 p-3 text-xs text-brand-900">
+            <p className="font-semibold">Review & Moderation Workflow</p>
+            <p className="mt-0.5 text-ink-600">
+              To ensure academic accuracy and protect students from placeholder or broken files, submitted study materials are held in review until verified by administrators.
+            </p>
+          </div>
+
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-line">
             <Button
               type="button"
@@ -418,11 +461,11 @@ export function VtuUploadPageClient({ meta }: { meta: Meta }) {
             <Button type="submit" disabled={uploading}>
               {uploading ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> Uploading PDF...
+                  <Loader2 className="size-4 animate-spin" /> Submitting for Review...
                 </>
               ) : (
                 <>
-                  <Upload className="size-4" /> Upload & Publish Resource
+                  <Upload className="size-4" /> Submit for Review
                 </>
               )}
             </Button>

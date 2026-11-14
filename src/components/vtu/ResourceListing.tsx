@@ -93,14 +93,52 @@ export function ResourceListing({
   const pageSize = 9;
 
   const subjectOptions = useMemo(() => {
+    const selectedBranch = meta.branches.find((b) => b.id === branchId);
+    const selectedSem = meta.semesters.find((s) => s.id === semesterId);
+    const selectedScheme = meta.schemes.find((s) => s.id === schemeId);
+
     let list = meta.subjects;
-    if (branchId) list = list.filter((s) => s.branchId === branchId);
-    if (semesterId) list = list.filter((s) => s.semesterId === semesterId);
-    if (schemeId) {
-      list = list.filter((s) => !s.schemeId || s.schemeId === schemeId);
+    if (branchId) {
+      list = list.filter((s) => {
+        if (s.branchId === branchId) return true;
+        if (selectedBranch && s.code.includes(selectedBranch.code)) return true;
+        return false;
+      });
     }
-    return list.map((s) => ({ id: s.id, label: `${s.code} — ${s.name}` }));
-  }, [meta.subjects, branchId, semesterId, schemeId]);
+    if (semesterId) {
+      list = list.filter((s) => {
+        if (s.semesterId === semesterId) return true;
+        if (selectedSem && s.code.includes(String(selectedSem.number))) return true;
+        return false;
+      });
+    }
+    if (schemeId) {
+      const schemeKey = selectedScheme?.name.replace(/\s*Scheme$/i, "").trim().toLowerCase();
+      list = list.filter((s) => {
+        if (!s.schemeId || s.schemeId === schemeId) return true;
+        if (schemeKey && s.code.startsWith(schemeKey.slice(-2))) return true;
+        return false;
+      });
+    }
+
+    const map = new Map<string, { id: string; label: string }>();
+    for (const s of list) {
+      if (!map.has(s.code)) {
+        map.set(s.code, { id: s.id, label: `${s.code} — ${s.name}` });
+      }
+    }
+
+    // Also include any subjects appearing in current loaded resources that match branch & sem
+    for (const r of resources) {
+      if (r.subjectCode && r.subjectName && !map.has(r.subjectCode)) {
+        if (selectedBranch && r.branchCode && r.branchCode !== selectedBranch.code) continue;
+        if (selectedSem && r.semesterNumber && r.semesterNumber !== selectedSem.number) continue;
+        map.set(r.subjectCode, { id: r.subjectCode, label: `${r.subjectCode} — ${r.subjectName}` });
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [meta.subjects, meta.branches, meta.semesters, meta.schemes, resources, branchId, semesterId, schemeId]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -110,9 +148,10 @@ export function ResourceListing({
         if (!hay.includes(needle)) return false;
       }
       if (subjectId) {
-        // subjectId filter is applied by matching code or id
+        // subjectId matches either subject id or code
         const subject = meta.subjects.find((s) => s.id === subjectId);
-        if (subject && resource.subjectCode !== subject.code) return false;
+        const targetCode = subject ? subject.code : subjectId;
+        if (resource.subjectCode !== targetCode) return false;
       }
       if (branchId) {
         const branch = meta.branches.find((b) => b.id === branchId);

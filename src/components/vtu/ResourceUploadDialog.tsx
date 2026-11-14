@@ -51,6 +51,7 @@ export function ResourceUploadDialog({
   const [semesterId, setSemesterId] = useState("");
   const [subjectId, setSubjectId] = useState("");
   const [moduleNumber, setModuleNumber] = useState("");
+  const [sourcePageUrl, setSourcePageUrl] = useState("");
   const [year, setYear] = useState("");
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
@@ -126,7 +127,8 @@ export function ResourceUploadDialog({
           fileName: file.name,
           fileUrl: publicUrl,
           fileSize: fileSizeStr,
-          status: "PUBLISHED",
+          sourcePageUrl: sourcePageUrl.trim() || undefined,
+          status: isAdmin ? "PUBLISHED" : "DRAFT",
           // extra metadata stored in description if year provided
           ...(year ? { description: `${description.trim()} | Year: ${year}`.trim().replace(/^\|/, "") } : {}),
         }),
@@ -137,7 +139,13 @@ export function ResourceUploadDialog({
       }
 
       setDone(true);
-      push({ title: "Resource published!", description: "Your PDF is now live in the library.", tone: "success" });
+      push({
+        title: isAdmin ? "Resource published!" : "Submitted for Review!",
+        description: isAdmin
+          ? "Your PDF is now live in the library."
+          : "Your resource has been submitted and is pending administrator review.",
+        tone: "success",
+      });
       setTimeout(() => {
         router.refresh();
         onClose();
@@ -369,6 +377,24 @@ export function ResourceUploadDialog({
             </div>
           </div>
 
+          {/* Source URL field */}
+          <div>
+            <label className="epi-label">Source URL / Reference Link (Optional)</label>
+            <input
+              type="url"
+              placeholder="e.g. https://vtu.ac.in/model-question-paper or official source link"
+              value={sourcePageUrl}
+              onChange={(e) => setSourcePageUrl(e.target.value)}
+              className="mt-1 h-9 w-full rounded-md border border-line bg-surface px-3 text-xs text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-none"
+            />
+          </div>
+
+          {!isAdmin && (
+            <div className="rounded-md border border-brand-200 bg-brand-50/40 p-2.5 text-[0.7rem] text-brand-900">
+              <span className="font-semibold">Pending Review:</span> Submissions are queued for moderation to verify document accuracy before appearing publicly.
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex justify-end gap-2 border-t border-line pt-3">
             <Button type="button" variant="outline" onClick={onClose}>
@@ -377,11 +403,11 @@ export function ResourceUploadDialog({
             <Button type="submit" disabled={uploading || !file}>
               {uploading ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> Uploading…
+                  <Loader2 className="size-4 animate-spin" /> Submitting…
                 </>
               ) : (
                 <>
-                  <Upload className="size-4" /> Upload Resource
+                  <Upload className="size-4" /> {isAdmin ? "Upload & Publish" : "Submit for Review"}
                 </>
               )}
             </Button>

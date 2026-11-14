@@ -64,6 +64,7 @@ const createSchema = z.object({
   fileName: z.string().min(1),
   fileUrl: z.string().min(1),
   fileSize: z.string().optional(),
+  sourcePageUrl: z.string().optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).default("PUBLISHED"),
 });
 
