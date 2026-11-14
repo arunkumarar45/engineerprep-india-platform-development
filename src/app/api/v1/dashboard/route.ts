@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { getDashboardSummary } from "@/lib/queries";
 import { requireUser } from "@/lib/auth";
 import { apiSuccess, handleError } from "@/lib/api";
