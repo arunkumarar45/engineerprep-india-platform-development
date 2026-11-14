@@ -171,7 +171,7 @@ export function DashboardView({
       <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
         {/* Continue learning */}
         <section>
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-bold text-ink-900">Continue Learning</h2>
             <Link
               href="/my-progress"
@@ -185,22 +185,24 @@ export function DashboardView({
               const Icon = CONTINUE_ICONS[item.icon] ?? Code2;
               return (
                 <Card key={item.title} hover className="p-4">
-                  <div className="flex items-start gap-3">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-500">
-                      <Icon className="size-5" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-ink-900">
-                        {item.title}
-                      </p>
-                      <p className="mt-0.5 text-[0.7rem] text-ink-500">
-                        {item.detail}
-                      </p>
-                      <ProgressBar
-                        value={item.progress}
-                        className="mt-2.5"
-                        size="sm"
-                      />
+                  <div className="flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-3">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-500">
+                        <Icon className="size-5" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-ink-900">
+                          {item.title}
+                        </p>
+                        <p className="mt-0.5 truncate text-[0.7rem] text-ink-500">
+                          {item.detail}
+                        </p>
+                        <ProgressBar
+                          value={item.progress}
+                          className="mt-2.5"
+                          size="sm"
+                        />
+                      </div>
                     </div>
                     <Link
                       href={item.href}

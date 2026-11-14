@@ -57,6 +57,8 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   ::selection {
@@ -117,6 +119,11 @@
     transition:
       border-color 0.15s ease,
       box-shadow 0.15s ease;
+  }
+  @media (max-width: 640px) {
+    .epi-input {
+      font-size: 1rem; /* 16px to prevent automatic iOS Safari viewport zoom */
+    }
   }
   .epi-input::placeholder {
     color: #9aa4b2;

@@ -741,7 +741,7 @@ export function ResumeBuilder() {
 
           <div
             id="printable-resume"
-            className="rounded-xl border border-line bg-white text-ink-950 p-8 shadow-sm transition space-y-4 print:p-0 print:border-none print:shadow-none"
+            className="rounded-xl border border-line bg-white text-ink-950 p-4 sm:p-8 shadow-sm transition space-y-4 overflow-x-auto print:p-0 print:border-none print:shadow-none"
             style={{ minHeight: "297mm", fontFamily: "Georgia, Cambria, 'Times New Roman', serif" }}
           >
             {/* Header */}

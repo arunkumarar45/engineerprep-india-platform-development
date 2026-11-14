@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { ChevronRight, GraduationCap, Heart, Home } from "lucide-react";
+import { ChevronRight, Heart, Home } from "lucide-react";
 import { sectionForPath } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { Navbar, type NotificationItem } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { Brandmark } from "@/components/layout/Navbar";
+import { BrandIcon, Brandmark } from "@/components/brand/Logo";
 import type { SessionUser } from "@/lib/auth";
 
 /* ------------------------------- Shell ------------------------------ */
@@ -133,7 +133,9 @@ export function PageHeader({
           )}
         </div>
         {actions && (
-          <div className="flex flex-wrap items-center gap-2">{actions}</div>
+          <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">
+            {actions}
+          </div>
         )}
       </div>
     </div>
@@ -147,9 +149,7 @@ export function Footer() {
     <footer className="mt-8 border-t border-line bg-white px-4 py-6 lg:px-7">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
-          <span className="grid size-8 place-items-center rounded-lg bg-brand-500 text-white">
-            <GraduationCap className="size-4" />
-          </span>
+          <BrandIcon size={32} />
           <div>
             <p className="text-[0.8rem] font-bold text-ink-900">
               EngineerPrep India

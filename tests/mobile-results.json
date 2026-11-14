@@ -1,0 +1,128 @@
+{
+  "results": {
+    "home": {
+      "320x568": "PASS",
+      "360x800": "PASS",
+      "375x812": "PASS",
+      "390x844": "PASS",
+      "412x915": "PASS",
+      "430x932": "PASS",
+      "768x1024": "PASS",
+      "1024x768": "PASS",
+      "1440x900": "PASS"
+    },
+    "login": {
+      "320x568": "PASS",
+      "360x800": "PASS",
+      "375x812": "PASS",
+      "390x844": "PASS",
+      "412x915": "PASS",
+      "430x932": "PASS",
+      "768x1024": "PASS",
+      "1024x768": "PASS",
+      "1440x900": "PASS"
+    },
+    "register": {
+      "320x568": "PASS",
+      "360x800": "PASS",
+      "375x812": "PASS",
+      "390x844": "PASS",
+      "412x915": "PASS",
+      "430x932": "PASS",
+      "768x1024": "PASS",
+      "1024x768": "PASS",
+      "1440x900": "PASS"
+    },
+    "dashboard": {
+      "320x568": "PASS",
+      "360x800": "PASS",
+      "375x812": "PASS",
+      "390x844": "PASS",
+      "412x915": "PASS",
+      "430x932": "PASS",
+      "768x1024": "PASS",
+      "1024x768": "PASS",
+      "1440x900": "PASS"
+    },
+    "vtu": {
+      "320x568": "PASS",
+      "360x800": "PASS",
+      "375x812": "PASS",
+      "390x844": "PASS",
+      "412x915": "PASS",
+      "430x932": "PASS",
+      "768x1024": "PASS",
+      "1024x768": "PASS",
+      "1440x900": "PASS"
+    },
+    "vtu-notes": {
+      "320x568": "PASS",
+      "360x800": "PASS",
+      "375x812": "PASS",
+      "390x844": "PASS",
+      "412x915": "PASS",
+      "430x932": "PASS",
+      "768x1024": "PASS",
+      "1024x768": "PASS",
+      "1440x900": "PASS"
+    },
+    "dsa": {
+      "320x568": "PASS",
+      "360x800": "PASS",
+      "375x812": "PASS",
+      "390x844": "PASS",
+      "412x915": "PASS",
+      "430x932": "PASS",
+      "768x1024": "PASS",
+      "1024x768": "PASS",
+      "1440x900": "PASS"
+    },
+    "jobs": {
+      "320x568": "PASS",
+      "360x800": "PASS",
+      "375x812": "PASS",
+      "390x844": "PASS",
+      "412x915": "PASS",
+      "430x932": "PASS",
+      "768x1024": "PASS",
+      "1024x768": "PASS",
+      "1440x900": "PASS"
+    },
+    "resume": {
+      "320x568": "PASS",
+      "360x800": "PASS",
+      "375x812": "PASS",
+      "390x844": "PASS",
+      "412x915": "PASS",
+      "430x932": "PASS",
+      "768x1024": "PASS",
+      "1024x768": "PASS",
+      "1440x900": "PASS"
+    },
+    "mock-tests": {
+      "320x568": "PASS",
+      "360x800": "PASS",
+      "375x812": "PASS",
+      "390x844": "PASS",
+      "412x915": "PASS",
+      "430x932": "PASS",
+      "768x1024": "PASS",
+      "1024x768": "PASS",
+      "1440x900": "PASS"
+    },
+    "admin": {
+      "320x568": "PASS",
+      "360x800": "PASS",
+      "375x812": "PASS",
+      "390x844": "PASS",
+      "412x915": "PASS",
+      "430x932": "PASS",
+      "768x1024": "PASS",
+      "1024x768": "PASS",
+      "1440x900": "PASS"
+    }
+  },
+  "navDrawerSuccess": true,
+  "scrollLocked": true,
+  "closedCleanly": true
+}

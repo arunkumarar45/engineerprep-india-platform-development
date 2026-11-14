@@ -12,7 +12,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Badge, Card } from "@/components/ui";
-import { Brandmark } from "@/components/layout/Navbar";
+import { Brandmark, MobileHeaderBrandmark } from "@/components/brand/Logo";
 import { Footer } from "@/components/layout";
 import { getResourceStats } from "@/lib/queries";
 import { getSessionUser } from "@/lib/auth";
@@ -79,9 +79,16 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <header className="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 lg:px-6">
-          <Brandmark />
+      <header className="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
+          <div className="flex shrink-0 items-center">
+            <div className="block sm:hidden">
+              <MobileHeaderBrandmark />
+            </div>
+            <div className="hidden sm:block">
+              <Brandmark />
+            </div>
+          </div>
           <nav className="ml-4 hidden items-center gap-0.5 lg:flex">
             {[
               { label: "Home", href: "/" },
@@ -99,25 +106,25 @@ export default async function HomePage() {
               </Link>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             {user ? (
               <Link
                 href="/dashboard"
-                className="hidden rounded-lg bg-brand-500 px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-600 sm:inline-flex"
+                className="rounded-xl bg-brand-500 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-brand-600"
               >
-                Go to Dashboard
+                Dashboard
               </Link>
             ) : (
               <>
                 <Link
                   href="/login"
-                  className="rounded-lg px-3 py-2 text-sm font-semibold text-ink-700 hover:bg-brand-50 hover:text-brand-600"
+                  className="rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-700 hover:bg-brand-50 hover:text-brand-600 sm:px-3 sm:py-2 sm:text-sm"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
-                  className="inline-flex h-9 items-center rounded-lg bg-brand-500 px-3.5 text-xs font-bold text-white transition-colors hover:bg-brand-600"
+                  className="inline-flex h-9 items-center rounded-xl bg-brand-500 px-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-brand-600 sm:px-3.5"
                 >
                   Create account
                 </Link>
@@ -216,17 +223,20 @@ export default async function HomePage() {
 
         {/* Stats */}
         <section className="border-y border-line bg-white">
-          <div className="mx-auto grid max-w-7xl gap-5 px-4 py-10 sm:grid-cols-3 lg:grid-cols-5 lg:px-6">
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 px-4 py-8 sm:grid-cols-3 lg:grid-cols-5 lg:gap-5 lg:px-6 lg:py-10">
             {[
               { value: `${(stats.NOTES || 0).toLocaleString()}+`, label: "Study Notes", icon: FileStack },
               { value: `${(stats.QUESTION_PAPER || 0).toLocaleString()}+`, label: "Question Papers", icon: Code2 },
               { value: `${(stats.SYLLABUS || 0).toLocaleString()}+`, label: "Syllabus Docs", icon: BookOpen },
-              { value: "48+", label: "Verified Courses", icon: GraduationCap },
+              { value: "48+", label: "Verified Courses", icon: Sparkles },
               { value: "Daily", label: "VTU Updates", icon: Flame },
-            ].map((stat) => {
+            ].map((stat, i) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.label} className="flex items-center gap-3">
+                <div
+                  key={stat.label}
+                  className={`flex items-center gap-3 ${i === 4 ? "col-span-2 sm:col-span-1" : ""}`}
+                >
                   <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-500">
                     <Icon className="size-5" />
                   </span>

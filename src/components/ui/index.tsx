@@ -454,7 +454,7 @@ export function SegmentedControl<T extends string>({
   return (
     <div
       className={cn(
-        "inline-flex rounded-lg border border-line bg-white p-0.5",
+        "inline-flex max-w-full overflow-x-auto rounded-lg border border-line bg-white p-0.5 scroll-thin",
         className,
       )}
     >
@@ -464,7 +464,7 @@ export function SegmentedControl<T extends string>({
           type="button"
           onClick={() => onChange(opt.id)}
           className={cn(
-            "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
+            "shrink-0 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors sm:px-3",
             value === opt.id
               ? "bg-brand-500 text-white"
               : "text-ink-500 hover:text-ink-900",

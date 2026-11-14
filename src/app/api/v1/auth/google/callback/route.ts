@@ -166,3 +166,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login?error=auth_failed", origin));
   }
 }
+

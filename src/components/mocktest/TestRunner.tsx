@@ -543,43 +543,48 @@ export function TestRunner({
           })}
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={current === 0}
-            onClick={() => setCurrent((c) => Math.max(0, c - 1))}
-          >
-            <ChevronLeft className="size-3.5" /> Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={current === questions.length - 1}
-            onClick={() =>
-              setCurrent((c) => Math.min(questions.length - 1, c + 1))
-            }
-          >
-            Next <ChevronRight className="size-3.5" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => clearResponse(question)}>
-            <RotateCcw className="size-3.5" /> Clear Response
-          </Button>
-          <Button
-            variant={marked[question.id] ? "secondary" : "outline"}
-            size="sm"
-            onClick={() => toggleMark(question)}
-          >
-            <Flag className="size-3.5" />
-            {marked[question.id] ? "Marked for Review" : "Mark for Review"}
-          </Button>
-          <Button
-            className="ml-auto"
-            size="sm"
-            onClick={() => setConfirmOpen(true)}
-          >
-            Submit Test
-          </Button>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={current === 0}
+              onClick={() => setCurrent((c) => Math.max(0, c - 1))}
+            >
+              <ChevronLeft className="size-3.5" /> Prev
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={current === questions.length - 1}
+              onClick={() =>
+                setCurrent((c) => Math.min(questions.length - 1, c + 1))
+              }
+            >
+              Next <ChevronRight className="size-3.5" />
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => clearResponse(question)}>
+              <RotateCcw className="size-3.5" /> Clear
+            </Button>
+            <Button
+              variant={marked[question.id] ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => toggleMark(question)}
+            >
+              <Flag className="size-3.5" />
+              {marked[question.id] ? "Marked" : "Review"}
+            </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() => setConfirmOpen(true)}
+            >
+              Submit Test
+            </Button>
+          </div>
         </div>
       </Card>
 

@@ -104,3 +104,4 @@ When an error occurs, the callback redirects to `/login?error=<code>`. The login
 | `unverified_google_email` | Google account has an unverified email address | User must verify their Google email |
 | `account_deactivated` | User account was disabled by an administrator | Contact platform administrator |
 | `auth_failed` | Generic token exchange or network error | Verify network connectivity and Google secrets |
+

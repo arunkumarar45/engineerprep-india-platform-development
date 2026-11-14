@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft, GraduationCap, X } from "lucide-react";
+import { ChevronsLeft, X } from "lucide-react";
 import { SIDEBARS } from "@/lib/nav";
 import { cn } from "@/lib/utils";
+import { BrandIcon } from "@/components/brand/Logo";
 
 export function Sidebar({
   section,
@@ -22,29 +24,53 @@ export function Sidebar({
   const pathname = usePathname();
   const config = SIDEBARS[section] ?? SIDEBARS.dashboard;
 
+  // Prevent background scrolling when mobile navigation menu is open
+  useEffect(() => {
+    if (open) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [open]);
+
+  // Handle escape key to close menu
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && open) {
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
   return (
     <>
-      {/* Mobile scrim */}
+      {/* Mobile backdrop scrim */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-navy-900/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-navy-900/60 backdrop-blur-sm transition-opacity duration-200 lg:hidden"
           onClick={onClose}
-          aria-hidden
+          aria-hidden="true"
         />
       )}
       <aside
         data-testid="app-sidebar"
+        role={open ? "dialog" : undefined}
+        aria-modal={open ? "true" : undefined}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col bg-navy-900 text-white transition-all duration-200 lg:sticky lg:top-0 lg:z-30 lg:h-screen lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex flex-col bg-navy-900 text-white shadow-2xl transition-all duration-200 ease-in-out lg:sticky lg:top-0 lg:z-30 lg:h-screen lg:translate-x-0 lg:shadow-none",
           collapsed ? "lg:w-[4.5rem]" : "lg:w-64",
-          open ? "w-72 translate-x-0" : "-translate-x-full",
+          open
+            ? "w-[min(18rem,calc(100vw-3rem))] translate-x-0"
+            : "-translate-x-full",
         )}
         aria-label={`${config.label} navigation`}
       >
         <div className="flex h-16 items-center gap-2.5 border-b border-white/10 px-4">
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-500 text-white shadow-[0_6px_16px_rgba(255,90,0,0.35)]">
-            <GraduationCap className="size-5" />
-          </span>
+          <BrandIcon size={34} />
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-extrabold leading-tight">
@@ -57,8 +83,8 @@ export function Sidebar({
           )}
           <button
             onClick={onClose}
-            className="ml-auto grid size-8 place-items-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white lg:hidden"
-            aria-label="Close navigation"
+            className="ml-auto grid size-8 place-items-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 lg:hidden"
+            aria-label="Close navigation menu"
           >
             <X className="size-4" />
           </button>
@@ -79,13 +105,13 @@ export function Sidebar({
         <nav className="flex-1 overflow-y-auto px-2.5 py-4 scroll-thin">
           <p
             className={cn(
-              "px-2 pb-2 text-[0.65rem] font-bold uppercase tracking-wider text-white/35",
+              "px-2 pb-2 text-[0.65rem] font-bold uppercase tracking-wider text-white/40",
               collapsed && "sr-only",
             )}
           >
             {config.label}
           </p>
-          <ul className="space-y-0.5">
+          <ul className="space-y-1">
             {config.items.map((item) => {
               const isActive =
                 pathname === item.href ||
@@ -102,19 +128,19 @@ export function Sidebar({
                     onClick={onClose}
                     title={collapsed ? item.label : undefined}
                     className={cn(
-                      "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[0.8rem] font-medium transition-colors",
+                      "group flex min-h-[2.5rem] items-center gap-2.5 rounded-xl px-3 py-2 text-[0.82rem] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500",
                       isActive
-                        ? "bg-brand-500 text-white shadow-[0_6px_16px_rgba(255,90,0,0.28)]"
-                        : "text-white/70 hover:bg-white/8 hover:text-white",
+                        ? "bg-brand-500 text-white shadow-[0_6px_16px_rgba(255,90,0,0.28)] font-semibold"
+                        : "text-white/75 hover:bg-white/10 hover:text-white",
                       collapsed && "lg:justify-center lg:px-0",
                     )}
                   >
-                    <Icon className="size-4.5 shrink-0" aria-hidden />
+                    <Icon className="size-4.5 shrink-0" aria-hidden="true" />
                     <span className={cn("truncate", collapsed && "lg:hidden")}>
                       {item.label}
                     </span>
                     {item.badge && !collapsed && (
-                      <span className="ml-auto rounded-full bg-white/15 px-1.5 py-0.5 text-[0.6rem] font-bold">
+                      <span className="ml-auto rounded-full bg-white/15 px-2 py-0.5 text-[0.62rem] font-bold">
                         {item.badge}
                       </span>
                     )}
@@ -127,9 +153,9 @@ export function Sidebar({
 
         {!collapsed && (
           <div className="m-3 rounded-xl border border-white/10 bg-white/5 p-3">
-            <p className="text-[0.7rem] font-bold text-white">Daily VTU Updates</p>
-            <p className="mt-1 text-[0.65rem] leading-relaxed text-white/55">
-              Notes, question papers, results and circulars — refreshed daily.
+            <p className="text-[0.72rem] font-bold text-white">Daily VTU Updates</p>
+            <p className="mt-1 text-[0.66rem] leading-relaxed text-white/60">
+              Notes, question papers, results &amp; circulars — verified daily.
             </p>
           </div>
         )}

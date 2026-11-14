@@ -15,15 +15,17 @@ export function SheetFilters({
   const current = search.get("difficulty") ?? active;
 
   return (
-    <SegmentedControl
-      options={options}
-      value={current.toUpperCase()}
-      onChange={(next) => {
-        const params = new URLSearchParams(search.toString());
-        if (next === "ALL") params.delete("difficulty");
-        else params.set("difficulty", next);
-        router.push(`/placements/dsa-sheets?${params.toString()}`);
-      }}
-    />
+    <div className="max-w-full overflow-x-auto scroll-thin">
+      <SegmentedControl
+        options={options}
+        value={current.toUpperCase()}
+        onChange={(next) => {
+          const params = new URLSearchParams(search.toString());
+          if (next === "ALL") params.delete("difficulty");
+          else params.set("difficulty", next);
+          router.push(`/placements/dsa-sheets?${params.toString()}`);
+        }}
+      />
+    </div>
   );
 }

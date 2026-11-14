@@ -13,7 +13,8 @@ import {
   ExternalLink,
   Eye,
   FileText,
-  GraduationCap,
+  BookOpen,
+  Route,
   MapPin,
   ArrowRight,
   Users,
@@ -156,7 +157,7 @@ export function ResourceCard({
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.68rem] font-semibold text-ink-500">
         {resource.subjectName && (
           <span className="inline-flex items-center gap-1">
-            <GraduationCap className="size-3" /> {resource.subjectCode} ·{" "}
+            <BookOpen className="size-3" /> {resource.subjectCode} ·{" "}
             {resource.subjectName}
           </span>
         )}
@@ -172,15 +173,15 @@ export function ResourceCard({
         )}
       </div>
 
-      <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-4 sm:flex-nowrap">
         <span className="text-[0.68rem] text-ink-500">
           {resource.fileSize} · {resource.downloadCount.toLocaleString()} downloads
         </span>
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5">
           <Link
             href={`/vtu/view/${resource.id}`}
             target="_blank"
-            className="inline-flex h-8 items-center gap-1 rounded-lg border border-line bg-surface px-2.5 text-xs font-semibold text-ink-700 transition-colors hover:border-brand-400 hover:text-brand-600"
+            className="inline-flex h-8 items-center gap-1 rounded-lg border border-line bg-surface px-2.5 text-xs font-semibold text-ink-700 transition-colors hover:border-brand-400 hover:text-brand-600 focus:outline-none"
           >
             <Eye className="size-3.5" /> View
           </Link>
@@ -403,7 +404,7 @@ export function RoadmapCard({
           className="grid size-11 shrink-0 place-items-center rounded-xl text-white"
           style={{ background: roadmap.coverTint ?? "#FF5A00" }}
         >
-          <GraduationCap className="size-5" />
+          <Route className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
           <Badge tone="brand">{roadmap.category}</Badge>
@@ -615,16 +616,16 @@ export function ProblemRow({
         onClick={onToggle}
         aria-label={solved ? "Mark as not solved" : "Mark as solved"}
         className={cn(
-          "grid size-7 shrink-0 place-items-center rounded-lg border transition-colors",
+          "grid size-8 shrink-0 place-items-center rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-success-500",
           solved
             ? "border-success-500/25 bg-success-500/10 text-success-500"
             : "border-line text-ink-500 hover:text-success-500",
         )}
       >
         {solved ? (
-          <CheckCircle2 className="size-4" />
+          <CheckCircle2 className="size-4.5" />
         ) : (
-          <Circle className="size-4" />
+          <Circle className="size-4.5" />
         )}
       </button>
     </div>

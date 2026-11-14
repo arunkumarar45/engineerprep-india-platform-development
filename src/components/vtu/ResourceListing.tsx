@@ -86,6 +86,9 @@ export function ResourceListing({
   const [bookmarks, setBookmarks] = useState<string[]>(bookmarkedIds);
   const [busy, setBusy] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  const activeFilterCount = [branchId, semesterId, schemeId, subjectId, module].filter(Boolean).length;
 
   const pageSize = 9;
 
@@ -244,8 +247,39 @@ export function ResourceListing({
               placeholder="Search notes, question papers, syllabus…"
             />
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:flex lg:items-end">
-            <div>
+
+          {/* Mobile Filter Toggle Button */}
+          <div className="flex items-center justify-between gap-2 lg:hidden">
+            <Button
+              type="button"
+              variant={activeFilterCount > 0 ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setMobileFiltersOpen((v) => !v)}
+              className="flex-1 sm:flex-initial"
+            >
+              <Filter className="size-3.5" />
+              <span>{mobileFiltersOpen ? "Hide Filters" : "Filter Resources"}</span>
+              {activeFilterCount > 0 && (
+                <span className="ml-1 rounded-full bg-brand-500 px-1.5 py-0.2 text-[0.65rem] font-bold text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+            {activeFilterCount > 0 && (
+              <Button size="sm" variant="ghost" onClick={reset}>
+                <RotateCcw className="size-3.5" /> Reset
+              </Button>
+            )}
+          </div>
+
+          {/* Filter Dropdowns: Collapsible on mobile, inline on desktop */}
+          <div
+            className={cn(
+              "grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:items-end",
+              mobileFiltersOpen ? "grid" : "hidden lg:flex",
+            )}
+          >
+            <div className="min-w-0">
               <p className="epi-label">Branch</p>
               <FilterDropdown
                 label="Branch"
@@ -255,13 +289,14 @@ export function ResourceListing({
                   setSubjectId("");
                   setPage(1);
                 }}
+                className="w-full lg:w-auto"
                 options={[
                   { id: "", label: "All Branches" },
                   ...meta.branches.map((b) => ({ id: b.id, label: b.code })),
                 ]}
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="epi-label">Semester</p>
               <FilterDropdown
                 label="Semester"
@@ -271,6 +306,7 @@ export function ResourceListing({
                   setSubjectId("");
                   setPage(1);
                 }}
+                className="w-full lg:w-auto"
                 options={[
                   { id: "", label: "All Semesters" },
                   ...meta.semesters.map((s) => ({
@@ -280,7 +316,7 @@ export function ResourceListing({
                 ]}
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="epi-label">Scheme</p>
               <FilterDropdown
                 label="Scheme"
@@ -289,13 +325,14 @@ export function ResourceListing({
                   setSchemeId(value);
                   setPage(1);
                 }}
+                className="w-full lg:w-auto"
                 options={[
                   { id: "", label: "All Schemes" },
                   ...meta.schemes.map((s) => ({ id: s.id, label: s.name })),
                 ]}
               />
             </div>
-            <div>
+            <div className="min-w-0 sm:col-span-2 md:col-span-1">
               <p className="epi-label">Subject</p>
               <FilterDropdown
                 label="Subject"
@@ -304,14 +341,14 @@ export function ResourceListing({
                   setSubjectId(value);
                   setPage(1);
                 }}
-                className="min-w-40"
+                className="w-full lg:min-w-40"
                 options={[
                   { id: "", label: "All Subjects" },
                   ...subjectOptions,
                 ]}
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="epi-label">Module</p>
               <FilterDropdown
                 label="Module"
@@ -320,6 +357,7 @@ export function ResourceListing({
                   setModule(value);
                   setPage(1);
                 }}
+                className="w-full lg:w-auto"
                 options={[
                   { id: "", label: "All Modules" },
                   ...Array.from({ length: 5 }, (_, i) => ({
@@ -331,13 +369,14 @@ export function ResourceListing({
             </div>
           </div>
         </div>
+
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
           <p className="inline-flex items-center gap-1.5 text-xs text-ink-500">
             <Filter className="size-3.5" />
             <span className="font-bold text-ink-900">{filtered.length}</span>{" "}
             resources match your filters
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={reset}>
               <RotateCcw className="size-3.5" /> Reset Filters
             </Button>
