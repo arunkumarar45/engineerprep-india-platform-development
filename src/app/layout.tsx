@@ -100,6 +100,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable}`}>
+      <head>
+        <link
+          rel="sitemap"
+          type="application/xml"
+          title="Sitemap"
+          href="/sitemap.xml"
+        />
+      </head>
       <body className="min-h-screen bg-surface font-sans text-ink-900 antialiased">
         <OrganizationJsonLd />
         <WebSiteJsonLd />
