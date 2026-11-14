@@ -8,11 +8,10 @@
  */
 import * as schema from "./schema";
 
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required");
-}
+// Fallback to build dummy during static build time page evaluation if DATABASE_URL is not injected into build workers
+const databaseUrl =
+  process.env.DATABASE_URL ||
+  "postgresql://postgres:postgres@localhost:5432/build_dummy";
 
 function createDb() {
   if (process.env.CF_PAGES === "1" || process.env.NEXT_RUNTIME === "edge") {
