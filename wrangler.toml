@@ -1,0 +1,25 @@
+name = "engineerprep-india"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+[vars]
+NODE_ENV = "production"
+CF_PAGES = "1"
+NEXT_PUBLIC_APP_NAME = "EngineerPrep India"
+
+# ── Cloudflare R2 Bucket (file uploads) ──
+# Create bucket in CF dashboard: Workers & Pages → R2 → Create bucket "engineerprep-uploads"
+# Then uncomment:
+# [[r2_buckets]]
+# binding = "R2_UPLOADS"
+# bucket_name = "engineerprep-uploads"
+
+# ── Secrets (set via wrangler CLI, never commit) ──
+# Run once after deploy:
+#   npx wrangler pages secret put DATABASE_URL
+#   npx wrangler pages secret put JWT_ACCESS_SECRET
+#   npx wrangler pages secret put JWT_REFRESH_SECRET
+#   npx wrangler pages secret put GOOGLE_CLIENT_ID
+#   npx wrangler pages secret put GOOGLE_CLIENT_SECRET
+#   npx wrangler pages secret put GOOGLE_CALLBACK_URL

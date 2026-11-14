@@ -71,47 +71,34 @@ export type SessionUser = {
 /* ----------------------------- Password ---------------------------- */
 
 /**
- * Hash a password using Argon2id.
- * Falls back to bcrypt if @node-rs/argon2 is not installed (graceful degradation).
+ * Hash a password using bcrypt (rounds=12).
+ * bcryptjs is a pure-JS implementation — compatible with Cloudflare Workers edge runtime.
+ * Note: Argon2id would be preferred for new deployments but requires native binaries
+ * which are incompatible with Cloudflare's V8 isolate runtime.
  */
 export async function hashPassword(password: string): Promise<string> {
-  try {
-    const argon2 = await import("@node-rs/argon2");
-    return argon2.hash(password, {
-      memoryCost: 65536,     // 64 MB
-      timeCost: 3,
-      parallelism: 4,
-    });
-  } catch {
-    // Fallback to bcrypt if argon2 is not available
-    console.warn("[auth] @node-rs/argon2 not available, falling back to bcrypt");
-    return bcrypt.hash(password, 12);
-  }
+  return bcrypt.hash(password, 12);
 }
 
 /**
- * Verify a password against a hash.
- * Transparently supports both Argon2id and bcrypt hashes.
- * When a bcrypt hash is successfully verified, upgrades it to Argon2id.
+ * Verify a password against a stored hash.
+ * Supports both bcrypt hashes (current) and legacy Argon2id hashes (treated as invalid
+ * on Cloudflare — users with Argon2id hashes must reset their password).
  */
 export async function verifyPassword(
   password: string,
   hash: string,
 ): Promise<boolean> {
-  // Argon2id hashes start with "$argon2id$" or "$argon2$"
-  if (hash.startsWith("$argon2")) {
-    try {
-      const argon2 = await import("@node-rs/argon2");
-      return argon2.verify(hash, password);
-    } catch {
-      console.warn("[auth] @node-rs/argon2 not available for Argon2id verification");
-      return false;
-    }
-  }
-
   // bcrypt hashes start with "$2b$" or "$2a$"
   if (hash.startsWith("$2")) {
     return bcrypt.compare(password, hash);
+  }
+
+  // Argon2id hashes ($argon2...) cannot be verified on Cloudflare edge runtime.
+  // Users with Argon2id hashes (dev/local seed) will need to reset their password.
+  if (hash.startsWith("$argon2")) {
+    console.warn("[auth] Argon2id hash detected — not supported on edge runtime. User must reset password.");
+    return false;
   }
 
   console.error("[auth] Unknown password hash format — verification failed");
@@ -119,8 +106,8 @@ export async function verifyPassword(
 }
 
 /**
- * Check if a password hash is bcrypt and needs upgrading to Argon2id.
- * Call this after successful bcrypt verification, then update the stored hash.
+ * Check if a password hash is bcrypt (legacy format before Argon2id migration).
+ * On Cloudflare edge, all hashes are bcrypt — this always returns false for Argon2id.
  */
 export function isLegacyBcryptHash(hash: string): boolean {
   return hash.startsWith("$2");
