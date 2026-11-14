@@ -64,6 +64,13 @@ const SECTIONS: Record<
     emptyTitle: "No assignments available",
     emptyMessage: "Authentic academic assignments will appear here as they are published.",
   },
+  "lab-manuals": {
+    title: "Lab Manuals",
+    subtitle: "Laboratory manuals, observation books and viva guidelines.",
+    type: "LAB_MANUAL",
+    emptyTitle: "No lab manuals available",
+    emptyMessage: "Authentic VTU lab manuals will appear here as they are published.",
+  },
   resources: {
     title: "All Resources",
     subtitle: "Every VTU study material — notes, papers, syllabus, manuals and more.",
@@ -200,6 +207,7 @@ export default async function VtuSectionPage({
             { label: "Question Papers", href: "/vtu/question-papers" },
             { label: "Syllabus", href: "/vtu/syllabus" },
             { label: "Assignments", href: "/vtu/assignments" },
+            { label: "Lab Manuals", href: "/vtu/lab-manuals" },
           ].map((item) => (
             <a
               key={item.href}
@@ -213,7 +221,8 @@ export default async function VtuSectionPage({
         <p className="mt-2.5 text-[0.7rem] text-ink-500">
           Library totals — Notes {stats.NOTES.toLocaleString()} · Question
           papers {stats.QUESTION_PAPER.toLocaleString()} · Syllabus{" "}
-          {stats.SYLLABUS.toLocaleString()}
+          {stats.SYLLABUS.toLocaleString()} · Lab manuals{" "}
+          {(stats.LAB_MANUAL || 0).toLocaleString()}
         </p>
       </Card>
 

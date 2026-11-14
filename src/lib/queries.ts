@@ -87,7 +87,10 @@ export type ResourceFilters = {
 };
 
 export async function getResources(filters: ResourceFilters = {}) {
-  const conds = [eq(resources.status, "PUBLISHED")];
+  const conds = [
+    eq(resources.status, "PUBLISHED"),
+    sql`${resources.fileUrl} IS NOT NULL AND ${resources.fileUrl} != ''`,
+  ];
   const isSyllabus = filters.type === "SYLLABUS";
 
   if (filters.type) conds.push(eq(resources.resourceType, filters.type as never));
@@ -183,7 +186,7 @@ export async function getResources(filters: ResourceFilters = {}) {
     .leftJoin(schemes, eq(subjects.schemeId, schemes.id))
     .where(and(...conds))
     .orderBy(desc(resources.createdAt))
-    .limit(filters.limit ?? 1000)
+    .limit(filters.limit ?? 2500)
     .offset(filters.offset ?? 0);
 }
 
@@ -226,16 +229,22 @@ export async function getResourceStats() {
   const rows = await db
     .select({ type: resources.resourceType, count: sql<number>`count(*)::int` })
     .from(resources)
-    .where(eq(resources.status, "PUBLISHED"))
+    .where(
+      and(
+        eq(resources.status, "PUBLISHED"),
+        sql`${resources.fileUrl} IS NOT NULL AND ${resources.fileUrl} != ''`,
+      ),
+    )
     .groupBy(resources.resourceType);
   const map: Record<string, number> = {
     NOTES: 0,
     QUESTION_PAPER: 0,
     SYLLABUS: 0,
     ASSIGNMENT: 0,
+    LAB_MANUAL: 0,
     OTHER: 0,
   };
-  rows.forEach((r) => {
+  rows.forEach((r: { type: string; count: number }) => {
     map[r.type] = r.count;
   });
   return map;

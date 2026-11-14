@@ -71,6 +71,20 @@ const CATEGORY_CARDS = [
     tone: "success" as const,
     key: "SYLLABUS",
   },
+  {
+    label: "Assignments",
+    href: "/vtu/assignments",
+    icon: ClipboardList,
+    tone: "warning" as const,
+    key: "ASSIGNMENT",
+  },
+  {
+    label: "Lab Manuals",
+    href: "/vtu/lab-manuals",
+    icon: FileStack,
+    tone: "info" as const,
+    key: "LAB_MANUAL",
+  },
 ];
 
 export function VtuOverviewClient({

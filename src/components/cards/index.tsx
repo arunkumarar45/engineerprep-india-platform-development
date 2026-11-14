@@ -110,6 +110,7 @@ export function ResourceCard({
     QUESTION_PAPER: "Question Paper",
     SYLLABUS: "Syllabus",
     ASSIGNMENT: "Assignment",
+    LAB_MANUAL: "Lab Manual",
     OTHER: "Resource",
   };
   return (
