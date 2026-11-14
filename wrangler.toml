@@ -4,22 +4,19 @@ compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".vercel/output/static"
 
 [vars]
-NODE_ENV = "production"
 CF_PAGES = "1"
+NODE_ENV = "production"
+NEXT_TELEMETRY_DISABLED = "1"
+COOKIE_SECURE = "true"
+COOKIE_SAMESITE = "lax"
+BCRYPT_ROUNDS = "12"
+RATE_LIMIT_MAX_REQUESTS = "100"
+STORAGE_PROVIDER = "local"
+JWT_ACCESS_EXPIRES_IN = "15m"
+JWT_REFRESH_EXPIRES_IN = "7d"
+FRONTEND_URL = "https://engineerprep-india.pages.dev"
+NEXT_PUBLIC_API_URL = "https://engineerprep-india.pages.dev"
+GOOGLE_CALLBACK_URL = "https://engineerprep-india.pages.dev/api/v1/auth/google/callback"
+INITIAL_ADMIN_EMAIL = "admin@engineerprep.in"
+INITIAL_ADMIN_PASSWORD = "Admin@SecurePassword123!"
 NEXT_PUBLIC_APP_NAME = "EngineerPrep India"
-
-# ── Cloudflare R2 Bucket (file uploads) ──
-# Create bucket in CF dashboard: Workers & Pages → R2 → Create bucket "engineerprep-uploads"
-# Then uncomment:
-# [[r2_buckets]]
-# binding = "R2_UPLOADS"
-# bucket_name = "engineerprep-uploads"
-
-# ── Secrets (set via wrangler CLI, never commit) ──
-# Run once after deploy:
-#   npx wrangler pages secret put DATABASE_URL
-#   npx wrangler pages secret put JWT_ACCESS_SECRET
-#   npx wrangler pages secret put JWT_REFRESH_SECRET
-#   npx wrangler pages secret put GOOGLE_CLIENT_ID
-#   npx wrangler pages secret put GOOGLE_CLIENT_SECRET
-#   npx wrangler pages secret put GOOGLE_CALLBACK_URL
