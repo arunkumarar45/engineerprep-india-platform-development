@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { Bookmark } from "lucide-react";
-import { PageHeader } from "@/components/layout";
-import { EmptyState } from "@/components/ui";
-import { OpportunityCard } from "@/components/cards";
-import { getOpportunities, getSavedOpportunityIds } from "@/lib/queries";
-import { getSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Saved Jobs",
+  robots: { index: false, follow: false },
+};
 
 export default async function SavedJobsPage() {
   const user = await getSessionUser();

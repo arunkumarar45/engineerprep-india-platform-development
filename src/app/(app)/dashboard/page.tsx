@@ -1,7 +1,13 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout";
 import { DashboardView } from "@/components/dashboard/DashboardView";
 import { getSessionUser } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  robots: { index: false, follow: false },
+};
 import {
   getDashboardSummary,
   getDsaProgress,

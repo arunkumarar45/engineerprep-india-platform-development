@@ -1,15 +1,52 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout";
 import { Badge } from "@/components/ui";
 import { TestRunner } from "@/components/mocktest/TestRunner";
 import { getAttempts, getMockTest } from "@/lib/queries";
 import { getSessionUser } from "@/lib/auth";
+import { BreadcrumbsJsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site-config";
+
+interface PageProps {
+  params: Promise<{ testId: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { testId } = await params;
+  const data = await getMockTest(testId);
+  if (!data?.test) return {};
+
+  const title = `${data.test.title} – Placement Mock Test`;
+  const description =
+    data.test.description?.trim() ||
+    `Attempt the ${data.test.title} (${data.test.durationMinutes} mins, ${data.test.totalMarks} marks) on EngineerPrep India with real-time scoring.`;
+
+  const canonicalUrl = absoluteUrl(`/placements/mock-tests/${data.test.id}`);
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${title} | EngineerPrep India`,
+      description,
+      url: canonicalUrl,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | EngineerPrep India`,
+      description,
+    },
+  };
+}
 
 export default async function MockTestPage({
   params,
-}: {
-  params: Promise<{ testId: string }>;
-}) {
+}: PageProps) {
   const { testId } = await params;
   const data = await getMockTest(testId);
   if (!data) notFound();
@@ -22,6 +59,14 @@ export default async function MockTestPage({
 
   return (
     <>
+      <BreadcrumbsJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Placement Guides", url: "/placements" },
+          { name: "Mock Tests", url: "/placements/mock-tests" },
+          { name: data.test.title, url: `/placements/mock-tests/${data.test.id}` },
+        ]}
+      />
       <PageHeader
         breadcrumb={[
           { label: "Placement Guides", href: "/placements" },

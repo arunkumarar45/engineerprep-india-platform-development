@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout";
 import { JobSubmitClient } from "./JobSubmitClient";
+
+export const metadata: Metadata = {
+  title: "Post an Opportunity",
+  robots: { index: false, follow: false },
+};
 
 export default function SubmitJobPage() {
   return (

@@ -1,4 +1,10 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Downloads",
+  robots: { index: false, follow: false },
+};
 import { DownloadList } from "@/components/vtu/ResourceListing";
 import { PageHeader } from "@/components/layout";
 import { getDownloads } from "@/lib/queries";

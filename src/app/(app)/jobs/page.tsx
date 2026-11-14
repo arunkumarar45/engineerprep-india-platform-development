@@ -1,8 +1,33 @@
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout";
 import { Badge } from "@/components/ui";
 import { JobBoard } from "@/components/jobs/JobBoard";
 import { getApplications, getOpportunities, getSavedOpportunityIds } from "@/lib/queries";
 import { getSessionUser } from "@/lib/auth";
+import { BreadcrumbsJsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site-config";
+
+export const metadata: Metadata = {
+  title: "Fresher Jobs & Internships for Engineering Students in India",
+  description:
+    "Explore verified software engineering fresher jobs, tech internships, and off-campus recruitment drives across Bangalore, Hyderabad, Pune, and India.",
+  alternates: {
+    canonical: absoluteUrl("/jobs"),
+  },
+  openGraph: {
+    title: "Fresher Jobs & Internships for Engineers | EngineerPrep India",
+    description:
+      "Find entry-level developer roles, campus hiring alerts, and paid engineering internships.",
+    url: absoluteUrl("/jobs"),
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Fresher Jobs & Internships for Engineers | EngineerPrep India",
+    description:
+      "Find entry-level developer roles, campus hiring alerts, and paid engineering internships.",
+  },
+};
 
 export default async function JobsPage({
   searchParams,
@@ -23,6 +48,12 @@ export default async function JobsPage({
 
   return (
     <>
+      <BreadcrumbsJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Jobs & Internships", url: "/jobs" },
+        ]}
+      />
       <PageHeader
         breadcrumb={[{ label: "Jobs & Internships" }]}
         title="Jobs & Internships"

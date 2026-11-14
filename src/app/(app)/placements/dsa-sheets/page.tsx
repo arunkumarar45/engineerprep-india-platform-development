@@ -1,8 +1,33 @@
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout";
 import { DSASheetCard } from "@/components/cards";
 import { getDsaProgress, getDsaProblems, getDsaSheets } from "@/lib/queries";
 import { getSessionUser } from "@/lib/auth";
+import { BreadcrumbsJsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site-config";
 import { SheetFilters } from "./SheetFilters";
+
+export const metadata: Metadata = {
+  title: "Curated DSA Sheets for Coding Interviews – Striver, NeetCode & Babbar",
+  description:
+    "Master Data Structures and Algorithms with verified DSA sheets: Striver A2Z DSA Course (455 problems), NeetCode 150, Love Babbar 450, Arsh Goyal, and company interview problem lists.",
+  alternates: {
+    canonical: absoluteUrl("/placements/dsa-sheets"),
+  },
+  openGraph: {
+    title: "Curated DSA Sheets for Coding Interviews | EngineerPrep India",
+    description:
+      "Practice topic-wise DSA problems with progress tracking: Striver A2Z, NeetCode 150, Love Babbar 450, and FAANG company coding questions.",
+    url: absoluteUrl("/placements/dsa-sheets"),
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Curated DSA Sheets for Coding Interviews | EngineerPrep India",
+    description:
+      "Practice topic-wise DSA problems with progress tracking: Striver A2Z, NeetCode 150, Love Babbar 450, and FAANG company coding questions.",
+  },
+};
 
 export default async function DsaSheetsPage({
   searchParams,
@@ -38,6 +63,13 @@ export default async function DsaSheetsPage({
 
   return (
     <>
+      <BreadcrumbsJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Placement Guides", url: "/placements" },
+          { name: "DSA Sheets", url: "/placements/dsa-sheets" },
+        ]}
+      />
       <PageHeader
         breadcrumb={[
           { label: "Placement Guides", href: "/placements" },

@@ -1,5 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Learning Progress",
+  robots: { index: false, follow: false },
+};
 import { Code2, Flame, Route, Trophy } from "lucide-react";
 import { PageHeader } from "@/components/layout";
 import { Card, ProgressBar } from "@/components/ui";

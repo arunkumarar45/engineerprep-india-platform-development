@@ -1,5 +1,10 @@
-import { notFound } from "next/navigation";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin Management",
+  robots: { index: false, follow: false },
+};
 import { PageHeader } from "@/components/layout";
 import {
   Automations,

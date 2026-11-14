@@ -1,13 +1,38 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Clock, ListChecks, PlayCircle, Timer, Trophy } from "lucide-react";
 import { PageHeader } from "@/components/layout";
 import { Badge, Card } from "@/components/ui";
 import { difficultyTone } from "@/lib/utils";
 import { getAttempts, getMockTests } from "@/lib/queries";
 import { getSessionUser } from "@/lib/auth";
+import { BreadcrumbsJsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site-config";
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import { questions } from "@/db/schema";
+
+export const metadata: Metadata = {
+  title: "Online Mock Tests for Campus Placements & Tech Assessments",
+  description:
+    "Practice timed aptitude tests, technical MCQs (Java, Python, C++, SQL, OS, DBMS), and company-pattern mock assessments with instant scoring and detailed explanations.",
+  alternates: {
+    canonical: absoluteUrl("/placements/mock-tests"),
+  },
+  openGraph: {
+    title: "Online Mock Tests for Campus Placements | EngineerPrep India",
+    description:
+      "Timed aptitude and technical assessments designed to match recruitment patterns of top tech companies.",
+    url: absoluteUrl("/placements/mock-tests"),
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Online Mock Tests for Campus Placements | EngineerPrep India",
+    description:
+      "Timed aptitude and technical assessments designed to match recruitment patterns of top tech companies.",
+  },
+};
 
 export default async function MockTestsPage() {
   const user = await getSessionUser();
@@ -32,6 +57,13 @@ export default async function MockTestsPage() {
 
   return (
     <>
+      <BreadcrumbsJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Placement Guides", url: "/placements" },
+          { name: "Mock Tests", url: "/placements/mock-tests" },
+        ]}
+      />
       <PageHeader
         breadcrumb={[
           { label: "Placement Guides", href: "/placements" },

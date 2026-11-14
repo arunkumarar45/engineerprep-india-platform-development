@@ -1,16 +1,54 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout";
 import { Badge, ProgressBar } from "@/components/ui";
 import { PatternDetail } from "@/components/placements/PatternDetail";
 import { getDsaPattern, getDsaProblems, getProblemBySlug } from "@/lib/queries";
 import { getDsaProgress } from "@/lib/queries";
 import { getSessionUser } from "@/lib/auth";
+import { BreadcrumbsJsonLd, LearningResourceJsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site-config";
+
+interface PageProps {
+  params: Promise<{ patternId: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { patternId } = await params;
+  const data = await getDsaPattern(patternId);
+  if (!data?.pattern) return {};
+
+  const { pattern, problems } = data;
+  const title = `${pattern.title} Pattern – LeetCode Problem Guide`;
+  const description =
+    pattern.description?.trim() ||
+    `Master the ${pattern.title} coding pattern with ${problems.length} curated practice questions, algorithmic templates, and interview solutions.`;
+
+  const canonicalUrl = absoluteUrl(`/placements/dsa-patterns/${pattern.slug || pattern.id}`);
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${title} | EngineerPrep India`,
+      description,
+      url: canonicalUrl,
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | EngineerPrep India`,
+      description,
+    },
+  };
+}
 
 export default async function DsaPatternDetailPage({
   params,
-}: {
-  params: Promise<{ patternId: string }>;
-}) {
+}: PageProps) {
   const { patternId } = await params;
   const data = await getDsaPattern(patternId);
   if (!data) notFound();
@@ -44,6 +82,14 @@ export default async function DsaPatternDetailPage({
 
   return (
     <>
+      <BreadcrumbsJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Placement Guides", url: "/placements" },
+          { name: "DSA Patterns", url: "/placements/dsa-patterns" },
+          { name: pattern.name || pattern.title, url: `/placements/dsa-patterns/${pattern.slug || pattern.id}` },
+        ]}
+      />
       <PageHeader
         breadcrumb={[
           { label: "Placement Guides", href: "/placements" },

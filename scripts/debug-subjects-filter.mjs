@@ -42,3 +42,4 @@ async function test() {
   await neon.end();
 }
 test().catch(console.error);
+

@@ -25,3 +25,4 @@ async function checkNotes() {
   await neon.end();
 }
 checkNotes().catch(console.error);
+

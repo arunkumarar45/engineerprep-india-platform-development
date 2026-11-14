@@ -1,4 +1,10 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Account Settings",
+  robots: { index: false, follow: false },
+};
 import { PageHeader } from "@/components/layout";
 import { NotificationPreferences } from "./NotificationPreferences";
 import { getSessionUser } from "@/lib/auth";

@@ -1,16 +1,53 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout";
 import { Badge, Card, ProgressBar } from "@/components/ui";
 import { difficultyTone } from "@/lib/utils";
 import { ProblemTracker } from "@/components/placements/ProblemTracker";
 import { getDsaProgress, getDsaSheet, getDsaProblems } from "@/lib/queries";
 import { getSessionUser } from "@/lib/auth";
+import { BreadcrumbsJsonLd, LearningResourceJsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site-config";
+
+interface PageProps {
+  params: Promise<{ sheetId: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { sheetId } = await params;
+  const sheet = await getDsaSheet(sheetId);
+  if (!sheet) return {};
+
+  const title = `${sheet.title} – Practice Coding Problems`;
+  const description =
+    sheet.description?.trim() ||
+    `Solve curated algorithmic coding problems from ${sheet.title}. Includes topic breakdown, LeetCode problem links, and progress tracking on EngineerPrep India.`;
+
+  const canonicalUrl = absoluteUrl(`/placements/dsa-sheets/${sheet.slug || sheet.id}`);
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${title} | EngineerPrep India`,
+      description,
+      url: canonicalUrl,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | EngineerPrep India`,
+      description,
+    },
+  };
+}
 
 export default async function DsaSheetDetailPage({
   params,
-}: {
-  params: Promise<{ sheetId: string }>;
-}) {
+}: PageProps) {
   const { sheetId } = await params;
   const sheet = await getDsaSheet(sheetId);
   if (!sheet) notFound();
@@ -28,6 +65,20 @@ export default async function DsaSheetDetailPage({
 
   return (
     <>
+      <BreadcrumbsJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Placement Guides", url: "/placements" },
+          { name: "DSA Sheets", url: "/placements/dsa-sheets" },
+          { name: sheet.title, url: `/placements/dsa-sheets/${sheet.slug || sheet.id}` },
+        ]}
+      />
+      <LearningResourceJsonLd
+        name={sheet.title}
+        description={sheet.description || `Complete ${sheet.title} coding problem set`}
+        url={`/placements/dsa-sheets/${sheet.slug || sheet.id}`}
+        learningResourceType="Algorithmic Problem Sheet"
+      />
       <PageHeader
         breadcrumb={[
           { label: "Placement Guides", href: "/placements" },

@@ -1,9 +1,34 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/layout";
 import { Badge, Card, ProgressBar } from "@/components/ui";
 import { getDsaPatterns, getDsaProblems, getDsaProgress } from "@/lib/queries";
 import { getSessionUser } from "@/lib/auth";
+import { BreadcrumbsJsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site-config";
+
+export const metadata: Metadata = {
+  title: "Essential DSA Coding Patterns for Technical Interviews",
+  description:
+    "Master the 24 core Data Structure and Algorithm patterns (Two Pointers, Sliding Window, Fast & Slow Pointers, Monotonic Stack, Backtracking, DP) for software engineer interviews.",
+  alternates: {
+    canonical: absoluteUrl("/placements/dsa-patterns"),
+  },
+  openGraph: {
+    title: "Essential DSA Coding Patterns for Technical Interviews | EngineerPrep India",
+    description:
+      "Learn and recognize patterns in LeetCode problems: Two Pointers, Sliding Window, Top K Elements, Binary Search, and Tree BFS/DFS.",
+    url: absoluteUrl("/placements/dsa-patterns"),
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Essential DSA Coding Patterns for Technical Interviews | EngineerPrep India",
+    description:
+      "Learn and recognize patterns in LeetCode problems: Two Pointers, Sliding Window, Top K Elements, Binary Search, and Tree BFS/DFS.",
+  },
+};
 
 export default async function DsaPatternsPage() {
   const user = await getSessionUser();
@@ -24,6 +49,13 @@ export default async function DsaPatternsPage() {
 
   return (
     <>
+      <BreadcrumbsJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Placement Guides", url: "/placements" },
+          { name: "DSA Patterns", url: "/placements/dsa-patterns" },
+        ]}
+      />
       <PageHeader
         breadcrumb={[
           { label: "Placement Guides", href: "/placements" },

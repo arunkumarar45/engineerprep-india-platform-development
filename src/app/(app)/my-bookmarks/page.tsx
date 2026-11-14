@@ -1,5 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Bookmarks",
+  robots: { index: false, follow: false },
+};
 import { BookMarked, Bookmark } from "lucide-react";
 import { PageHeader } from "@/components/layout";
 import { Badge, Card, EmptyState } from "@/components/ui";

@@ -9,8 +9,13 @@ export const siteConfig = {
   tagline: "Learn. Practice. Prepare. Get Hired.",
   description:
     "Comprehensive engineering preparation platform: VTU notes, syllabus, question papers, curated DSA sheets, developer roadmaps, mock assessments, jobs and internships.",
-  // Production URL configured via environment variable, falling back to canonical domain
-  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://engineerprep.in").replace(/\/$/, ""),
+  // Production URL configured via environment variable, falling back to live production domain
+  url: (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "https://engineerprep-india.vercel.app")
+  ).replace(/\/$/, ""),
   ogImage: "/images/og-image.png",
   logo: "/images/logo.png",
   themeColor: "#FF5A00",
@@ -20,7 +25,12 @@ export const siteConfig = {
   },
   organization: {
     name: "EngineerPrep India",
-    url: (process.env.NEXT_PUBLIC_SITE_URL || "https://engineerprep.in").replace(/\/$/, ""),
+    url: (
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : "https://engineerprep-india.vercel.app")
+    ).replace(/\/$/, ""),
     logo: "/images/logo.png",
     founder: "EngineerPrep India Educational Foundation",
     foundingYear: 2024,

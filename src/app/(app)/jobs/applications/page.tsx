@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Job Applications Tracker",
+  robots: { index: false, follow: false },
+};
 import {
   Briefcase,
   CalendarClock,

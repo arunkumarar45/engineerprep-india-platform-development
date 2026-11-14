@@ -27,3 +27,4 @@ async function checkPerFile() {
   await neon.end();
 }
 checkPerFile().catch(console.error);
+

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
   Building2,
   Code2,
@@ -12,8 +13,32 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/layout";
 import { Badge, Button, Card, ProgressBar } from "@/components/ui";
+import { BreadcrumbsJsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site-config";
 import { getSessionUser } from "@/lib/auth";
 import { getDsaProgress, getRoadmaps, getDsaProblems } from "@/lib/queries";
+
+export const metadata: Metadata = {
+  title: "Engineering Placement Preparation & Tech Interview Guides",
+  description:
+    "Comprehensive placement preparation for engineering students: curated DSA sheets, 20 coding patterns, system design, technical CS subjects, aptitude tests, and company interview questions.",
+  alternates: {
+    canonical: absoluteUrl("/placements"),
+  },
+  openGraph: {
+    title: "Engineering Placement Preparation & Tech Interview Guides | EngineerPrep India",
+    description:
+      "Prepare for software engineering and campus placement interviews with verified DSA sheets, role roadmaps, aptitude practice, and company guides.",
+    url: absoluteUrl("/placements"),
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Engineering Placement Preparation & Tech Interview Guides | EngineerPrep India",
+    description:
+      "Prepare for software engineering and campus placement interviews with verified DSA sheets, role roadmaps, aptitude practice, and company guides.",
+  },
+};
 
 const PREP_CARDS = [
   {
@@ -81,6 +106,12 @@ export default async function PlacementsOverviewPage() {
 
   return (
     <>
+      <BreadcrumbsJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Placement Guides", url: "/placements" },
+        ]}
+      />
       <PageHeader
         breadcrumb={[{ label: "Placement Guides" }]}
         title="Placement Guides"

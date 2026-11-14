@@ -1,5 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Mock Tests",
+  robots: { index: false, follow: false },
+};
 import { ListChecks, Trophy } from "lucide-react";
 import { PageHeader } from "@/components/layout";
 import { Badge, Card, EmptyState, ProgressBar } from "@/components/ui";

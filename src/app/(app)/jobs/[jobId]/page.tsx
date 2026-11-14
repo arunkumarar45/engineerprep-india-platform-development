@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
   Bookmark,
   BookmarkCheck,
@@ -18,6 +19,8 @@ import { JobApplyButton } from "./JobApplyButton";
 import { getOpportunity, getSavedOpportunityIds } from "@/lib/queries";
 import { getSessionUser } from "@/lib/auth";
 import { daysUntil, formatDate, formatSalary, jsonArray } from "@/lib/utils";
+import { BreadcrumbsJsonLd, JobPostingJsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site-config";
 
 const TABS = [
   { id: "overview", label: "Overview" },
@@ -27,11 +30,45 @@ const TABS = [
   { id: "company", label: "About Company" },
 ];
 
+interface PageProps {
+  params: Promise<{ jobId: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { jobId } = await params;
+  const job = await getOpportunity(jobId);
+  if (!job) return {};
+
+  const title = `${job.title} at ${job.company}`;
+  const description =
+    job.description?.trim().slice(0, 160) ||
+    `Apply for ${job.title} hiring at ${job.company} (${job.location || "India"}). Check eligibility, salary, skills, and application details on EngineerPrep India.`;
+
+  const canonicalUrl = absoluteUrl(`/jobs/${job.id}`);
+
+  return {
+    title: `${title} | Fresher Jobs & Internships`,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${title} | EngineerPrep India`,
+      description,
+      url: canonicalUrl,
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | EngineerPrep India`,
+      description,
+    },
+  };
+}
+
 export default async function JobDetailPage({
   params,
-}: {
-  params: Promise<{ jobId: string }>;
-}) {
+}: PageProps) {
   const { jobId } = await params;
   const job = await getOpportunity(jobId);
   if (!job) notFound();
@@ -49,6 +86,23 @@ export default async function JobDetailPage({
 
   return (
     <>
+      <BreadcrumbsJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Jobs & Internships", url: "/jobs" },
+          { name: `${job.title} at ${job.company}`, url: `/jobs/${job.id}` },
+        ]}
+      />
+      <JobPostingJsonLd
+        title={job.title}
+        description={job.description || `${job.title} at ${job.company}`}
+        companyName={job.company}
+        location={job.location}
+        datePosted={job.postedAt ? new Date(job.postedAt).toISOString() : new Date().toISOString()}
+        validThrough={job.applicationDeadline ? new Date(job.applicationDeadline).toISOString() : undefined}
+        employmentType={job.type === "INTERNSHIP" ? "INTERN" : "FULL_TIME"}
+        url={`/jobs/${job.id}`}
+      />
       <PageHeader
         breadcrumb={[
           { label: "Jobs", href: "/jobs" },

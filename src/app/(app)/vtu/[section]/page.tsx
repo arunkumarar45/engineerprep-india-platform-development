@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { CalendarClock, Database, Upload } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +8,8 @@ import { PageHeader } from "@/components/layout";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import { UpdateCard } from "@/components/cards";
 import { DownloadList, ResourceListing } from "@/components/vtu/ResourceListing";
+import { BreadcrumbsJsonLd } from "@/components/seo/JsonLd";
+import { absoluteUrl } from "@/lib/site-config";
 import { getSessionUser } from "@/lib/auth";
 import {
   getBranches,
@@ -84,6 +87,89 @@ const SECTIONS: Record<
     emptyMessage: "Download a resource and it will be listed here.",
   },
 };
+
+const SECTION_METADATA: Record<
+  string,
+  { title: string; description: string; noindex?: boolean }
+> = {
+  notes: {
+    title: "VTU Notes PDF – Subject & Module-wise Engineering Study Notes",
+    description:
+      "Download free, verified VTU notes PDF for 2018, 2021 & 2022 schemes across CSE, ISE, ECE, EEE, Mechanical & Civil Engineering. Organized module-by-module.",
+  },
+  "question-papers": {
+    title: "VTU Previous Year Question Papers & Model Papers with Solutions",
+    description:
+      "Download official VTU previous year question papers and model exam question papers with answer solutions for all semesters and engineering branches.",
+  },
+  syllabus: {
+    title: "VTU Syllabus PDF – Official Curriculum & Teaching Schemes",
+    description:
+      "Download official VTU syllabus copy and curriculum teaching schemes for 2018, 2021, and 2022 schemes across all engineering branches.",
+  },
+  assignments: {
+    title: "VTU Academic Assignments & Coursework Materials",
+    description:
+      "Access verified VTU academic assignments, question banks, and coursework guidelines for semester exam preparation.",
+  },
+  "lab-manuals": {
+    title: "VTU Lab Manuals PDF – Practical Experiment Guides & Viva",
+    description:
+      "Download VTU laboratory manuals, observation notes, practical experiment writeups, and viva questions for engineering lab exams.",
+  },
+  resources: {
+    title: "VTU Academic Resources Library – Notes, Papers, Syllabus & Manuals",
+    description:
+      "Search the complete EngineerPrep India VTU library: download verified module notes, question papers, syllabus PDFs, and lab manuals.",
+  },
+  updates: {
+    title: "VTU Notifications, Circulars & Examination Updates",
+    description:
+      "Stay informed with official Visvesvaraya Technological University (VTU) circulars, notifications, timetables, and exam alerts.",
+  },
+  downloads: {
+    title: "My Downloads",
+    description: "Manage and view your downloaded VTU study materials.",
+    noindex: true,
+  },
+};
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ section: string }>;
+}): Promise<Metadata> {
+  const { section } = await params;
+  const meta = SECTION_METADATA[section];
+  if (!meta) return {};
+
+  if (meta.noindex) {
+    return {
+      title: `${meta.title} | EngineerPrep India`,
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const canonicalUrl = absoluteUrl(`/vtu/${section}`);
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${meta.title} | EngineerPrep India`,
+      description: meta.description,
+      url: canonicalUrl,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${meta.title} | EngineerPrep India`,
+      description: meta.description,
+    },
+  };
+}
 
 export default async function VtuSectionPage({
   params,
@@ -182,6 +268,13 @@ export default async function VtuSectionPage({
 
   return (
     <>
+      <BreadcrumbsJsonLd
+        items={[
+          { name: "Home", url: "/" },
+          { name: "VTU Notes & Resources", url: "/vtu" },
+          { name: config.title, url: `/vtu/${section}` },
+        ]}
+      />
       <PageHeader
         breadcrumb={[
           { label: "VTU Notes & Resources", href: "/vtu" },

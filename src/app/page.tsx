@@ -1,7 +1,32 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "EngineerPrep India – VTU Notes, DSA & Placement Preparation",
+  description:
+    "EngineerPrep India helps engineering students prepare for VTU exams and placements with subject-wise notes, previous-year question papers, syllabus PDFs, DSA practice, interview preparation and fresher job opportunities.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "EngineerPrep India – VTU Notes, DSA & Placement Preparation",
+    description:
+      "EngineerPrep India helps engineering students prepare for VTU exams and placements with subject-wise notes, previous-year question papers, syllabus PDFs, DSA practice, interview preparation and fresher job opportunities.",
+    url: "/",
+    siteName: "EngineerPrep India",
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EngineerPrep India – VTU Notes, DSA & Placement Preparation",
+    description:
+      "EngineerPrep India helps engineering students prepare for VTU exams and placements with subject-wise notes, previous-year question papers, syllabus PDFs, DSA practice, interview preparation and fresher job opportunities.",
+  },
+};
 import {
   ArrowRight,
   BookOpen,
@@ -145,12 +170,10 @@ export default async function HomePage() {
                 <Sparkles className="size-3" /> Built for VTU engineering students
               </Badge>
               <h1 className="text-[2rem] font-extrabold leading-[1.12] tracking-tight text-ink-900 sm:text-[2.6rem] lg:text-[3rem]">
-                Everything You Need for Your{" "}
-                <span className="text-brand-500">Engineering Journey.</span>
+                EngineerPrep India – <span className="text-brand-500">Your Engineering Learning and Placement Platform</span>
               </h1>
               <p className="mt-4 max-w-xl text-[0.95rem] leading-relaxed text-ink-500">
-                Study smarter, prepare for placements and discover
-                opportunities — all in one platform.
+                EngineerPrep India helps engineering students prepare for VTU exams and campus placements with verified subject-wise notes, previous-year question papers, syllabus PDFs, DSA sheet tracking, and fresher job opportunities.
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-3">
                 <Link
@@ -297,6 +320,84 @@ export default async function HomePage() {
                 </Link>
               );
             })}
+          </div>
+        </section>
+
+        {/* Informative Platform Overview for Students & Search */}
+        <section className="border-t border-line bg-surface py-14">
+          <div className="mx-auto max-w-7xl px-4 lg:px-6">
+            <div className="max-w-3xl">
+              <h2 className="text-2xl font-extrabold tracking-tight text-ink-900 sm:text-3xl">
+                Comprehensive VTU Exam &amp; Tech Placement Preparation
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-ink-600 sm:text-base">
+                EngineerPrep India is engineered to bridge the gap between semester academic examinations and competitive technology campus recruitment. Here is how our free resources empower your college journey:
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-6 md:grid-cols-3">
+              <div className="rounded-xl border border-line bg-white p-6 shadow-sm">
+                <h3 className="text-base font-bold text-ink-900">
+                  1. Official VTU Curriculum Resources
+                </h3>
+                <p className="mt-2 text-xs leading-relaxed text-ink-600">
+                  Access module-wise lecture notes, official teaching schemes, and authentic model question papers for 2018, 2021, and 2022 schemes across CSE, ISE, ECE, EEE, Mechanical, and Civil Engineering.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+                  <Link href="/vtu/notes" className="text-brand-600 hover:underline">
+                    Subject Notes →
+                  </Link>
+                  <span className="text-ink-300">·</span>
+                  <Link href="/vtu/question-papers" className="text-brand-600 hover:underline">
+                    Question Papers →
+                  </Link>
+                  <span className="text-ink-300">·</span>
+                  <Link href="/vtu/syllabus" className="text-brand-600 hover:underline">
+                    Syllabus PDFs →
+                  </Link>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-line bg-white p-6 shadow-sm">
+                <h3 className="text-base font-bold text-ink-900">
+                  2. Curated DSA &amp; Coding Sheets
+                </h3>
+                <p className="mt-2 text-xs leading-relaxed text-ink-600">
+                  Solve industry-standard coding problem sheets including Striver A2Z DSA, NeetCode 150, and Love Babbar 450. Track your solved questions, topic mastery, and algorithmic problem-solving patterns.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+                  <Link href="/placements/dsa-sheets" className="text-brand-600 hover:underline">
+                    Browse DSA Sheets →
+                  </Link>
+                  <span className="text-ink-300">·</span>
+                  <Link href="/placements/dsa-patterns" className="text-brand-600 hover:underline">
+                    DSA Patterns →
+                  </Link>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-line bg-white p-6 shadow-sm">
+                <h3 className="text-base font-bold text-ink-900">
+                  3. Placements, Core CS &amp; Job Board
+                </h3>
+                <p className="mt-2 text-xs leading-relaxed text-ink-600">
+                  Master Computer Science core fundamentals—DBMS, Operating Systems, Computer Networks, and SQL queries. Explore curated career roadmaps and verified fresher job and internship listings.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+                  <Link href="/placements" className="text-brand-600 hover:underline">
+                    Placement Guides →
+                  </Link>
+                  <span className="text-ink-300">·</span>
+                  <Link href="/placements/roadmaps" className="text-brand-600 hover:underline">
+                    Roadmaps →
+                  </Link>
+                  <span className="text-ink-300">·</span>
+                  <Link href="/jobs" className="text-brand-600 hover:underline">
+                    Fresher Jobs →
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>

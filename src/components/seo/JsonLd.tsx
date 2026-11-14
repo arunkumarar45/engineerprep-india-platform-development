@@ -36,6 +36,14 @@ export function WebSiteJsonLd() {
     url: siteConfig.url,
     description: siteConfig.description,
     inLanguage: "en-IN",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${siteConfig.url}/vtu/resources?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
   };
 
   return (
