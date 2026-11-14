@@ -13,9 +13,9 @@ export interface LogoProps {
 
 /**
  * EngineerPrep India — Brand Icon v2
- * Bold engineering iconmark: circuit-board trace grid forming a sharp "EP" letterform
- * on a deep-navy rounded-square base with a vivid saffron-to-amber gradient pulse.
- * Intentionally high visual weight for strong recognizability at all sizes.
+ * Bold engineering iconmark: EP letterform on deep-navy base.
+ * Uses React.useId() to generate unique SVG def IDs per instance,
+ * preventing gradient/filter conflicts when rendered multiple times on the page.
  */
 export function BrandIcon({
   size = 36,
@@ -24,6 +24,15 @@ export function BrandIcon({
   size?: number | string;
   className?: string;
 }) {
+  // Unique prefix per instance — avoids SVG ID collisions (Navbar + Sidebar + Footer)
+  const uid = React.useId().replace(/:/g, "");
+  const ids = {
+    fire:  `${uid}-fire`,
+    amber: `${uid}-amber`,
+    glow:  `${uid}-glow`,
+    shine: `${uid}-shine`,
+  };
+
   return (
     <svg
       width={size}
@@ -35,89 +44,67 @@ export function BrandIcon({
       aria-hidden="true"
     >
       <defs>
-        {/* Saffron fire gradient — left-bottom to top-right */}
-        <linearGradient id="g-fire" x1="4" y1="52" x2="52" y2="4" gradientUnits="userSpaceOnUse">
+        {/* Saffron-to-amber fire gradient */}
+        <linearGradient id={ids.fire} x1="4" y1="52" x2="52" y2="4" gradientUnits="userSpaceOnUse">
           <stop offset="0%"   stopColor="#C43A00" />
           <stop offset="40%"  stopColor="#FF5A00" />
           <stop offset="100%" stopColor="#FF8C1A" />
         </linearGradient>
 
-        {/* Warm amber accent for circuit dots */}
-        <linearGradient id="g-amber" x1="28" y1="8" x2="28" y2="48" gradientUnits="userSpaceOnUse">
+        {/* Warm amber accent for circuit nodes */}
+        <linearGradient id={ids.amber} x1="28" y1="8" x2="28" y2="48" gradientUnits="userSpaceOnUse">
           <stop offset="0%"   stopColor="#FFD166" />
           <stop offset="100%" stopColor="#FF9640" />
         </linearGradient>
 
-        {/* Strong drop-shadow glow for the icon on light backgrounds */}
-        <filter id="f-glow" x="-15%" y="-15%" width="130%" height="130%">
-          <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#FF5A00" floodOpacity="0.40" />
-          <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000000" floodOpacity="0.18" />
+        {/* Saffron drop-shadow glow */}
+        <filter id={ids.glow} x="-15%" y="-15%" width="130%" height="130%">
+          <feDropShadow dx="0" dy="4" stdDeviation="4"  floodColor="#FF5A00" floodOpacity="0.40" />
+          <feDropShadow dx="0" dy="1" stdDeviation="1"  floodColor="#000000" floodOpacity="0.18" />
         </filter>
 
         {/* Subtle inner shine */}
-        <linearGradient id="g-shine" x1="10" y1="4" x2="46" y2="28" gradientUnits="userSpaceOnUse">
+        <linearGradient id={ids.shine} x1="10" y1="4" x2="46" y2="28" gradientUnits="userSpaceOnUse">
           <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.18" />
           <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.00" />
         </linearGradient>
       </defs>
 
-      {/* ── Base plate: deep navy rounded square ── */}
-      <rect x="2" y="2" width="52" height="52" rx="14" fill="#0F172A" filter="url(#f-glow)" />
+      {/* ── Deep Navy base plate ── */}
+      <rect x="2" y="2" width="52" height="52" rx="14" fill="#0F172A" filter={`url(#${ids.glow})`} />
+      <rect x="2" y="2" width="52" height="52" rx="14" fill={`url(#${ids.shine})`} />
 
-      {/* ── Inner shine overlay ── */}
-      <rect x="2" y="2" width="52" height="52" rx="14" fill="url(#g-shine)" />
+      {/* ── LETTER E — spine + 3 bars (saffron) ── */}
+      {/* Spine */}
+      <rect x="10" y="11" width="7" height="34" rx="2" fill={`url(#${ids.fire})`} />
+      {/* Top bar */}
+      <rect x="10" y="11" width="26" height="7" rx="2" fill={`url(#${ids.fire})`} />
+      {/* Mid bar */}
+      <rect x="10" y="24.5" width="20" height="7" rx="2" fill={`url(#${ids.fire})`} />
+      {/* Bottom bar */}
+      <rect x="10" y="38" width="26" height="7" rx="2" fill={`url(#${ids.fire})`} />
 
-      {/* ══════════════════════════════════════════
-          LETTER  E  —  left column + 3 bars
-          Column: x=10..17, y=11..45
-          Top bar:   y=11..18, x=10..36
-          Mid bar:   y=24..31, x=10..30
-          Bot bar:   y=38..45, x=10..36
-         ══════════════════════════════════════════ */}
-
-      {/* E — vertical spine */}
-      <rect x="10" y="11" width="7" height="34" rx="2" fill="url(#g-fire)" />
-
-      {/* E — top bar */}
-      <rect x="10" y="11" width="26" height="7" rx="2" fill="url(#g-fire)" />
-
-      {/* E — mid bar (slightly shorter — visual rhythm) */}
-      <rect x="10" y="24.5" width="20" height="7" rx="2" fill="url(#g-fire)" />
-
-      {/* E — bottom bar */}
-      <rect x="10" y="38" width="26" height="7" rx="2" fill="url(#g-fire)" />
-
-      {/* ══════════════════════════════════════════
-          LETTER  P  —  right of E sharing spine space
-          Stem: x=30..37, y=11..45
-          Bowl: rounded rect arc top-right, y=11..31, x=30..46, r=10
-         ══════════════════════════════════════════ */}
-
-      {/* P — vertical stem */}
+      {/* ── LETTER P — stem + rounded bowl (white) ── */}
+      {/* Stem */}
       <rect x="30" y="11" width="7" height="34" rx="2" fill="#FFFFFF" fillOpacity="0.93" />
-
-      {/* P — bowl (rounded right cap) */}
+      {/* Bowl */}
       <path
         d="M37 11 H43 C47.4183 11 51 14.5817 51 19 C51 23.4183 47.4183 27 43 27 H37 V20 H43 C43.5523 20 44 19.5523 44 19 C44 18.4477 43.5523 18 43 18 H37 V11 Z"
         fill="#FFFFFF"
         fillOpacity="0.93"
       />
+      {/* P centre circuit node */}
+      <circle cx="43" cy="19" r="3.5" fill={`url(#${ids.amber})`} />
 
-      {/* P bowl — accent dot (circuit node) at bowl centre */}
-      <circle cx="43" cy="19" r="3.5" fill="url(#g-amber)" />
+      {/* ── Circuit corner nodes ── */}
+      <circle cx="47" cy="10" r="2" fill={`url(#${ids.amber})`} fillOpacity="0.70" />
+      <circle cx="47" cy="46" r="2" fill={`url(#${ids.amber})`} fillOpacity="0.55" />
+      <circle cx="10" cy="28" r="2" fill={`url(#${ids.amber})`} fillOpacity="0.60" />
 
-      {/* ── Circuit trace decorations — tiny terminal dots ── */}
-      {/* Top-right corner node */}
-      <circle cx="47" cy="10" r="2" fill="url(#g-amber)" fillOpacity="0.70" />
-      {/* Bottom-right corner node */}
-      <circle cx="47" cy="46" r="2" fill="url(#g-amber)" fillOpacity="0.55" />
-      {/* Mid-left node (E mid junction) */}
-      <circle cx="10" cy="28" r="2" fill="url(#g-amber)" fillOpacity="0.60" />
-
-      {/* ── Ascending arrow / career trajectory — bottom-right ── */}
+      {/* ── Career ascent arrow ── */}
       <path
         d="M38 36 L46 36 L46 44 M46 36 L39 43"
-        stroke="url(#g-amber)"
+        stroke={`url(#${ids.amber})`}
         strokeWidth="2.4"
         strokeLinecap="round"
         strokeLinejoin="round"
