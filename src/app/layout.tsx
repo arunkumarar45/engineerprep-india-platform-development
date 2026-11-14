@@ -17,8 +17,6 @@ const mono = JetBrains_Mono({
   display: "swap",
 });
 
-export const runtime = "edge";
-
 export const viewport: Viewport = {
   themeColor: siteConfig.themeColor,
   width: "device-width",

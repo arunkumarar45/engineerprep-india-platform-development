@@ -1,18 +1,21 @@
-export const runtime = "edge";
 /**
- * Bulk content import â€” EngineerPrep India
+ * Admin API route — EngineerPrep India
  *
- * Workflow:
- *   1. POST with action=validate â€” parse file, validate rows, create ImportJob record
- *   2. POST with action=confirm â€” ACTUALLY insert valid rows into the database
+ * Covers: stats, students, automations, executions, content,
+ *         imports, exports (real DB data), manual automation triggers,
+ *         DSA CRUD (sheets / patterns / problems), and roadmap CRUD.
  *
- * Files supported: CSV, JSON (array or {rows:[]}), XLSX (requires xlsx package)
- * Import categories: DSA Problems, Roadmaps, Jobs/Internships, Aptitude/Technical tests
+ * All endpoints require admin authentication.
+ * Sensitive operations are logged to the audit_logs table.
  */
-import { eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import {
+  auditLogs,
+  automationExecutions,
+  automationRules,
+  branches,
   companies,
   dsaPatterns,
   dsaProblems,
@@ -22,750 +25,717 @@ import {
   opportunities,
   questions,
   questionOptions,
+  resources,
   roadmapStages,
   roadmapTopics,
   roadmaps,
+  subjects,
+  users,
   vtuUpdates,
-  auditLogs,
 } from "@/db/schema";
+import {
+  getAdminStats,
+  getAllUsers,
+  getAutomationExecutions,
+  getAutomationRules,
+  getContentForAdmin,
+} from "@/lib/queries";
 import { requireAdmin } from "@/lib/auth";
-import { apiError, apiSuccess, handleError } from "@/lib/api";
-import { v4 as uuidv4 } from "uuid";
+import {
+  enqueueJob,
+  runRule,
+  sweepExpiredOpportunities,
+} from "@/lib/automation";
+import { apiError, apiSuccess, handleError, toCsv } from "@/lib/api";
 
-const MAX_BYTES = 50 * 1024 * 1024; // 50 MB
+/* ----------------------------- Audit ----------------------------- */
 
-/* -------------------- Column definitions -------------------- */
-
-const COLUMN_MAPS: Record<string, { required: string[]; optional: string[] }> =
-  {
-    "DSA Problems": {
-      required: ["title", "difficulty", "pattern"],
-      optional: ["statement", "practiceUrl", "sheet", "slug"],
-    },
-    Roadmaps: {
-      required: ["title", "category", "stage", "topic"],
-      optional: [
-        "description",
-        "estimatedDuration",
-        "difficulty",
-        "resourceUrl",
-        "estimatedMinutes",
-      ],
-    },
-    "Jobs/Internships": {
-      required: ["title", "company", "type", "location"],
-      optional: [
-        "stipend",
-        "salaryMin",
-        "salaryMax",
-        "batch",
-        "skills",
-        "deadline",
-        "mode",
-        "description",
-        "applicationUrl",
-      ],
-    },
-    Aptitude: {
-      required: ["question", "optionA", "correct"],
-      optional: [
-        "optionB",
-        "optionC",
-        "optionD",
-        "topic",
-        "explanation",
-        "testTitle",
-        "marks",
-      ],
-    },
-    Technical: {
-      required: ["question", "answer", "topic"],
-      optional: [
-        "optionA",
-        "optionB",
-        "optionC",
-        "optionD",
-        "explanation",
-        "testTitle",
-        "marks",
-      ],
-    },
-    "VTU Updates": {
-      required: ["title", "category"],
-      optional: ["summary", "fileUrl"],
-    },
-  };
-
-/* -------------------- Parsers -------------------- */
-
-export function parseCsv(
-  text: string,
-): Array<Record<string, string>> {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length === 0) return [];
-  const headers = splitCsvLine(lines[0]).map((h) => h.trim());
-  return lines.slice(1).map((line) => {
-    const cells = splitCsvLine(line);
-    const row: Record<string, string> = {};
-    headers.forEach((h, i) => {
-      row[h] = (cells[i] ?? "").trim();
-    });
-    return row;
-  });
-}
-
-function splitCsvLine(line: string): string[] {
-  const out: string[] = [];
-  let current = "";
-  let quoted = false;
-  for (let i = 0; i < line.length; i += 1) {
-    const char = line[i];
-    if (quoted) {
-      if (char === '"' && line[i + 1] === '"') {
-        current += '"';
-        i += 1;
-      } else if (char === '"') quoted = false;
-      else current += char;
-    } else if (char === '"') quoted = true;
-    else if (char === ",") {
-      out.push(current);
-      current = "";
-    } else current += char;
-  }
-  out.push(current);
-  return out;
-}
-
-function parseJson(text: string): Array<Record<string, unknown>> {
-  const data = JSON.parse(text);
-  return Array.isArray(data) ? data : (data.rows ?? []);
-}
-
-/* -------------------- Validation -------------------- */
-
-function validateRows(
-  rows: Array<Record<string, unknown>>,
-  category: string,
-): {
-  valid: Array<Record<string, unknown>>;
-  errors: Array<{ row: number; field: string; message: string }>;
-} {
-  const map = COLUMN_MAPS[category];
-  if (!map) throw new Error(`Unsupported import category: ${category}`);
-
-  const valid: Array<Record<string, unknown>> = [];
-  const errors: Array<{ row: number; field: string; message: string }> = [];
-
-  rows.forEach((row, index) => {
-    const rowNumber = index + 2; // 1-indexed, +1 for header row
-    const missing = map.required.filter(
-      (field) =>
-        row[field] === undefined ||
-        row[field] === null ||
-        String(row[field]).trim() === "",
-    );
-
-    if (missing.length > 0) {
-      missing.forEach((field) =>
-        errors.push({
-          row: rowNumber,
-          field,
-          message: `${field} is required`,
-        }),
-      );
-      return;
-    }
-
-    // Category-specific validations
-    if (
-      category === "DSA Problems" &&
-      !["EASY", "MEDIUM", "HARD"].includes(
-        String(row.difficulty).toUpperCase(),
-      )
-    ) {
-      errors.push({
-        row: rowNumber,
-        field: "difficulty",
-        message: "Difficulty must be EASY, MEDIUM or HARD",
-      });
-      return;
-    }
-
-    if (
-      category === "Jobs/Internships" &&
-      !["JOB", "INTERNSHIP", "OFF_CAMPUS"].includes(
-        String(row.type).toUpperCase(),
-      )
-    ) {
-      errors.push({
-        row: rowNumber,
-        field: "type",
-        message: "Type must be JOB, INTERNSHIP, or OFF_CAMPUS",
-      });
-      return;
-    }
-
-    valid.push(row);
-  });
-
-  return { valid, errors };
-}
-
-/* -------------------- Actual DB insertion -------------------- */
-
-async function insertDsaProblems(
-  rows: Array<Record<string, unknown>>,
-  adminId: string,
-): Promise<{ inserted: number; skipped: number }> {
-  let inserted = 0;
-  let skipped = 0;
-
-  // Cache patterns and sheets for lookup
-  const patternMap = new Map<string, string>(); // name -> id
-  const sheetMap = new Map<string, string>(); // title -> id
-
-  const allPatterns = await db.select().from(dsaPatterns);
-  allPatterns.forEach((p) => patternMap.set(p.name.toLowerCase(), p.id));
-
-  const allSheets = await db.select().from(dsaSheets);
-  allSheets.forEach((s) => sheetMap.set(s.title.toLowerCase(), s.id));
-
-  for (const row of rows) {
-    const title = String(row.title ?? "").trim();
-    const slug =
-      String(row.slug ?? title)
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "") +
-      "-" +
-      Date.now().toString(36);
-
-    const patternName = String(row.pattern ?? "").toLowerCase();
-    const sheetTitle = String(row.sheet ?? "").toLowerCase();
-
-    let patternId = patternMap.get(patternName) ?? null;
-    if (!patternId && patternName) {
-      // Create pattern if it doesn't exist
-      const [newPattern] = await db
-        .insert(dsaPatterns)
-        .values({
-          name: String(row.pattern),
-          slug: patternName.replace(/[^a-z0-9]+/g, "-"),
-        })
-        .onConflictDoNothing()
-        .returning();
-      if (newPattern) {
-        patternId = newPattern.id;
-        patternMap.set(patternName, patternId);
-      }
-    }
-
-    let sheetId = sheetMap.get(sheetTitle) ?? null;
-    if (!sheetId && sheetTitle) {
-      const [newSheet] = await db
-        .insert(dsaSheets)
-        .values({
-          title: String(row.sheet),
-          slug: sheetTitle.replace(/[^a-z0-9]+/g, "-"),
-          difficulty: "BEGINNER",
-          totalProblems: 0,
-        })
-        .onConflictDoNothing()
-        .returning();
-      if (newSheet) {
-        sheetId = newSheet.id;
-        sheetMap.set(sheetTitle, sheetId);
-      }
-    }
-
-    try {
-      await db
-        .insert(dsaProblems)
-        .values({
-          title,
-          slug,
-          statement: String(row.statement ?? ""),
-          practiceUrl: String(row.practiceUrl ?? "") || null,
-          difficulty: String(row.difficulty ?? "EASY").toUpperCase() as never,
-          patternId,
-          sheetId,
-          orderIndex: 0,
-        })
-        .onConflictDoNothing();
-      inserted++;
-    } catch (err) {
-      console.warn(`[import] Skipped duplicate DSA problem: ${title}`, err);
-      skipped++;
-    }
-  }
-
-  // Update totalProblems count on sheets
-  for (const [, sheetId] of sheetMap) {
-    const countResult = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(dsaProblems)
-      .where(eq(dsaProblems.sheetId, sheetId));
-    const count = countResult[0]?.count ?? 0;
-    await db
-      .update(dsaSheets)
-      .set({ totalProblems: count })
-      .where(eq(dsaSheets.id, sheetId));
-  }
-
-  void adminId;
-  return { inserted, skipped };
-}
-
-async function insertJobsInternships(
-  rows: Array<Record<string, unknown>>,
-  adminId: string,
-): Promise<{ inserted: number; skipped: number }> {
-  let inserted = 0;
-  let skipped = 0;
-
-  // Cache companies for lookup
-  const companyMap = new Map<string, string>();
-  const allCompanies = await db.select().from(companies);
-  allCompanies.forEach((c) => companyMap.set(c.name.toLowerCase(), c.id));
-
-  for (const row of rows) {
-    const companyName = String(row.company ?? "").trim();
-    let companyId = companyMap.get(companyName.toLowerCase()) ?? null;
-
-    if (!companyId && companyName) {
-      const [newCompany] = await db
-        .insert(companies)
-        .values({
-          name: companyName,
-          logoText: companyName.substring(0, 2).toUpperCase(),
-        })
-        .returning();
-      companyId = newCompany.id;
-      companyMap.set(companyName.toLowerCase(), companyId);
-    }
-
-    const opportunityType = String(row.type ?? "JOB")
-      .toUpperCase()
-      .replace("INTERNSHIP", "INTERNSHIP") as "JOB" | "INTERNSHIP" | "OFF_CAMPUS";
-
-    try {
-      await db.insert(opportunities).values({
-        title: String(row.title ?? "").trim(),
-        description: String(row.description ?? "") || null,
-        opportunityType,
-        companyId,
-        location: String(row.location ?? "").trim(),
-        workMode: (String(row.mode ?? "ONSITE").toUpperCase() as "ONSITE" | "REMOTE" | "HYBRID") || "ONSITE",
-        salaryMin: row.salaryMin ? parseInt(String(row.salaryMin), 10) : null,
-        salaryMax: row.salaryMax ? parseInt(String(row.salaryMax), 10) : null,
-        stipend: row.stipend ? parseInt(String(row.stipend), 10) : null,
-        graduationBatch: row.batch ? parseInt(String(row.batch), 10) : null,
-        applicationDeadline: row.deadline ? new Date(String(row.deadline)) : null,
-        applicationUrl: String(row.applicationUrl ?? "") || null,
-        status: "OPEN",
-      });
-      inserted++;
-    } catch (err) {
-      console.warn(`[import] Skipped opportunity: ${row.title}`, err);
-      skipped++;
-    }
-  }
-
-  void adminId;
-  return { inserted, skipped };
-}
-
-async function insertRoadmapTopics(
-  rows: Array<Record<string, unknown>>,
-  adminId: string,
-): Promise<{ inserted: number; skipped: number }> {
-  let inserted = 0;
-  let skipped = 0;
-
-  const roadmapMap = new Map<string, string>(); // title -> id
-  const stageMap = new Map<string, string>(); // "roadmapId:stageTitle" -> id
-
-  for (const row of rows) {
-    const roadmapTitle = String(row.title ?? "").trim();
-    const stageTitle = String(row.stage ?? "Introduction").trim();
-    const topicTitle = String(row.topic ?? "").trim();
-
-    if (!roadmapTitle || !topicTitle) {
-      skipped++;
-      continue;
-    }
-
-    // Ensure roadmap exists
-    let roadmapId = roadmapMap.get(roadmapTitle.toLowerCase());
-    if (!roadmapId) {
-      const slug =
-        roadmapTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-") +
-        "-" +
-        Date.now().toString(36);
-      const [roadmap] = await db
-        .insert(roadmaps)
-        .values({
-          title: roadmapTitle,
-          slug,
-          category: String(row.category ?? "General"),
-          description: String(row.description ?? "") || null,
-          difficulty: (String(row.difficulty ?? "BEGINNER").toUpperCase() as never) || "BEGINNER",
-          estimatedDuration: String(row.estimatedDuration ?? "") || null,
-          stepCount: 0,
-        })
-        .onConflictDoNothing()
-        .returning();
-
-      if (roadmap) {
-        roadmapId = roadmap.id;
-        roadmapMap.set(roadmapTitle.toLowerCase(), roadmapId);
-      } else {
-        // Roadmap already exists â€” look it up
-        const [existing] = await db
-          .select()
-          .from(roadmaps)
-          .where(eq(roadmaps.title, roadmapTitle))
-          .limit(1);
-        if (existing) {
-          roadmapId = existing.id;
-          roadmapMap.set(roadmapTitle.toLowerCase(), roadmapId);
-        }
-      }
-    }
-
-    if (!roadmapId) {
-      skipped++;
-      continue;
-    }
-
-    // Ensure stage exists
-    const stageKey = `${roadmapId}:${stageTitle.toLowerCase()}`;
-    let stageId = stageMap.get(stageKey);
-    if (!stageId) {
-      const [stage] = await db
-        .insert(roadmapStages)
-        .values({
-          roadmapId,
-          title: stageTitle,
-          orderIndex: stageMap.size,
-        })
-        .onConflictDoNothing()
-        .returning();
-
-      if (stage) {
-        stageId = stage.id;
-        stageMap.set(stageKey, stageId);
-      }
-    }
-
-    if (!stageId) {
-      skipped++;
-      continue;
-    }
-
-    // Insert topic
-    try {
-      await db.insert(roadmapTopics).values({
-        stageId,
-        title: topicTitle,
-        resourceUrl: String(row.resourceUrl ?? "") || null,
-        estimatedMinutes: row.estimatedMinutes
-          ? parseInt(String(row.estimatedMinutes), 10)
-          : 60,
-        orderIndex: 0,
-      });
-      inserted++;
-    } catch (err) {
-      console.warn(`[import] Skipped topic: ${topicTitle}`, err);
-      skipped++;
-    }
-  }
-
-  void adminId;
-  return { inserted, skipped };
-}
-
-async function insertVtuUpdates(
-  rows: Array<Record<string, unknown>>,
-  adminId: string,
-): Promise<{ inserted: number; skipped: number }> {
-  let inserted = 0;
-  let skipped = 0;
-
-  for (const row of rows) {
-    try {
-      await db.insert(vtuUpdates).values({
-        title: String(row.title ?? "").trim(),
-        category: String(row.category ?? "General").trim(),
-        summary: String(row.summary ?? "") || null,
-        fileUrl: String(row.fileUrl ?? "") || null,
-        createdBy: adminId,
-      });
-      inserted++;
-    } catch (err) {
-      console.warn(`[import] Skipped VTU update: ${row.title}`, err);
-      skipped++;
-    }
-  }
-
-  return { inserted, skipped };
-}
-
-async function insertAptitudeQuestions(
-  rows: Array<Record<string, unknown>>,
-  adminId: string,
-  category: string,
-): Promise<{ inserted: number; skipped: number }> {
-  let inserted = 0;
-  let skipped = 0;
-
-  // Group by testTitle or use a default test
-  const testMap = new Map<string, string>(); // testTitle -> testId
-
-  const getOrCreateTest = async (testTitle: string): Promise<string> => {
-    if (testMap.has(testTitle)) return testMap.get(testTitle)!;
-    const slug =
-      testTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-") +
-      "-" +
-      Date.now().toString(36);
-    const [test] = await db
-      .insert(mockTests)
-      .values({
-        title: testTitle,
-        slug,
-        subject: category,
-        difficulty: "MEDIUM",
-        durationMinutes: 60,
-        totalMarks: rows.length * 2,
-        isPublished: false,
-      })
-      .returning();
-    testMap.set(testTitle, test.id);
-    return test.id;
-  };
-
-  for (const row of rows) {
-    const testTitle =
-      String(row.testTitle ?? `${category} Test - ${new Date().toLocaleDateString("en-IN")}`);
-    const testId = await getOrCreateTest(testTitle);
-
-    try {
-      const [q] = await db
-        .insert(questions)
-        .values({
-          testId,
-          text: String(row.question ?? "").trim(),
-          topic: String(row.topic ?? category).trim(),
-          marks: row.marks ? parseInt(String(row.marks), 10) : 2,
-          orderIndex: 0,
-        })
-        .returning();
-
-      // Insert options
-      const optionLabels = ["A", "B", "C", "D"];
-      const correctLabel = String(row.correct ?? "A").toUpperCase();
-
-      for (const label of optionLabels) {
-        const text = String(row[`option${label}`] ?? "").trim();
-        if (!text && label !== "A") continue; // Skip empty options (except A)
-        await db.insert(questionOptions).values({
-          questionId: q.id,
-          label,
-          text: text || `Option ${label}`,
-          isCorrect: label === correctLabel,
-        });
-      }
-
-      inserted++;
-    } catch (err) {
-      console.warn(`[import] Skipped question: ${row.question}`, err);
-      skipped++;
-    }
-  }
-
-  void adminId;
-  return { inserted, skipped };
-}
-
-/* -------------------- API Handlers -------------------- */
-
-export async function GET() {
+async function writeAuditLog(
+  actorId: string,
+  action: string,
+  entity: string,
+  entityId?: string,
+  metadata?: Record<string, unknown>,
+) {
   try {
-    await requireAdmin();
-    const imports = await db
-      .select()
-      .from(importJobs)
-      .orderBy(importJobs.createdAt);
-    return apiSuccess(
-      { imports, columns: COLUMN_MAPS },
-      "Import history fetched",
-    );
-  } catch (error) {
-    return handleError(error, "Unable to load imports");
+    await db.insert(auditLogs).values({
+      actorId,
+      action,
+      entity,
+      entityId: entityId ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch (err) {
+    console.error("[audit] Failed to write audit log:", err);
   }
 }
 
-export async function POST(request: Request) {
+/* ============================= GET ================================= */
+
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ slug?: string[] }> },
+) {
   try {
     const admin = await requireAdmin();
-    const form = await request.formData();
-    const file = form.get("file");
-    const category = String(form.get("category") ?? "DSA Problems");
-    const action = String(form.get("action") ?? "validate");
+    const { slug } = await context.params;
+    const section = slug?.[0] ?? "overview";
+    const url = new URL(request.url);
 
-    /* ---- CONFIRM: Actually insert records ---- */
-    if (action === "confirm") {
-      const importId = String(form.get("importId") ?? "");
-      const [job] = await db
+    /* ---- Stats ---- */
+    if (section === "stats") {
+      const stats = await getAdminStats();
+      return apiSuccess(stats, "Admin statistics fetched");
+    }
+
+    /* ---- Automations ---- */
+    if (section === "automations") {
+      const [rules, executions] = await Promise.all([
+        getAutomationRules(),
+        getAutomationExecutions(30),
+      ]);
+      return apiSuccess({ rules, executions }, "Automation data fetched");
+    }
+
+    /* ---- Executions ---- */
+    if (section === "executions") {
+      const limit = parseInt(url.searchParams.get("limit") ?? "60", 10);
+      const executions = await getAutomationExecutions(Math.min(limit, 200));
+      return apiSuccess({ executions }, "Executions fetched");
+    }
+
+    /* ---- Content ---- */
+    if (section === "content") {
+      const content = await getContentForAdmin();
+      return apiSuccess(content, "Content fetched");
+    }
+
+    /* ---- Students ---- */
+    if (section === "students") {
+      const students = await getAllUsers();
+      return apiSuccess({ students }, "Students fetched");
+    }
+
+    /* ---- Pending community job submissions ---- */
+    if (section === "pending-jobs") {
+      const rows = await db
+        .select({
+          id: opportunities.id,
+          title: opportunities.title,
+          description: opportunities.description,
+          opportunityType: opportunities.opportunityType,
+          location: opportunities.location,
+          workMode: opportunities.workMode,
+          applicationUrl: opportunities.applicationUrl,
+          status: opportunities.status,
+          postedAt: opportunities.postedAt,
+          companyName: companies.name,
+          companyLogoText: companies.logoText,
+          companyLogoColor: companies.logoColor,
+        })
+        .from(opportunities)
+        .leftJoin(companies, eq(opportunities.companyId, companies.id))
+        .where(eq(opportunities.status, "PENDING"))
+        .orderBy(desc(opportunities.postedAt));
+      void admin;
+      return apiSuccess({ jobs: rows, count: rows.length }, "Pending jobs fetched");
+    }
+
+    /* ---- Imports ---- */
+    if (section === "imports") {
+      const imports = await db
         .select()
         .from(importJobs)
-        .where(eq(importJobs.id, importId))
-        .limit(1);
+        .orderBy(desc(importJobs.createdAt))
+        .limit(100);
+      return apiSuccess({ imports }, "Import history fetched");
+    }
 
-      if (!job) return apiError("Import job not found", 404);
-      if (job.status === "COMPLETED")
-        return apiError("This import has already been processed", 409);
-      if (job.status !== "VALIDATED")
-        return apiError("Only validated imports can be confirmed", 400);
+    /* ---- Export (real database data) ---- */
+    if (section === "export") {
+      const kind = url.searchParams.get("kind") ?? "resources";
 
-      // Mark as processing
-      await db
-        .update(importJobs)
-        .set({ status: "PROCESSING" })
-        .where(eq(importJobs.id, importId));
-
-      // Get the preview rows from the job (what was validated)
-      const validRows = (job.preview as Array<Record<string, unknown>>) ?? [];
-
-      let insertResult = { inserted: 0, skipped: 0 };
-      try {
-        switch (job.category) {
-          case "DSA Problems":
-            insertResult = await insertDsaProblems(validRows, admin.id);
-            break;
-          case "Jobs/Internships":
-            insertResult = await insertJobsInternships(validRows, admin.id);
-            break;
-          case "Roadmaps":
-            insertResult = await insertRoadmapTopics(validRows, admin.id);
-            break;
-          case "VTU Updates":
-            insertResult = await insertVtuUpdates(validRows, admin.id);
-            break;
-          case "Aptitude":
-          case "Technical":
-            insertResult = await insertAptitudeQuestions(
-              validRows,
-              admin.id,
-              job.category,
-            );
-            break;
-          default:
-            throw new Error(
-              `Insertion not implemented for category: ${job.category}`,
-            );
-        }
-
-        await db
-          .update(importJobs)
-          .set({
-            status: "COMPLETED",
-            importedRows: insertResult.inserted,
-            completedAt: new Date(),
+      if (kind === "resources") {
+        const rows = await db
+          .select({
+            title: resources.title,
+            type: resources.resourceType,
+            status: resources.status,
+            downloadCount: resources.downloadCount,
+            fileSize: resources.fileSize,
+            subjectName: subjects.name,
+            subjectCode: subjects.code,
+            createdAt: resources.createdAt,
           })
-          .where(eq(importJobs.id, importId));
+          .from(resources)
+          .leftJoin(subjects, eq(resources.subjectId, subjects.id))
+          .orderBy(desc(resources.createdAt));
 
-        // Write audit log
-        await db.insert(auditLogs).values({
-          actorId: admin.id,
-          action: "BULK_IMPORT",
-          entity: job.category,
-          entityId: importId,
-          metadata: { inserted: insertResult.inserted, skipped: insertResult.skipped },
-        });
-
-        return apiSuccess(
-          {
-            importedRows: insertResult.inserted,
-            skippedRows: insertResult.skipped,
+        const headers = [
+          "title",
+          "type",
+          "status",
+          "downloadCount",
+          "fileSize",
+          "subjectName",
+          "subjectCode",
+          "createdAt",
+        ];
+        return new Response(toCsv(headers, rows as never[]), {
+          headers: {
+            "Content-Type": "text/csv",
+            "Content-Disposition": `attachment; filename="resources-${Date.now()}.csv"`,
           },
-          `Import completed. ${insertResult.inserted} records inserted.`,
-        );
-      } catch (insertError) {
-        await db
-          .update(importJobs)
-          .set({
-            status: "FAILED",
-            completedAt: new Date(),
+        });
+      }
+
+      if (kind === "opportunities") {
+        const rows = await db
+          .select({
+            title: opportunities.title,
+            type: opportunities.opportunityType,
+            status: opportunities.status,
+            location: opportunities.location,
+            workMode: opportunities.workMode,
+            graduationBatch: opportunities.graduationBatch,
+            applicationDeadline: opportunities.applicationDeadline,
+            companyName: companies.name,
+            postedAt: opportunities.postedAt,
           })
-          .where(eq(importJobs.id, importId));
+          .from(opportunities)
+          .leftJoin(companies, eq(opportunities.companyId, companies.id))
+          .orderBy(desc(opportunities.postedAt));
 
-        throw insertError;
+        const headers = [
+          "title",
+          "type",
+          "status",
+          "location",
+          "workMode",
+          "graduationBatch",
+          "applicationDeadline",
+          "companyName",
+          "postedAt",
+        ];
+        return new Response(toCsv(headers, rows as never[]), {
+          headers: {
+            "Content-Type": "text/csv",
+            "Content-Disposition": `attachment; filename="opportunities-${Date.now()}.csv"`,
+          },
+        });
       }
+
+      if (kind === "students") {
+        const rows = await db
+          .select({
+            fullName: users.fullName,
+            email: users.email,
+            collegeName: users.collegeName,
+            graduationYear: users.graduationYear,
+            isActive: users.isActive,
+            emailVerified: users.emailVerified,
+            createdAt: users.createdAt,
+          })
+          .from(users)
+          .where(eq(users.role, "STUDENT"))
+          .orderBy(desc(users.createdAt));
+
+        const headers = [
+          "fullName",
+          "email",
+          "collegeName",
+          "graduationYear",
+          "isActive",
+          "emailVerified",
+          "createdAt",
+        ];
+        return new Response(toCsv(headers, rows as never[]), {
+          headers: {
+            "Content-Type": "text/csv",
+            "Content-Disposition": `attachment; filename="students-${Date.now()}.csv"`,
+          },
+        });
+      }
+
+      if (kind === "dsa-problems") {
+        const rows = await db
+          .select({
+            title: dsaProblems.title,
+            slug: dsaProblems.slug,
+            difficulty: dsaProblems.difficulty,
+            practiceUrl: dsaProblems.practiceUrl,
+            sheetTitle: dsaSheets.title,
+            orderIndex: dsaProblems.orderIndex,
+          })
+          .from(dsaProblems)
+          .leftJoin(dsaSheets, eq(dsaProblems.sheetId, dsaSheets.id))
+          .orderBy(dsaProblems.orderIndex);
+
+        const headers = [
+          "title",
+          "slug",
+          "difficulty",
+          "practiceUrl",
+          "sheetTitle",
+          "orderIndex",
+        ];
+        return new Response(toCsv(headers, rows as never[]), {
+          headers: {
+            "Content-Type": "text/csv",
+            "Content-Disposition": `attachment; filename="dsa-problems-${Date.now()}.csv"`,
+          },
+        });
+      }
+
+      return apiError(`Unknown export kind: ${kind}`, 400);
     }
 
-    /* ---- VALIDATE: Parse and validate file ---- */
-    if (!(file instanceof File)) return apiError("A file is required", 400);
-    if (file.size > MAX_BYTES) return apiError("File exceeds the 50 MB limit", 413);
-
-    const name = file.name.toLowerCase();
-    const text = await file.text();
-    let rows: Array<Record<string, unknown>>;
-
-    if (name.endsWith(".json")) {
-      rows = parseJson(text);
-    } else if (name.endsWith(".xlsx")) {
-      // Try to load xlsx package dynamically
-      try {
-        const XLSX = await import("xlsx" as never) as { read: (data: Buffer, opts: { type: string }) => { SheetNames: string[]; Sheets: Record<string, unknown> }; utils: { sheet_to_json: (sheet: unknown) => Array<Record<string, unknown>> } };
-        const workbook = XLSX.read(Buffer.from(text), { type: "binary" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        rows = XLSX.utils.sheet_to_json(sheet);
-      } catch {
-        return apiError(
-          "XLSX support requires the 'xlsx' package. Install it with: npm install xlsx, or export your spreadsheet as CSV or JSON.",
-          400,
-        );
-      }
-    } else {
-      rows = parseCsv(text);
+    /* ---- Audit logs ---- */
+    if (section === "audit-logs") {
+      const logs = await db
+        .select()
+        .from(auditLogs)
+        .orderBy(desc(auditLogs.createdAt))
+        .limit(100);
+      return apiSuccess({ logs }, "Audit logs fetched");
     }
 
-    const { valid, errors } = validateRows(rows, category);
-
-    // Store ALL valid rows in the preview field for use during confirmation
-    const [job] = await db
-      .insert(importJobs)
-      .values({
-        category,
-        fileName: file.name,
-        fileSize: `${(file.size / 1024).toFixed(0)} KB`,
-        status: errors.length === 0 ? "VALIDATED" : "FAILED",
-        totalRows: rows.length,
-        validRows: valid.length,
-        invalidRows: errors.length,
-        importedRows: 0,
-        preview: valid, // Store ALL valid rows, not just the first 5
-        errors: errors.slice(0, 25),
-        createdBy: admin.id,
-      })
-      .returning();
-
-    return apiSuccess(
-      {
-        importId: job.id,
-        fileName: job.fileName,
-        totalRows: job.totalRows,
-        validRows: job.validRows,
-        invalidRows: job.invalidRows,
-        preview: valid.slice(0, 5), // Show only 5 for display
-        errors: errors.slice(0, 25),
-      },
-      errors.length === 0
-        ? "File validated successfully. Confirm to import."
-        : "File validated with row-level errors. Fix issues and re-upload, or confirm to import only valid rows.",
-    );
+    return apiError("Unknown admin section", 404);
   } catch (error) {
-    return handleError(error, "Import processing failed");
+    return handleError(error, "Admin request failed");
+  }
+}
+
+/* ========================= Validation Schemas ====================== */
+
+const automationSchema = z.object({
+  name: z.string().min(3),
+  description: z.string().optional(),
+  category: z.string().min(2),
+  cronExpression: z.string().optional(),
+  queueName: z.string().min(2),
+  status: z.enum(["ACTIVE", "DISABLED"]).default("ACTIVE"),
+});
+
+const resourceCreateSchema = z.object({
+  title: z.string().min(2),
+  description: z.string().optional(),
+  resourceType: z.enum(["NOTES", "QUESTION_PAPER", "SYLLABUS", "LAB_MANUAL", "ASSIGNMENT", "OTHER"]),
+  subjectId: z.string().uuid().optional(),
+  moduleNumber: z.coerce.number().int().optional(),
+  fileName: z.string(),
+  fileUrl: z.string().url("File URL must be a valid URL"),
+  fileSize: z.string().default("—"),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).default("PUBLISHED"),
+});
+
+const opportunityCreateSchema = z.object({
+  title: z.string().min(2),
+  description: z.string().optional(),
+  opportunityType: z.enum(["JOB", "INTERNSHIP", "OFF_CAMPUS"]),
+  companyId: z.string().uuid().optional(),
+  location: z.string().min(2),
+  workMode: z.enum(["ONSITE", "REMOTE", "HYBRID"]).default("ONSITE"),
+  salaryMin: z.coerce.number().int().optional(),
+  salaryMax: z.coerce.number().int().optional(),
+  stipend: z.coerce.number().int().optional(),
+  duration: z.string().optional(),
+  applicationDeadline: z.string().datetime().optional(),
+  applicationUrl: z.string().url().optional(),
+  graduationBatch: z.coerce.number().int().optional(),
+});
+
+const mockTestCreateSchema = z.object({
+  title: z.string().min(2),
+  subject: z.string().min(2),
+  description: z.string().optional(),
+  difficulty: z.enum(["EASY", "MEDIUM", "HARD", "BEGINNER", "INTERMEDIATE", "ADVANCED"]).default("MEDIUM"),
+  durationMinutes: z.coerce.number().int().min(5).max(300).default(60),
+  totalMarks: z.coerce.number().int().min(1).max(1000).default(100),
+  isPublished: z.boolean().default(false),
+});
+
+const vtuUpdateCreateSchema = z.object({
+  title: z.string().min(2),
+  category: z.string().min(2),
+  summary: z.string().optional(),
+  fileUrl: z.string().url().optional(),
+  fileSize: z.string().optional(),
+});
+
+/* -- DSA schemas ------------------------------------------ */
+
+const dsaSheetCreateSchema = z.object({
+  title: z.string().min(2),
+  author: z.string().optional(),
+  description: z.string().optional(),
+  coverImageUrl: z.string().url().optional(),
+  coverTint: z.string().optional(),
+  difficulty: z
+    .enum(["EASY", "MEDIUM", "HARD", "BEGINNER", "INTERMEDIATE", "ADVANCED"])
+    .default("BEGINNER"),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase, digits and hyphens only")
+    .optional(),
+});
+
+const dsaPatternCreateSchema = z.object({
+  name: z.string().min(2),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
+  summary: z.string().optional(),
+  about: z.string().optional(),
+  icon: z.string().optional(),
+});
+
+const dsaProblemCreateSchema = z.object({
+  title: z.string().min(2),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
+  statement: z.string().optional(),
+  editorial: z.string().optional(),
+  practiceUrl: z.string().url().optional(),
+  difficulty: z
+    .enum(["EASY", "MEDIUM", "HARD", "BEGINNER", "INTERMEDIATE", "ADVANCED"])
+    .default("EASY"),
+  orderIndex: z.coerce.number().int().default(0),
+  sheetId: z.string().uuid().optional(),
+  patternId: z.string().uuid().optional(),
+  examples: z.array(z.any()).optional(),
+  hints: z.array(z.string()).optional(),
+});
+
+/* -- Roadmap schemas --------------------------------------- */
+
+const roadmapCreateSchema = z.object({
+  title: z.string().min(2),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
+  description: z.string().optional(),
+  category: z.string().min(2).default("Web Dev"),
+  coverImageUrl: z.string().url().optional(),
+  coverTint: z.string().optional(),
+  icon: z.string().optional(),
+  estimatedDuration: z.string().optional(),
+  difficulty: z
+    .enum(["EASY", "MEDIUM", "HARD", "BEGINNER", "INTERMEDIATE", "ADVANCED"])
+    .default("BEGINNER"),
+});
+
+const roadmapStageCreateSchema = z.object({
+  roadmapId: z.string().uuid(),
+  title: z.string().min(2),
+  description: z.string().optional(),
+  orderIndex: z.coerce.number().int().default(0),
+  icon: z.string().optional(),
+});
+
+const roadmapTopicCreateSchema = z.object({
+  stageId: z.string().uuid(),
+  title: z.string().min(2),
+  description: z.string().optional(),
+  orderIndex: z.coerce.number().int().default(0),
+  resourceUrl: z.string().url().optional(),
+  estimatedMinutes: z.coerce.number().int().optional(),
+  isOptional: z.boolean().default(false),
+});
+
+/* -- Mock test question schemas --------------------------- */
+
+const questionCreateSchema = z.object({
+  mockTestId: z.string().uuid(),
+  text: z.string().min(2),
+  explanation: z.string().optional(),
+  marks: z.coerce.number().int().default(1),
+  negativeMarks: z.coerce.number().default(0),
+  orderIndex: z.coerce.number().int().default(0),
+  options: z
+    .array(
+      z.object({
+        text: z.string().min(1),
+        isCorrect: z.boolean().default(false),
+        orderIndex: z.coerce.number().int().default(0),
+      }),
+    )
+    .min(2)
+    .max(6),
+});
+
+/* ============================= POST ================================ */
+
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ slug?: string[] }> },
+) {
+  try {
+    const admin = await requireAdmin();
+    const { slug } = await context.params;
+    const section = slug?.[0];
+
+    /* ---- Manual automation run ---- */
+    if (section === "automations" && slug?.[1] === "run") {
+      const id = slug[2];
+      if (!id) return apiError("Rule id is required", 400);
+      const result = await runRule(id);
+      await writeAuditLog(admin.id, "RUN_AUTOMATION", "automation_rules", id);
+      return apiSuccess(result, "Automation executed");
+    }
+
+    /* ---- Create automation rule ---- */
+    if (section === "automations") {
+      const body = automationSchema.parse(await request.json());
+      const key = body.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const [created] = await db
+        .insert(automationRules)
+        .values({
+          ...body,
+          key,
+          idempotencyKey: `${key}-${Date.now()}`,
+        })
+        .returning();
+      await writeAuditLog(admin.id, "CREATE", "automation_rules", created.id);
+      return apiSuccess({ rule: created }, "Automation rule created", 201);
+    }
+
+    /* ---- Sweep expired opportunities ---- */
+    if (section === "sweep") {
+      const result = await sweepExpiredOpportunities();
+      await enqueueJob("cleanup-queue", result as Record<string, unknown>);
+      await writeAuditLog(admin.id, "SWEEP_EXPIRED", "opportunities");
+      return apiSuccess(result, "Expired opportunities cleaned up");
+    }
+
+    /* ---- Create VTU resource ---- */
+    if (section === "resources") {
+      const body = resourceCreateSchema.parse(await request.json());
+      const [created] = await db
+        .insert(resources)
+        .values({ ...body, uploadedBy: admin.id })
+        .returning();
+      await writeAuditLog(admin.id, "CREATE", "resources", created.id);
+      return apiSuccess({ resource: created }, "Resource created", 201);
+    }
+
+    /* ---- Create VTU update ---- */
+    if (section === "vtu-updates") {
+      const body = vtuUpdateCreateSchema.parse(await request.json());
+      const [created] = await db
+        .insert(vtuUpdates)
+        .values({ ...body, createdBy: admin.id })
+        .returning();
+      await writeAuditLog(admin.id, "CREATE", "vtu_updates", created.id);
+      return apiSuccess({ update: created }, "VTU update created", 201);
+    }
+
+    /* ---- Approve / Reject community job submission ---- */
+    if (section === "opportunities" && slug?.[1] === "approve") {
+      const id = slug[2];
+      if (!id) return apiError("Opportunity id is required", 400);
+      await db
+        .update(opportunities)
+        .set({ status: "OPEN" })
+        .where(eq(opportunities.id, id));
+      await writeAuditLog(admin.id, "APPROVE_JOB", "opportunities", id);
+      return apiSuccess({ id, status: "OPEN" }, "Job approved and published");
+    }
+
+    if (section === "opportunities" && slug?.[1] === "reject") {
+      const id = slug[2];
+      if (!id) return apiError("Opportunity id is required", 400);
+      await db
+        .update(opportunities)
+        .set({ status: "CLOSED" })
+        .where(eq(opportunities.id, id));
+      await writeAuditLog(admin.id, "REJECT_JOB", "opportunities", id);
+      return apiSuccess({ id, status: "CLOSED" }, "Job rejected");
+    }
+
+    /* ---- Create opportunity ---- */
+    if (section === "opportunities") {
+      const body = opportunityCreateSchema.parse(await request.json());
+      const [created] = await db
+        .insert(opportunities)
+        .values({
+          ...body,
+          applicationDeadline: body.applicationDeadline
+            ? new Date(body.applicationDeadline)
+            : null,
+        })
+        .returning();
+      await writeAuditLog(admin.id, "CREATE", "opportunities", created.id);
+      return apiSuccess({ opportunity: created }, "Opportunity created", 201);
+    }
+
+    /* ---- Create mock test ---- */
+    if (section === "mock-tests") {
+      const body = mockTestCreateSchema.parse(await request.json());
+      const slug_val = body.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+      const [created] = await db
+        .insert(mockTests)
+        .values({ ...body, slug: slug_val })
+        .returning();
+      await writeAuditLog(admin.id, "CREATE", "mock_tests", created.id);
+      return apiSuccess({ test: created }, "Mock test created", 201);
+    }
+
+    return apiError("Unknown admin action", 404);
+  } catch (error) {
+    return handleError(error, "Admin action failed");
+  }
+}
+
+/* ============================= PUT ================================= */
+
+export async function PUT(
+  request: Request,
+  context: { params: Promise<{ slug?: string[] }> },
+) {
+  try {
+    const admin = await requireAdmin();
+    const { slug } = await context.params;
+
+    /* ---- Toggle automation status ---- */
+    if (slug?.[0] === "automations" && slug?.[2] === "status") {
+      const id = slug[1];
+      const { status } = z
+        .object({ status: z.enum(["ACTIVE", "DISABLED"]) })
+        .parse(await request.json());
+
+      await db
+        .update(automationRules)
+        .set({ status, updatedAt: new Date() })
+        .where(eq(automationRules.id, id));
+
+      await db.insert(automationExecutions).values({
+        ruleId: id,
+        status: "SKIPPED",
+        triggerSource: "MANUAL",
+        attempts: 0,
+        message: `Rule ${status === "ACTIVE" ? "enabled" : "disabled"} by administrator`,
+      });
+
+      await writeAuditLog(admin.id, `SET_STATUS_${status}`, "automation_rules", id);
+      return apiSuccess({ id, status }, "Automation rule updated");
+    }
+
+    /* ---- Update student account ---- */
+    if (slug?.[0] === "students" && slug?.[1]) {
+      const studentId = slug[1];
+      const { isActive, role } = z
+        .object({
+          isActive: z.boolean().optional(),
+          role: z.enum(["STUDENT", "ADMIN"]).optional(),
+        })
+        .parse(await request.json());
+
+      await db
+        .update(users)
+        .set({
+          ...(isActive !== undefined ? { isActive } : {}),
+          ...(role ? { role } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, studentId));
+
+      await writeAuditLog(admin.id, "UPDATE_STUDENT", "users", studentId, {
+        isActive,
+        role,
+      });
+
+      return apiSuccess({ id: studentId }, "Student updated");
+    }
+
+    /* ---- Update resource ---- */
+    if (slug?.[0] === "resources" && slug?.[1]) {
+      const resourceId = slug[1];
+      const body = resourceCreateSchema.partial().parse(await request.json());
+      await db
+        .update(resources)
+        .set({ ...body, updatedAt: new Date() })
+        .where(eq(resources.id, resourceId));
+      await writeAuditLog(admin.id, "UPDATE", "resources", resourceId);
+      return apiSuccess({ id: resourceId }, "Resource updated");
+    }
+
+    /* ---- Update opportunity ---- */
+    if (slug?.[0] === "opportunities" && slug?.[1]) {
+      const oppId = slug[1];
+      const body = opportunityCreateSchema.partial().parse(await request.json());
+      await db
+        .update(opportunities)
+        .set({
+          ...body,
+          applicationDeadline:
+            body.applicationDeadline != null
+              ? new Date(body.applicationDeadline)
+              : undefined,
+        })
+        .where(eq(opportunities.id, oppId));
+      await writeAuditLog(admin.id, "UPDATE", "opportunities", oppId);
+      return apiSuccess({ id: oppId }, "Opportunity updated");
+    }
+
+    return apiError("Unknown admin action", 404);
+  } catch (error) {
+    return handleError(error, "Admin action failed");
+  }
+}
+
+/* ============================= DELETE ============================== */
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ slug?: string[] }> },
+) {
+  try {
+    const admin = await requireAdmin();
+    const { slug } = await context.params;
+    void request;
+
+    /* ---- Delete resource ---- */
+    if (slug?.[0] === "resources" && slug?.[1]) {
+      const resourceId = slug[1];
+      await db.delete(resources).where(eq(resources.id, resourceId));
+      await writeAuditLog(admin.id, "DELETE", "resources", resourceId);
+      return apiSuccess({ id: resourceId }, "Resource deleted");
+    }
+
+    /* ---- Delete opportunity ---- */
+    if (slug?.[0] === "opportunities" && slug?.[1]) {
+      const oppId = slug[1];
+      await db.delete(opportunities).where(eq(opportunities.id, oppId));
+      await writeAuditLog(admin.id, "DELETE", "opportunities", oppId);
+      return apiSuccess({ id: oppId }, "Opportunity deleted");
+    }
+
+    /* ---- Delete VTU update ---- */
+    if (slug?.[0] === "vtu-updates" && slug?.[1]) {
+      const updateId = slug[1];
+      await db.delete(vtuUpdates).where(eq(vtuUpdates.id, updateId));
+      await writeAuditLog(admin.id, "DELETE", "vtu_updates", updateId);
+      return apiSuccess({ id: updateId }, "VTU update deleted");
+    }
+
+    /* ---- Delete mock test ---- */
+    if (slug?.[0] === "mock-tests" && slug?.[1]) {
+      const testId = slug[1];
+      await db.delete(mockTests).where(eq(mockTests.id, testId));
+      await writeAuditLog(admin.id, "DELETE", "mock_tests", testId);
+      return apiSuccess({ id: testId }, "Mock test deleted");
+    }
+
+    return apiError("Unknown admin action", 404);
+  } catch (error) {
+    return handleError(error, "Admin action failed");
   }
 }

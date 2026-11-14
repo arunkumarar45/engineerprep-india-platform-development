@@ -1,10 +1,9 @@
-export const runtime = "edge";
 /**
- * Bulk content import â€” EngineerPrep India
+ * Bulk content import — EngineerPrep India
  *
  * Workflow:
- *   1. POST with action=validate â€” parse file, validate rows, create ImportJob record
- *   2. POST with action=confirm â€” ACTUALLY insert valid rows into the database
+ *   1. POST with action=validate — parse file, validate rows, create ImportJob record
+ *   2. POST with action=confirm — ACTUALLY insert valid rows into the database
  *
  * Files supported: CSV, JSON (array or {rows:[]}), XLSX (requires xlsx package)
  * Import categories: DSA Problems, Roadmaps, Jobs/Internships, Aptitude/Technical tests
@@ -420,7 +419,7 @@ async function insertRoadmapTopics(
         roadmapId = roadmap.id;
         roadmapMap.set(roadmapTitle.toLowerCase(), roadmapId);
       } else {
-        // Roadmap already exists â€” look it up
+        // Roadmap already exists — look it up
         const [existing] = await db
           .select()
           .from(roadmaps)

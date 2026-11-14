@@ -1,4 +1,3 @@
-export const runtime = "edge";
 import { searchAll } from "@/lib/queries";
 import { apiSuccess, handleError } from "@/lib/api";
 

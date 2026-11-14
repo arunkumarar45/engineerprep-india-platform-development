@@ -1,328 +1,300 @@
-export const runtime = "edge";
-/**
- * File Upload API â€” EngineerPrep India
- *
- * Implements real file persistence:
- * - Local storage (default dev): saves to ./uploads/{category}/{uuid}-{filename}
- * - S3-compatible (production):  set USE_S3=true in .env + configure S3_* vars
- *   NOTE: install @aws-sdk/client-s3 separately for S3 mode.
- *
- * Security:
- * - Path traversal protection via path.basename()
- * - MIME type allowlist
- * - File size limit
- * - Requires authenticated user
- */
-import { NextResponse } from "next/server";
-import { writeFile, mkdir, readFile } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
-import { randomUUID } from "crypto";
-import { getSessionUser, requireUser } from "@/lib/auth";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "@/db";
+import { users, vtuUpdates } from "@/db/schema";
+import {
+  getBranches,
+  getSemesters,
+  getSchemes,
+  getSubjects,
+  getVtuUpdates,
+} from "@/lib/queries";
+import { requireAdmin } from "@/lib/auth";
+import { queueNotification } from "@/lib/automation";
 import { apiError, apiSuccess, handleError } from "@/lib/api";
 
-/* ------------------------------------------------------------------ */
-/* Configuration                                                        */
-/* ------------------------------------------------------------------ */
-
-const ALLOWED_MIME_TYPES = new Set([
-  "application/pdf",
-  "text/csv",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/json",
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-]);
-
-const MAX_BYTES = 50 * 1024 * 1024; // 50 MB
-
-const MIME_TO_EXT: Record<string, string> = {
-  "application/pdf": ".pdf",
-  "text/csv": ".csv",
-  "application/vnd.ms-excel": ".xls",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
-  "application/json": ".json",
-  "image/png": ".png",
-  "image/jpeg": ".jpg",
-  "image/webp": ".webp",
-  "application/msword": ".doc",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
-};
-
-/* ------------------------------------------------------------------ */
-/* Local storage helpers                                                */
-/* ------------------------------------------------------------------ */
-
-function getUploadRoot(): string {
-  return process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
-}
-
-function getUploadDir(category: string): string {
-  const safeCategory = category.replace(/[^a-z0-9-]/g, "").slice(0, 40) || "misc";
-  return path.join(getUploadRoot(), safeCategory);
-}
-
-async function saveLocally(
-  buffer: ArrayBuffer,
-  originalName: string,
-  mimeType: string,
-  category: string,
-): Promise<{ storedPath: string; publicUrl: string }> {
-  const dir = getUploadDir(category);
-  if (!existsSync(dir)) {
-    await mkdir(dir, { recursive: true });
-  }
-
-  const baseName = path.basename(originalName).replace(/[^a-zA-Z0-9._-]/g, "_");
-  const ext = MIME_TO_EXT[mimeType] ?? path.extname(baseName) ?? ".bin";
-  const id = randomUUID();
-  const fileName = `${id}${ext}`;
-  const storedPath = path.join(dir, fileName);
-
-  await writeFile(storedPath, Buffer.from(buffer));
-
-  const safeCategory = category.replace(/[^a-z0-9-]/g, "").slice(0, 40) || "misc";
-  const publicUrl = `/api/v1/uploads?path=${safeCategory}/${fileName}`;
-
-  return { storedPath, publicUrl };
-}
-
-/* ------------------------------------------------------------------ */
-/* S3 storage â€” only used when USE_S3=true                             */
-/* Install @aws-sdk/client-s3 for S3 support                          */
-/* ------------------------------------------------------------------ */
-
-async function saveToS3(
-  buffer: ArrayBuffer,
-  originalName: string,
-  mimeType: string,
-  category: string,
-): Promise<{ storedPath: string; publicUrl: string }> {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const s3Module = require("@aws-sdk/client-s3") as typeof import("@aws-sdk/client-s3");
-  const { S3Client, PutObjectCommand } = s3Module;
-
-  const bucket = process.env.STORAGE_BUCKET ?? process.env.S3_BUCKET;
-  const region = process.env.STORAGE_REGION ?? process.env.S3_REGION ?? "ap-south-1";
-  const endpoint = process.env.STORAGE_ENDPOINT ?? process.env.S3_ENDPOINT;
-
-  if (!bucket) throw new Error("S3_BUCKET or STORAGE_BUCKET env variable is not set");
-
-  const client = new S3Client({
-    region,
-    endpoint,
-    credentials: {
-      accessKeyId: process.env.STORAGE_ACCESS_KEY ?? process.env.S3_ACCESS_KEY_ID ?? "",
-      secretAccessKey: process.env.STORAGE_SECRET_KEY ?? process.env.S3_SECRET_ACCESS_KEY ?? "",
-    },
-  });
-
-  const baseName = path.basename(originalName).replace(/[^a-zA-Z0-9._-]/g, "_");
-  const ext = MIME_TO_EXT[mimeType] ?? path.extname(baseName) ?? ".bin";
-  const safeCategory = category.replace(/[^a-z0-9-]/g, "").slice(0, 40) || "misc";
-  const key = `uploads/${safeCategory}/${randomUUID()}${ext}`;
-
-  await client.send(
-    new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: Buffer.from(buffer),
-      ContentType: mimeType,
-    }),
-  );
-
-  const baseUrl =
-    process.env.S3_PUBLIC_BASE_URL ??
-    `https://${bucket}.s3.${region}.amazonaws.com`;
-  return {
-    storedPath: key,
-    publicUrl: `${baseUrl}/${key}`,
-  };
-}
-
-/* ------------------------------------------------------------------ */
-/* POST /api/v1/uploads                                                 */
-/* ------------------------------------------------------------------ */
-
-export function verifyMagicBytes(buffer: ArrayBuffer | Uint8Array, mimeType: string): boolean {
-  if (buffer.byteLength < 4) return false;
-  const bytes = buffer instanceof Uint8Array ? buffer.subarray(0, 8) : new Uint8Array(buffer.slice(0, 8));
-
-  if (mimeType === "application/pdf") {
-    // %PDF-
-    return (
-      bytes[0] === 0x25 &&
-      bytes[1] === 0x50 &&
-      bytes[2] === 0x44 &&
-      bytes[3] === 0x46 &&
-      bytes[4] === 0x2d
-    );
-  }
-
-  if (mimeType === "image/png") {
-    return bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
-  }
-
-  if (mimeType === "image/jpeg") {
-    return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
-  }
-
-  if (
-    mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-    mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  ) {
-    return bytes[0] === 0x50 && bytes[1] === 0x4b;
-  }
-
-  return true;
-}
-
-export async function POST(request: Request) {
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ slug?: string[] }> },
+) {
   try {
-    const user = await requireUser();
-
-    // Parse multipart form
-    let form: FormData;
-    try {
-      form = await request.formData();
-    } catch {
-      return apiError("Invalid multipart form data", 400);
+    const { slug } = await context.params;
+    if (slug?.[0] === "meta") {
+      const [branches, semesters, schemes, subjects] = await Promise.all([
+        getBranches(),
+        getSemesters(),
+        getSchemes(),
+        getSubjects(),
+      ]);
+      return apiSuccess({ branches, semesters, schemes, subjects }, "Metadata loaded");
     }
-
-    const file = form.get("file");
-    const category = (form.get("category") as string | null) ?? "misc";
-
-    if (!(file instanceof File)) {
-      return apiError("A file field named 'file' is required", 400);
-    }
-
-    if (file.size === 0) {
-      return apiError("Uploaded file is empty", 400);
-    }
-    if (file.size > MAX_BYTES) {
-      return apiError(
-        `File exceeds the ${MAX_BYTES / 1024 / 1024} MB limit`,
-        413,
-      );
-    }
-
-    const mimeType = file.type || "application/octet-stream";
-    if (!ALLOWED_MIME_TYPES.has(mimeType)) {
-      return apiError(`Unsupported file type: ${mimeType}`, 415);
-    }
-
-    const buffer = await file.arrayBuffer();
-
-    if (!verifyMagicBytes(buffer, mimeType)) {
-      return apiError(
-        "File signature (magic bytes) does not match the declared MIME type. Malicious or corrupt file rejected.",
-        400,
-      );
-    }
-
-    let result: { storedPath: string; publicUrl: string };
-
-    const isS3 = process.env.STORAGE_TYPE === "s3" || process.env.USE_S3 === "true";
-    if (isS3) {
-      result = await saveToS3(buffer, file.name, mimeType, category);
-    } else {
-      result = await saveLocally(buffer, file.name, mimeType, category);
-    }
-
-    const fileSizeStr =
-      file.size > 1024 * 1024
-        ? `${(file.size / 1024 / 1024).toFixed(1)} MB`
-        : `${Math.ceil(file.size / 1024)} KB`;
-
-    return apiSuccess(
-      {
-        originalName: file.name,
-        storedPath: result.storedPath,
-        publicUrl: result.publicUrl,
-        size: file.size,
-        fileSizeStr,
-        mimeType,
-        category,
-        storage: isS3 ? "s3" : "local",
-        uploadedBy: user.id,
-      },
-      "File uploaded successfully",
-      201,
-    );
+    const updates = await getVtuUpdates();
+    return apiSuccess({ updates }, "VTU updates fetched");
   } catch (error) {
-    return handleError(error, "Upload failed");
+    return handleError(error, "Unable to load VTU data");
+  }
+}
+
+const updateSchema = z.object({
+  title: z.string().min(4),
+  category: z.string().min(2),
+  summary: z.string().optional(),
+  fileUrl: z.string().optional(),
+  fileSize: z.string().optional(),
+});
+
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ slug?: string[] }> },
+) {
+  try {
+    const { slug } = await context.params;
+
+    // ── Manual sync from VTU official portal ──────────────────────────
+    if (slug?.[0] === "sync") {
+      const admin = await requireAdmin();
+
+      let fetched: {
+        title: string;
+        category: string;
+        summary: string;
+        fileUrl?: string;
+        fileSize?: string;
+        publishedAt: Date;
+      }[] = [];
+
+      try {
+        // Method 1: Official VTU WordPress REST API (fastest, structured, accurate)
+        const wpRes = await fetch("https://vtu.ac.in/wp-json/wp/v2/posts?per_page=20", {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            Accept: "application/json",
+          },
+          signal: AbortSignal.timeout(15000),
+        });
+
+        if (wpRes.ok) {
+          const posts = await wpRes.json();
+          if (Array.isArray(posts) && posts.length > 0) {
+            fetched = posts.map((p) => {
+              const rawTitle = (p.title?.rendered ?? "")
+                .replace(/&#8211;/g, "–")
+                .replace(/&#8212;/g, "—")
+                .replace(/&#8220;/g, '“')
+                .replace(/&#8221;/g, '”')
+                .replace(/&#038;/g, "&")
+                .replace(/&amp;/g, "&")
+                .replace(/<[^>]+>/g, "")
+                .trim();
+
+              const contentHtml = p.content?.rendered ?? "";
+              const pdfMatch = contentHtml.match(/href="([^"]*\.pdf)"/i) || contentHtml.match(/(https?:\/\/[^\s"']+\.pdf)/i);
+              const fileUrl = pdfMatch ? pdfMatch[1].replace(/\\\//g, "/") : undefined;
+
+              const sizeMatch = contentHtml.match(/Size:\s*([^<]+)/i);
+              const fileSize = sizeMatch ? sizeMatch[1].trim() : fileUrl ? "PDF" : undefined;
+
+              const lower = rawTitle.toLowerCase();
+              let category = "General";
+              if (lower.includes("exam") || lower.includes("result") || lower.includes("timetable") || lower.includes("revaluation") || lower.includes("marks")) {
+                category = "Examinations";
+              } else if (lower.includes("circular") || lower.includes("order")) {
+                category = "Circular";
+              } else if (lower.includes("notification") || lower.includes("fee") || lower.includes("registration")) {
+                category = "Notification";
+              } else if (lower.includes("academic") || lower.includes("calendar")) {
+                category = "Academic";
+              }
+
+              return {
+                title: rawTitle,
+                category,
+                summary: rawTitle,
+                fileUrl,
+                fileSize,
+                publishedAt: new Date(p.date ?? Date.now()),
+              };
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("VTU REST API sync failed, trying HTML fallback:", err);
+      }
+
+      if (fetched.length === 0) {
+        try {
+          const res = await fetch("https://vtu.ac.in/", {
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              Accept: "text/html",
+            },
+            signal: AbortSignal.timeout(15000),
+          });
+
+          if (res.ok) {
+            const html = await res.text();
+            fetched = parseVtuAnnouncements(html).map((item) => ({
+              ...item,
+              publishedAt: new Date(),
+            }));
+          }
+        } catch {
+          return apiSuccess(
+            { synced: 0, skipped: 0 },
+            "VTU portal unreachable. Try again later or add updates manually.",
+          );
+        }
+      }
+
+      let synced = 0;
+      let skipped = 0;
+
+      for (const item of fetched) {
+        const existing = await db
+          .select({ id: vtuUpdates.id })
+          .from(vtuUpdates)
+          .where(eq(vtuUpdates.title, item.title))
+          .limit(1);
+
+        if (existing.length > 0) {
+          skipped++;
+          continue;
+        }
+
+        const [created] = await db
+          .insert(vtuUpdates)
+          .values({
+            title: item.title,
+            category: item.category,
+            summary: item.summary,
+            fileUrl: item.fileUrl ?? null,
+            fileSize: item.fileSize ?? null,
+            publishedAt: item.publishedAt,
+            createdBy: admin.id,
+          })
+          .returning();
+
+        synced++;
+      }
+
+      return apiSuccess(
+        { synced, skipped, total: fetched.length },
+        synced > 0
+          ? `Synced ${synced} real updates from official VTU portal`
+          : fetched.length === 0
+            ? "No announcements found on VTU portal."
+            : `All ${skipped} updates already up to date`,
+      );
+    }
+
+    // ── Manual update creation ─────────────────────────────────────────
+    if (slug?.[0] !== "updates") return apiError("Unknown action", 404);
+    const admin = await requireAdmin();
+    const body = updateSchema.parse(await request.json());
+    const [created] = await db
+      .insert(vtuUpdates)
+      .values({ ...body, createdBy: admin.id })
+      .returning();
+
+    const students = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.role, "STUDENT"));
+    for (const student of students) {
+      await queueNotification({
+        userId: student.id,
+        type: "VTU_UPDATE",
+        title: created.title,
+        body: created.summary ?? "A new VTU update has been published.",
+        linkUrl: "/vtu/updates",
+        idempotencyKey: `vtu-update-${created.id}-${student.id}`,
+      });
+    }
+
+    return apiSuccess({ update: created }, "VTU update published", 201);
+  } catch (error) {
+    return handleError(error, "Unable to publish VTU update");
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ slug?: string[] }> },
+) {
+  try {
+    await requireAdmin();
+    const { slug } = await context.params;
+    const id = slug?.[1];
+    if (!id) return apiError("Update id is required", 400);
+    await db.delete(vtuUpdates).where(eq(vtuUpdates.id, id));
+    return apiSuccess({ id }, "VTU update deleted");
+  } catch (error) {
+    return handleError(error, "Unable to delete VTU update");
   }
 }
 
 /* ------------------------------------------------------------------ */
-/* GET /api/v1/uploads?path=category/filename                          */
-/*  Serve locally stored files with content-type and security headers  */
+/* VTU HTML parser                                                      */
 /* ------------------------------------------------------------------ */
-export async function GET(request: Request) {
-  try {
-    const url = new URL(request.url);
-    const rawPath = url.searchParams.get("path") ?? "";
 
-    // Path traversal protection
-    const parts = rawPath.split("/").filter(Boolean);
-    if (parts.length !== 2) {
-      return apiError("Invalid file path. Use ?path=category/filename", 400);
+function parseVtuAnnouncements(html: string) {
+  const results: {
+    title: string;
+    category: string;
+    summary: string;
+    fileUrl?: string;
+  }[] = [];
+
+  // Extract announcement items from VTU portal HTML
+  // Matches patterns like <li>...<a href="...">Title</a>...</li>
+  const listItemRe = /<li[^>]*>([\s\S]*?)<\/li>/gi;
+  const linkRe = /<a[^>]+href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/i;
+  const dateRe = /\b(\d{1,2}[-/]\d{1,2}[-/]\d{2,4}|\w+ \d{4})\b/;
+
+  let match: RegExpExecArray | null;
+  while ((match = listItemRe.exec(html)) !== null) {
+    const item = match[1];
+    const linkMatch = linkRe.exec(item);
+    if (!linkMatch) continue;
+
+    const href = linkMatch[1].trim();
+    const rawTitle = linkMatch[2].replace(/<[^>]+>/g, "").trim();
+    if (!rawTitle || rawTitle.length < 10) continue;
+
+    // Skip navigation items
+    if (["Home", "About", "Academics", "Research"].includes(rawTitle)) continue;
+
+    const dateMatch = dateRe.exec(item);
+    const dateStr = dateMatch ? ` (${dateMatch[1]})` : "";
+
+    // Categorise by keyword
+    let category = "General";
+    const lower = rawTitle.toLowerCase();
+    if (lower.includes("exam") || lower.includes("result") || lower.includes("timetable")) {
+      category = "Examinations";
+    } else if (lower.includes("circular") || lower.includes("notice") || lower.includes("order")) {
+      category = "Circular";
+    } else if (lower.includes("tender") || lower.includes("quotation")) {
+      category = "Tenders";
+    } else if (lower.includes("admission") || lower.includes("pg") || lower.includes("ug")) {
+      category = "Admissions";
+    } else if (lower.includes("notification") || lower.includes("announcement")) {
+      category = "Announcement";
     }
 
-    const [category, filename] = parts;
-    const safeCategory = category.replace(/[^a-z0-9-]/g, "").slice(0, 40);
-    const safeFilename = path.basename(filename).replace(/[^a-zA-Z0-9._-]/g, "");
+    const fileUrl = href.startsWith("http") ? href : `https://www.vtu.ac.in${href}`;
 
-    if (!safeCategory || !safeFilename) {
-      return apiError("Invalid file path segments", 400);
-    }
-
-    const uploadRoot = getUploadRoot();
-    const filePath = path.join(uploadRoot, safeCategory, safeFilename);
-
-    // Ensure resolved path is inside upload root
-    const resolvedRoot = path.resolve(uploadRoot);
-    const resolvedFile = path.resolve(filePath);
-    if (!resolvedFile.startsWith(resolvedRoot)) {
-      return apiError("Forbidden", 403);
-    }
-
-    let data: Buffer;
-    try {
-      data = await readFile(resolvedFile);
-    } catch {
-      return new NextResponse("File not found", { status: 404 });
-    }
-
-    const ext = path.extname(safeFilename).toLowerCase();
-    const contentTypeMap: Record<string, string> = {
-      ".pdf": "application/pdf",
-      ".png": "image/png",
-      ".jpg": "image/jpeg",
-      ".jpeg": "image/jpeg",
-      ".webp": "image/webp",
-      ".csv": "text/csv",
-      ".json": "application/json",
-      ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      ".xls": "application/vnd.ms-excel",
-      ".doc": "application/msword",
-      ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    };
-    const contentType = contentTypeMap[ext] ?? "application/octet-stream";
-
-    return new NextResponse(data as unknown as BodyInit, {
-      headers: {
-        "Content-Type": contentType,
-        "Content-Disposition": `inline; filename="${safeFilename}"`,
-        "Cache-Control": "private, max-age=3600",
-        "X-Content-Type-Options": "nosniff",
-      },
+    results.push({
+      title: rawTitle.slice(0, 255) + dateStr,
+      category,
+      summary: `Official VTU announcement: ${rawTitle}`,
+      fileUrl: href.includes(".pdf") ? fileUrl : undefined,
     });
-  } catch (error) {
-    return handleError(error, "File serve failed");
+
+    if (results.length >= 20) break; // cap at 20 per sync
   }
+
+  return results;
 }
