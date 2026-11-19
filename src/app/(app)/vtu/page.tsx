@@ -19,8 +19,10 @@ export const metadata: Metadata = {
   },
 };
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// No `force-dynamic` — the cached queries let Next.js reuse the response.
+// User-specific props (isAdmin, isLoggedIn) are passed from a cookie-verified call
+// that happens on every request anyway, so ISR is the right trade-off.
+export const revalidate = 60; // Regenerate at most once per minute
 import { getSessionUser } from "@/lib/auth";
 import {
   getBranches,
@@ -38,7 +40,7 @@ export default async function VtuOverviewPage() {
     await Promise.all([
       getVtuUpdates(),
       getResourceStats(),
-      getResources({ type: "NOTES" }),
+      getResources({ type: "NOTES", limit: 50 }), // show first 50 notes as preview only
       getBranches(),
       getSemesters(),
       getSchemes(),

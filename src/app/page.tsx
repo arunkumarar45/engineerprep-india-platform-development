@@ -2,7 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static"; // ISR — no per-request DB calls
+export const revalidate = 60; // Regenerate at most once per minute
 
 export const metadata: Metadata = {
   title: "EngineerPrep India – VTU Notes, DSA & Placement Preparation",
@@ -42,7 +43,7 @@ import { Badge, Card } from "@/components/ui";
 import { Brandmark, MobileHeaderBrandmark } from "@/components/brand/Logo";
 import { Footer } from "@/components/layout";
 import { getResourceStats } from "@/lib/queries";
-import { getSessionUser } from "@/lib/auth";
+import { AuthNavButton } from "@/components/AuthNavButton";
 
 const ENTRY_CARDS = [
   {
@@ -101,7 +102,6 @@ const HIGHLIGHTS = [
 ];
 
 export default async function HomePage() {
-  const user = await getSessionUser();
   const stats = await getResourceStats();
 
   return (
@@ -134,29 +134,7 @@ export default async function HomePage() {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-            {user ? (
-              <Link
-                href="/dashboard"
-                className="rounded-xl bg-brand-500 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-brand-600"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="rounded-xl px-2.5 py-1.5 text-xs font-bold text-ink-700 hover:bg-brand-50 hover:text-brand-600 sm:px-3 sm:py-2 sm:text-sm"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className="inline-flex h-9 items-center rounded-xl bg-brand-500 px-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-brand-600 sm:px-3.5"
-                >
-                  Create account
-                </Link>
-              </>
-            )}
+            <AuthNavButton />
           </div>
         </div>
       </header>

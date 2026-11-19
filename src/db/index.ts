@@ -33,11 +33,15 @@ function createDb() {
 
   const pool =
     globalForDb.__epiPostgresPool ??
-    new Pool({ connectionString: databaseUrl });
+    new Pool({
+      connectionString: databaseUrl,
+      max: 10,                    // cap concurrent DB connections
+      idleTimeoutMillis: 30_000,  // release idle connections after 30 s
+      connectionTimeoutMillis: 3_000, // fail fast instead of hanging
+    });
 
-  if (process.env.NODE_ENV !== "production") {
-    globalForDb.__epiPostgresPool = pool;
-  }
+  // Persist pool in dev AND production to reuse across hot-reloads / invocations
+  globalForDb.__epiPostgresPool = pool;
 
   return drizzle(pool, { schema });
 }

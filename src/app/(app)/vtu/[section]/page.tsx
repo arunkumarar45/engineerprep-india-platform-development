@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { CalendarClock, Database, Upload } from "lucide-react";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Keep force-dynamic only here because URL params (filters) affect data
 import { PageHeader } from "@/components/layout";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import { UpdateCard } from "@/components/cards";
@@ -253,7 +253,7 @@ export default async function VtuSectionPage({
 
   const [resources, branches, semesters, schemes, subjects, stats, bookmarks] =
     await Promise.all([
-      getResources(config.type ? { type: config.type } : {}),
+      getResources(config.type ? { type: config.type, limit: 500 } : { limit: 500 }),
       getBranches(),
       getSemesters(),
       getSchemes(),

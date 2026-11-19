@@ -2,7 +2,13 @@
  * Server-side data access layer for EngineerPrep India.
  * All pages read through these functions so business logic stays out of
  * route handlers / components.
+ *
+ * Caching strategy:
+ *  - Static/slow-changing data (branches, semesters, schemes) → cached 5 min
+ *  - Resource listings and stats → cached 60 s, tagged for on-demand revalidation
+ *  - User-specific data (progress, bookmarks, downloads) → never cached
  */
+import { unstable_cache } from "next/cache";
 import { and, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
@@ -45,23 +51,38 @@ import {
 
 /* ------------------------------ VTU --------------------------------- */
 
-export async function getBranches() {
-  return db.select().from(branches).orderBy(branches.code);
-}
+export const getBranches = unstable_cache(
+  async () => db.select().from(branches).orderBy(branches.code),
+  ["branches"],
+  { revalidate: 300, tags: ["branches"] }, // 5 minutes — rarely changes
+);
 
-export async function getSemesters() {
-  return db.select().from(semesters).orderBy(semesters.number);
-}
+export const getSemesters = unstable_cache(
+  async () => db.select().from(semesters).orderBy(semesters.number),
+  ["semesters"],
+  { revalidate: 300, tags: ["semesters"] },
+);
 
-export async function getSchemes() {
-  return db.select().from(schemes).orderBy(schemes.name);
-}
+export const getSchemes = unstable_cache(
+  async () => db.select().from(schemes).orderBy(schemes.name),
+  ["schemes"],
+  { revalidate: 300, tags: ["schemes"] },
+);
 
 export async function getSubjects(filter?: {
   branchId?: string;
   semesterId?: string;
   schemeId?: string;
 }) {
+  // Cache unfiltered subject list (used for filter dropdowns) for 5 min
+  if (!filter || (!filter.branchId && !filter.semesterId && !filter.schemeId)) {
+    return unstable_cache(
+      async () =>
+        db.select().from(subjects).orderBy(subjects.name),
+      ["subjects-all"],
+      { revalidate: 300, tags: ["subjects"] },
+    )();
+  }
   const conds = [];
   if (filter?.branchId) conds.push(eq(subjects.branchId, filter.branchId));
   if (filter?.semesterId)
@@ -186,7 +207,7 @@ export async function getResources(filters: ResourceFilters = {}) {
     .leftJoin(schemes, eq(subjects.schemeId, schemes.id))
     .where(and(...conds))
     .orderBy(desc(resources.createdAt))
-    .limit(filters.limit ?? 2500)
+    .limit(filters.limit ?? 100)   // default 100 instead of 2500 — callers request more explicitly
     .offset(filters.offset ?? 0);
 }
 
@@ -225,34 +246,45 @@ export async function getResourceById(id: string) {
   return row ?? null;
 }
 
-export async function getResourceStats() {
-  const rows = await db
-    .select({ type: resources.resourceType, count: sql<number>`count(*)::int` })
-    .from(resources)
-    .where(
-      and(
-        eq(resources.status, "PUBLISHED"),
-        sql`${resources.fileUrl} IS NOT NULL AND ${resources.fileUrl} != ''`,
-      ),
-    )
-    .groupBy(resources.resourceType);
-  const map: Record<string, number> = {
-    NOTES: 0,
-    QUESTION_PAPER: 0,
-    SYLLABUS: 0,
-    ASSIGNMENT: 0,
-    LAB_MANUAL: 0,
-    OTHER: 0,
-  };
-  rows.forEach((r: { type: string; count: number }) => {
-    map[r.type] = r.count;
-  });
-  return map;
-}
+export const getResourceStats = unstable_cache(
+  async () => {
+    const rows = await db
+      .select({ type: resources.resourceType, count: sql<number>`count(*)::int` })
+      .from(resources)
+      .where(
+        and(
+          eq(resources.status, "PUBLISHED"),
+          sql`${resources.fileUrl} IS NOT NULL AND ${resources.fileUrl} != ''`,
+        ),
+      )
+      .groupBy(resources.resourceType);
+    const map: Record<string, number> = {
+      NOTES: 0,
+      QUESTION_PAPER: 0,
+      SYLLABUS: 0,
+      ASSIGNMENT: 0,
+      LAB_MANUAL: 0,
+      OTHER: 0,
+    };
+    rows.forEach((r: { type: string; count: number }) => {
+      map[r.type] = r.count;
+    });
+    return map;
+  },
+  ["resource-stats"],
+  { revalidate: 60, tags: ["resource-stats"] }, // fresh every 60 s
+);
 
-export async function getVtuUpdates() {
-  return db.select().from(vtuUpdates).orderBy(desc(vtuUpdates.publishedAt));
-}
+export const getVtuUpdates = unstable_cache(
+  async () =>
+    db
+      .select()
+      .from(vtuUpdates)
+      .orderBy(desc(vtuUpdates.publishedAt))
+      .limit(50), // cap at 50 — no one reads 500 announcements
+  ["vtu-updates"],
+  { revalidate: 120, tags: ["vtu-updates"] }, // fresh every 2 min
+);
 
 export async function getDownloads(userId: string) {
   return db
@@ -293,13 +325,17 @@ export async function recordDownload(userId: string, resourceId: string) {
 
 /* ------------------------------- DSA -------------------------------- */
 
-export async function getDsaSheets() {
-  return db.select().from(dsaSheets).orderBy(dsaSheets.title);
-}
+export const getDsaSheets = unstable_cache(
+  async () => db.select().from(dsaSheets).orderBy(dsaSheets.title),
+  ["dsa-sheets"],
+  { revalidate: 300, tags: ["dsa-sheets"] },
+);
 
-export async function getPlaylists() {
-  return db.select().from(playlists).orderBy(playlists.orderIndex);
-}
+export const getPlaylists = unstable_cache(
+  async () => db.select().from(playlists).orderBy(playlists.orderIndex),
+  ["playlists"],
+  { revalidate: 300, tags: ["playlists"] },
+);
 
 export async function getDsaSheet(slug: string) {
   const [sheet] = await db
@@ -310,9 +346,11 @@ export async function getDsaSheet(slug: string) {
   return sheet ?? null;
 }
 
-export async function getDsaPatterns() {
-  return db.select().from(dsaPatterns).orderBy(dsaPatterns.name);
-}
+export const getDsaPatterns = unstable_cache(
+  async () => db.select().from(dsaPatterns).orderBy(dsaPatterns.name),
+  ["dsa-patterns"],
+  { revalidate: 300, tags: ["dsa-patterns"] },
+);
 
 export async function getDsaPattern(slug: string) {
   const [pattern] = await db
@@ -334,7 +372,24 @@ export async function getDsaProblems(filters: {
   sheetId?: string;
   patternId?: string;
 } = {}) {
-  const rows = await db
+  // Build SQL WHERE conditions instead of filtering in JavaScript
+  const conds = [];
+  if (filters.sheetId) conds.push(eq(dsaProblems.sheetId, filters.sheetId));
+  if (filters.patternId) conds.push(eq(dsaProblems.patternId, filters.patternId));
+  if (filters.difficulty && filters.difficulty !== "ALL") {
+    const d = filters.difficulty.toUpperCase();
+    if (d === "BEGINNER") {
+      conds.push(or(eq(dsaProblems.difficulty, "EASY" as never), eq(dsaProblems.difficulty, "BEGINNER" as never))!);
+    } else if (d === "INTERMEDIATE") {
+      conds.push(or(eq(dsaProblems.difficulty, "MEDIUM" as never), eq(dsaProblems.difficulty, "INTERMEDIATE" as never))!);
+    } else if (d === "ADVANCED") {
+      conds.push(or(eq(dsaProblems.difficulty, "HARD" as never), eq(dsaProblems.difficulty, "ADVANCED" as never))!);
+    } else {
+      conds.push(eq(dsaProblems.difficulty, d as never));
+    }
+  }
+
+  return db
     .select({
       id: dsaProblems.id,
       title: dsaProblems.title,
@@ -355,25 +410,8 @@ export async function getDsaProblems(filters: {
     .from(dsaProblems)
     .leftJoin(dsaPatterns, eq(dsaProblems.patternId, dsaPatterns.id))
     .leftJoin(dsaSheets, eq(dsaProblems.sheetId, dsaSheets.id))
+    .where(conds.length ? and(...conds) : undefined)
     .orderBy(dsaProblems.orderIndex);
-
-  return rows.filter((row) => {
-    if (filters.difficulty && filters.difficulty !== "ALL") {
-      if (!difficultyMatches(row.difficulty, filters.difficulty)) return false;
-    }
-    if (filters.sheetId && row.sheetId !== filters.sheetId) return false;
-    if (filters.patternId && row.patternId !== filters.patternId) return false;
-    return true;
-  });
-}
-
-function difficultyMatches(value: string, filter: string) {
-  const v = value.toUpperCase();
-  const f = filter.toUpperCase();
-  if (f === "BEGINNER") return v === "EASY" || v === "BEGINNER";
-  if (f === "INTERMEDIATE") return v === "MEDIUM" || v === "INTERMEDIATE";
-  if (f === "ADVANCED") return v === "HARD" || v === "ADVANCED";
-  return v === f;
 }
 
 export async function getDsaProgress(userId: string) {
@@ -407,8 +445,15 @@ export async function getProblemBySlug(slug: string) {
 
 /* ----------------------------- Roadmaps ----------------------------- */
 
+// Cache all roadmaps for 5 minutes (content changes rarely)
+const _getAllRoadmaps = unstable_cache(
+  async () => db.select().from(roadmaps).orderBy(roadmaps.title),
+  ["roadmaps-all"],
+  { revalidate: 300, tags: ["roadmaps"] },
+);
+
 export async function getRoadmaps(category?: string) {
-  const rows = await db.select().from(roadmaps).orderBy(roadmaps.title);
+  const rows = await _getAllRoadmaps();
   if (!category || category === "All") return rows;
   return rows.filter(
     (r) => (r.category ?? "").toLowerCase() === category.toLowerCase(),
@@ -455,13 +500,16 @@ export async function getRoadmapProgress(userId: string) {
 
 /* ---------------------------- Mock tests ---------------------------- */
 
-export async function getMockTests() {
-  return db
-    .select()
-    .from(mockTests)
-    .where(eq(mockTests.isPublished, true))
-    .orderBy(mockTests.title);
-}
+export const getMockTests = unstable_cache(
+  async () =>
+    db
+      .select()
+      .from(mockTests)
+      .where(eq(mockTests.isPublished, true))
+      .orderBy(mockTests.title),
+  ["mock-tests"],
+  { revalidate: 300, tags: ["mock-tests"] },
+);
 
 export async function getMockTest(id: string) {
   const [test] = await db

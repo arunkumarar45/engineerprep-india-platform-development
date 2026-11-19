@@ -20,9 +20,30 @@ const nextConfig: NextConfig = {
     ? ["@aws-sdk/client-s3"]
     : ["@aws-sdk/client-s3", "@node-rs/argon2", "bullmq", "ioredis"],
 
-  // Security headers
+  // Security headers + long-lived caching for static assets
   async headers() {
     return [
+      // ---- Immutable static assets (hashed filenames) ----
+      {
+        source: "/_next/static/(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      // ---- Public images / icons ----
+      {
+        source: "/(.*)\\.(png|jpg|jpeg|gif|svg|ico|webp|avif|woff|woff2)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=604800",
+          },
+        ],
+      },
+      // ---- All other routes: security headers ----
       {
         source: "/(.*)",
         headers: [
@@ -118,12 +139,22 @@ const nextConfig: NextConfig = {
   // Image optimization: allow AVIF/WebP and common remote patterns
   images: {
     formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400, // Cache optimized images for 24 h
     remotePatterns: [
       { protocol: "https", hostname: "i.ytimg.com" },
       { protocol: "https", hostname: "img.youtube.com" },
       { protocol: "https", hostname: "yt3.ggpht.com" },
       { protocol: "https", hostname: "yt3.googleusercontent.com" },
     ],
+  },
+
+  // Compress responses with gzip/brotli
+  compress: true,
+
+  // Experimental: improved build speed and package tree-shaking
+  experimental: {
+    // Optimize client-side bundle by tree-shaking server-only packages
+    optimizePackageImports: ["lucide-react", "drizzle-orm"],
   },
 };
 

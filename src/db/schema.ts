@@ -332,6 +332,8 @@ export const resources = pgTable(
     hashIdx: index("resources_file_hash_idx").on(t.fileHash),
     subjectCodeIdx: index("resources_subject_code_idx").on(t.subjectCode),
     typeStatusIdx: index("resources_type_status_idx").on(t.resourceType, t.status),
+    // Composite index covering the most common query: published resources filtered by type, ordered by date
+    statusTypeCreatedIdx: index("resources_status_type_created_idx").on(t.status, t.resourceType, t.createdAt),
   }),
 );
 

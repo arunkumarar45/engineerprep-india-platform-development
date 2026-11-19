@@ -21,6 +21,13 @@ const queries = [
   `CREATE INDEX IF NOT EXISTS resources_subject_code_idx ON resources (subject_code);`,
   `CREATE INDEX IF NOT EXISTS resources_type_status_idx ON resources (resource_type, status);`,
 
+  // Composite index for the most critical query: published resources by type, sorted by date
+  // This covers: WHERE status='PUBLISHED' AND resource_type=X ORDER BY created_at DESC
+  `CREATE INDEX IF NOT EXISTS resources_status_type_created_idx ON resources (status, resource_type, created_at DESC);`,
+
+  // Partial index for published resources only (smaller, faster for the common read path)
+  `CREATE INDEX IF NOT EXISTS resources_published_created_idx ON resources (created_at DESC) WHERE status = 'PUBLISHED';`,
+
   // GIN Trigram index for search if extension is available
   `CREATE EXTENSION IF NOT EXISTS pg_trgm;`,
   `CREATE INDEX IF NOT EXISTS resources_title_trgm_idx ON resources USING gin (title gin_trgm_ops);`,

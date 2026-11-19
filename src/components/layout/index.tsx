@@ -168,7 +168,6 @@ export function Footer() {
           <Link href="/contact" className="hover:text-brand-600">Contact</Link>
           <Link href="/privacy-policy" className="hover:text-brand-600">Privacy</Link>
           <Link href="/terms" className="hover:text-brand-600">Terms</Link>
-          <a href="/sitemap.xml" className="hover:text-brand-600">Sitemap</a>
         </nav>
         <p className="flex items-center gap-1 text-[0.68rem] text-ink-500">
           Built with <Heart className="size-3 text-brand-500" /> for engineering

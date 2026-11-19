@@ -9,6 +9,7 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
+  preload: true,
 });
 
 const mono = JetBrains_Mono({
@@ -101,12 +102,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable}`}>
       <head>
-        <link
-          rel="sitemap"
-          type="application/xml"
-          title="Sitemap"
-          href="/sitemap.xml"
-        />
+        {/* DNS-prefetch for external resources used in the app */}
+        <link rel="dns-prefetch" href="https://drive.google.com" />
+        <link rel="dns-prefetch" href="https://docs.google.com" />
+        <link rel="dns-prefetch" href="https://i.ytimg.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="min-h-screen bg-surface font-sans text-ink-900 antialiased">
         <OrganizationJsonLd />

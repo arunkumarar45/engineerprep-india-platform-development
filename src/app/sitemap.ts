@@ -9,7 +9,9 @@ import {
   getResources,
 } from "@/lib/queries";
 
-export const dynamic = "force-dynamic";
+// Sitemap is generated statically and refreshed every hour.
+// Individual resource URLs use the same /vtu/view/[id] pattern.
+export const revalidate = 3600; // 1 hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -204,7 +206,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getRoadmaps().catch(() => []),
     getMockTests().catch(() => []),
     getOpportunities({}).catch(() => []),
-    getResources({ limit: 1000 }).catch(() => []),
+    getResources({ limit: 500 }).catch(() => []),
   ]);
 
   const dynamicSheets: MetadataRoute.Sitemap = sheets.map((sheet) => ({
